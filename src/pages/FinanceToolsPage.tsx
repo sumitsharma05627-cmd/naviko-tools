@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, ArrowRight, ShieldCheck, Zap, DollarSign, 
   Flame, Landmark, Briefcase, Percent, TrendingDown, Star, Sparkles 
@@ -12,6 +12,10 @@ interface FinanceToolsPageProps {
 }
 
 export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }) => {
+  useEffect(() => {
+    document.title = 'Finance Tools & Calculators — NAVIKO';
+  }, []);
+
   const financeTools = TOOLS_DATA.filter((t) => t.category === 'finance');
 
   return (

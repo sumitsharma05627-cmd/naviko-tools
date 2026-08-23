@@ -1,6 +1,6 @@
 {
   "name": "NAVIKO",
-  "description": "Smart Tools. Simple Solutions. Free, privacy-first online tools for students, job seekers, creators, and everyday productivity.",
+  "description": "NAVIKO provides free online tools for students, professionals, and everyday users, including calculators, converters, QR code tools, image tools, typing tests, resume tools, and more.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

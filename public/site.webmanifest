@@ -1,6 +1,8 @@
 {
   "name": "NAVIKO Tools",
   "short_name": "NAVIKO",
+  "description": "NAVIKO provides free online tools for students, professionals, and everyday users, including calculators, converters, QR code tools, image tools, typing tests, resume tools, and more.",
+  "start_url": "/",
   "icons": [
     {
       "src": "/favicon-16x16.png",

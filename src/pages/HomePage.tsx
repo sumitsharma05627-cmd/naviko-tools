@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, ArrowRight, Sparkles, ShieldCheck, Zap, Lock, 
   ChevronRight, Star, TrendingUp, Flame, Landmark,
@@ -17,6 +17,10 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { t } = useLanguage();
+
+  useEffect(() => {
+    document.title = 'NAVIKO — Free Online Tools | Smart Tools. Simple Solutions.';
+  }, []);
   
   // Interactive mini-calculator state on hero for instant Gen Z engagement!
   const [quickSip, setQuickSip] = useState(5000);
