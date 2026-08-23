@@ -1,0 +1,6 @@
+{
+  "name": "NAVIKO",
+  "description": "Smart Tools. Simple Solutions. Free, privacy-first online tools for students, job seekers, creators, and everyday productivity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
