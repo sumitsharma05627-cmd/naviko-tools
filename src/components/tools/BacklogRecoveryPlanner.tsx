@@ -6,6 +6,7 @@ import {
   Layers, ArrowRight, Copy, CheckCircle, Clock3, Circle, FileText
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface BacklogChapter {
   id: string;
@@ -58,6 +59,7 @@ const DEFAULT_SUBJECTS: BacklogSubject[] = [
 ];
 
 export const BacklogRecoveryPlanner: React.FC = () => {
+  const { t } = useLanguage();
   const [daysAvailable, setDaysAvailable] = useState<number>(30);
   const [dailyHours, setDailyHours] = useState<number>(5);
   const [revisionMinutesPerDay, setRevisionMinutesPerDay] = useState<number>(30);

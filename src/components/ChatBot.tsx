@@ -373,8 +373,8 @@ export const ChatBot: React.FC<ChatBotProps> = ({ onNavigate }) => {
     // --- Financial Tools ---
     if (q.includes('debt') || q.includes('debt clock') || q.includes('national debt') || q.includes('public debt') || q.includes('india debt') || q.includes('gdp ratio')) {
       return {
-        text: '🇮🇳 **National Debt Clock (India & World)**\n\n• **India Gross Public Debt**: ~₹185.4 Lakh Crores (~81% of GDP)\n• **Debt Growth**: +₹54,800 every second\n• **Per Citizen Debt**: ~₹1,28,000\n• Includes live comparative trackers for USA, Japan, UK, China, and Germany.',
-        action: { label: 'View Live Debt Clock', path: '/tools/debt-clock' },
+        text: '🇮🇳 **Government Debt Estimator & Clock (India & World)**\n\n• **Central Govt Liabilities (Union Budget)**: ~₹185.27 Lakh Crore (56.8% of GDP)\n• **General Govt Debt (Centre + States)**: ~₹265.30 Lakh Crore (81.3% of GDP)\n• **Estimated Net Annual Borrowing Rate**: +₹5.12 Lakh / second (Union Budget fiscal deficit)\n• **Debt Equivalent Per Citizen**: ~₹1,28,660\n• Includes comparative models for USA, Japan, UK, China, and Germany with transparent official methodologies.',
+        action: { label: 'Open Debt Estimator', path: '/tools/debt-clock' },
       };
     }
 

@@ -5,6 +5,7 @@ import {
   RotateCcw, Check, Flame, ChevronRight, AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface SubjectItem {
   id: string;
@@ -35,6 +36,7 @@ const DEFAULT_SUBJECTS: SubjectItem[] = [
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const StudyTimetableGenerator: React.FC = () => {
+  const { t } = useLanguage();
   const [examName, setExamName] = useState<string>('Final Semester Exams');
   const [examDate, setExamDate] = useState<string>(() => {
     const d = new Date();

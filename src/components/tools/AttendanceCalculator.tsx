@@ -15,6 +15,7 @@ import {
   Target,
   BookOpen
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface SubjectEntry {
   id: string;
@@ -24,6 +25,7 @@ interface SubjectEntry {
 }
 
 export const AttendanceCalculator: React.FC = () => {
+  const { t } = useLanguage();
   // Simple Mode State
   const [totalClasses, setTotalClasses] = useState<number>(45);
   const [attendedClasses, setAttendedClasses] = useState<number>(34);

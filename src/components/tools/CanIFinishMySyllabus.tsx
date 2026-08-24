@@ -5,8 +5,10 @@ import {
   TrendingUp, ShieldCheck, Flame, Sliders, HelpCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const CanIFinishMySyllabus: React.FC = () => {
+  const { t } = useLanguage();
   const [chaptersRemaining, setChaptersRemaining] = useState<number>(40);
   const [hoursPerChapter, setHoursPerChapter] = useState<number>(2);
   const [daysRemaining, setDaysRemaining] = useState<number>(35);

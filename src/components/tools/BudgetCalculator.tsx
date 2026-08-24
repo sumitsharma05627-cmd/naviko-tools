@@ -20,6 +20,7 @@ import {
   PiggyBank,
   Check
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface ExpenseItem {
   id: string;
@@ -51,6 +52,7 @@ const DEFAULT_EXPENSES: ExpenseItem[] = [
 ];
 
 export const BudgetCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [currency, setCurrency] = useState<CurrencySymbol>('₹');
   const [monthlyIncome, setMonthlyIncome] = useState<number>(80000);
   const [sideIncome, setSideIncome] = useState<number>(0);

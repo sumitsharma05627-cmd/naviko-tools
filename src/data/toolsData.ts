@@ -738,45 +738,46 @@ export const TOOLS_DATA: ToolMeta[] = [
   },
   {
     id: 'debt-clock',
-    name: 'National Debt Clock (India & World)',
+    name: 'Government Debt Estimator & Clock (India & World)',
     slug: 'debt-clock',
     path: '/tools/debt-clock',
     category: 'finance',
     categoryName: 'Finance & Wealth',
-    description: 'Real-time sovereign public debt clock for India, United States, Japan, UK, China, and world economies with per-citizen debt, debt-to-GDP ratios, growth tickers, and payoff simulator.',
-    shortDescription: 'Live national debt clock for India, USA, Japan, and world with per-capita metrics.',
+    description: 'Sovereign public debt counter & analyzer for India, United States, Japan, UK, China, and world economies with statistical per-citizen debt, Debt-to-GDP ratios, annual borrowing rates, and documented methodology.',
+    shortDescription: 'Sovereign debt estimator for India, USA, Japan, and world economies with Debt-to-GDP & per-capita metrics.',
     iconName: 'Globe',
     popular: true,
     studentHub: false,
     status: 'active',
     tags: ['debt clock', 'india debt clock', 'national debt', 'sovereign debt', 'debt to gdp', 'public debt', 'us debt clock', 'gdp', 'fiscal deficit', 'economy', 'budget'],
     features: [
-      'Live real-time microsecond ticking national debt counters for India, USA, Japan, UK, Germany, China, etc.',
-      'Calculates live Debt Per Citizen (Per Capita) and Debt Per Working Taxpayer',
-      'Debt-to-GDP safety gauge with FRBM benchmark targets',
-      'Real-world perspective comparators: Chandrayaan space missions, expressways, AI hubs',
-      'Interactive citizen debt payoff and amortization simulation calculator',
-      'Global sovereign debt leaderboard with sortable matrix in INR, USD, and EUR'
+      'Deterministic sovereign debt estimators for India, USA, Japan, UK, Germany, China, etc. derived from official fiscal baselines',
+      'Calculates statistical Debt Equivalent Per Citizen and Per Income-Tax Return Filer',
+      'Explicit separation between Central Government Liabilities (56.8% of GDP) and General Government Debt (81.3% of GDP)',
+      'Budgetary annual interest servicing rates and fiscal deficit growth metrics',
+      'Documented infrastructure project scale comparators (Chandrayaan-3, expressways, supercomputer hubs)',
+      'Interactive hypothetical citizen amortization calculator and global sovereign debt matrix'
     ],
     howToUse: [
       'Select any country (e.g. India 🇮🇳, USA 🇺🇸, Japan 🇯🇵) from the top country selector.',
+      'For India, toggle between Central Government Liabilities (Union Budget) and General Government Consolidated Debt (Centre + States).',
       'Toggle currency view between Local Currency (₹ INR), USD ($), or EUR (€).',
-      'For India, easily switch between Indian numbering (Lakh / Crore) and Standard (Trillions).',
-      'Explore live growth rates per second, daily additions, and session debt accumulated while viewing the page.',
-      'Use the Payoff Simulator slider to see the impact of citizen monthly contributions.'
+      'For India, switch easily between Indian numbering (Lakh / Crore) and Standard (Trillions).',
+      'Explore estimated annual borrowing rates, daily net additions, and session debt counter.',
+      'Review the transparent Data & Methodology section for official source citations (Ministry of Finance, RBI, CBDT, IMF).'
     ],
     faqs: [
       {
-        question: 'What is India\'s Total National Public Debt?',
-        answer: 'India\'s combined General Government Debt (Central Government + State Governments) is approximately ₹185+ Lakh Crores (around 81% of GDP), with an annual growth rate of roughly ₹17.3 Lakh Crores driven by capital infrastructure investments and fiscal deficits.'
+        question: 'What is India\'s Total Government Debt?',
+        answer: 'As per Union Budget documents (Ministry of Finance), Central Government Total Liabilities stand at approximately ₹185.27 Lakh Crore (~56.8% of GDP). When combined with all State Governments (General Government Debt tracked by RBI and IMF), consolidated gross debt is approximately ₹265.30 Lakh Crore (~81.3% of GDP).'
       },
       {
-        question: 'Is India\'s National Debt dangerous compared to other countries?',
-        answer: 'Unlike many developing countries, over 95% of India\'s sovereign debt is denominated in domestic currency (INR) and held by domestic financial institutions like RBI, banks, and EPFO, insulating India from foreign exchange default shocks. For comparison, Japan has a Debt-to-GDP over 250% and the USA over 120%.'
+        question: 'Is India\'s sovereign debt risky compared to other major economies?',
+        answer: 'Over 95% of India\'s sovereign liabilities are internal, rupee-denominated, and held by domestic financial institutions (commercial banks, insurance, EPFO, and RBI), shielding India from external currency liquidity crises. For comparison, Japan\'s Debt-to-GDP exceeds 220% and the USA exceeds 123%.'
       },
       {
-        question: 'How is the live debt clock calculated?',
-        answer: 'The clock uses official sovereign baseline figures from finance ministries and central banks, compounding continuously based on official annual borrowing projections, fiscal deficit targets, and bond yield interest trajectories.'
+        question: 'How is the debt counter calculated?',
+        answer: 'The counter is a deterministic mathematical model based on the latest available official baseline figure published by respective finance ministries (e.g. Union Budget Statement of Liabilities) and the official annual fiscal deficit / net borrowing rate divided across 31,536,000 seconds in a year.'
       }
     ]
   },

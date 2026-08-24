@@ -4,6 +4,7 @@ import { ToolMeta } from '../types';
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from './DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from './AdSlot';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ToolLayoutProps {
   tool: ToolMeta;
@@ -18,13 +19,19 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   onNavigate,
   examples = []
 }) => {
+  const { t } = useLanguage();
+
+  const toolName = t(`${tool.id}.title`, tool.name);
+  const toolDesc = t(`${tool.id}.subtitle`, tool.description);
+  const categoryLabel = t(`cat.${tool.category}`, tool.categoryName);
+
   useEffect(() => {
     // 1. Title
-    const title = tool.seoTitle || `${tool.name} — Free Online Tool | NAVIKO`;
+    const title = tool.seoTitle || `${toolName} — Free Online Tool | NAVIKO`;
     document.title = title;
 
     // 2. Meta description
-    const desc = tool.metaDescription || tool.description;
+    const desc = tool.metaDescription || toolDesc;
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -71,7 +78,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
       '@graph': [
         {
           '@type': 'WebApplication',
-          'name': tool.name,
+          'name': toolName,
           'url': `https://naviko.in${tool.path}`,
           'description': desc,
           'applicationCategory': 'UtilitiesApplication',
@@ -117,7 +124,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
         scriptEl.parentNode.removeChild(scriptEl);
       }
     };
-  }, [tool]);
+  }, [tool, toolName, toolDesc]);
 
   // Find related tools prioritized by tool.relatedToolPaths
   let relatedTools: ToolMeta[] = [];
@@ -145,25 +152,25 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
               className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
             >
               <Home className="w-3.5 h-3.5" />
-              <span>Home</span>
+              <span>{t('nav.home', 'Home')}</span>
             </button>
             <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
             <button
               onClick={() => onNavigate('/tools')}
               className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
             >
-              Tools
+              {t('nav.allTools', 'Tools')}
             </button>
             <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
             <button
               onClick={() => onNavigate(`/tools?category=${tool.category}`)}
               className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
             >
-              {tool.categoryName}
+              {categoryLabel}
             </button>
             <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
             <span className="text-slate-800 dark:text-slate-200 font-semibold truncate">
-              {tool.name}
+              {toolName}
             </span>
           </nav>
         </div>
@@ -174,13 +181,13 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
         <div className="mb-6 text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-3">
             <DynamicIcon name={tool.iconName} className="w-3.5 h-3.5" />
-            <span>{tool.categoryName}</span>
+            <span>{categoryLabel}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {tool.name}
+            {toolName}
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            {tool.description}
+            {toolDesc}
           </p>
         </div>
 
@@ -207,7 +214,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    How to Use the {tool.name}
+                    {t('common.howToUse', 'How to Use')} {toolName}
                   </h2>
                 </div>
                 <ol className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
@@ -231,7 +238,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                     <Lightbulb className="w-4 h-4" />
                   </div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Worked Examples &amp; Use Cases
+                    {t('layout.examplesTitle', 'Worked Examples & Use Cases')}
                   </h2>
                 </div>
                 <div className="space-y-4">
@@ -258,7 +265,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                     <HelpCircle className="w-4 h-4" />
                   </div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                    Frequently Asked Questions
+                    {t('common.faq', 'Frequently Asked Questions')}
                   </h2>
                 </div>
                 <div className="space-y-4 divide-y divide-slate-100 dark:divide-slate-800">
@@ -283,7 +290,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
             {tool.features && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs transition-colors">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">
-                  Why Use NAVIKO?
+                  {t('common.whyNaviko', 'Why Use NAVIKO?')}
                 </h3>
                 <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
                   {tool.features.map((feat, idx) => (
@@ -294,11 +301,11 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                   ))}
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold">✓</span>
-                    <span>100% Client-side privacy (no data stored)</span>
+                    <span>{t('common.clientSidePrivacy', '100% Client-side privacy (no data stored)')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 font-bold">✓</span>
-                    <span>No registration, login, or limits required</span>
+                    <span>{t('common.zeroLogs', 'No registration, login, or limits required')}</span>
                   </li>
                 </ul>
               </div>
@@ -307,7 +314,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
             {/* 9. Related Tools */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs transition-colors">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-4">
-                Related Tools
+                {t('common.relatedTools', 'Related Tools')}
               </h3>
               <div className="space-y-3">
                 {relatedTools.map((rel) => (
@@ -322,10 +329,10 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
-                          {rel.name}
+                          {t(`${rel.id}.title`, rel.name)}
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {rel.shortDescription}
+                          {t(`${rel.id}.subtitle`, rel.shortDescription)}
                         </div>
                       </div>
                     </div>
@@ -340,3 +347,4 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
     </div>
   );
 };
+

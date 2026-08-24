@@ -6,8 +6,10 @@ import {
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import confetti from 'canvas-confetti';
 import { formatCurrency, formatNumberWords, CurrencyCode, CURRENCIES } from '../../utils/finance';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const SipCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [monthlyInvestment, setMonthlyInvestment] = useState<number>(10000);
   const [expectedRate, setExpectedRate] = useState<number>(12);
   const [years, setYears] = useState<number>(10);
