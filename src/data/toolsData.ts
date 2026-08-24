@@ -1491,12 +1491,219 @@ export const TOOLS_DATA: ToolMeta[] = [
         answer: 'Formula: Required Classes = Ceil(((Target% / 100) × Total Classes - Attended Classes) / (1 - (Target% / 100))).'
       }
     ]
+  },
+  {
+    id: 'study-decision-planner',
+    name: 'Study Decision Planner',
+    slug: 'study-decision-planner',
+    path: '/student-tools/study-decision-planner',
+    category: 'student',
+    categoryName: 'Student & Study Tools',
+    description: 'Create a realistic, personalized study plan based on your exam date, target score, available hours, subject strengths, chapters, and revision requirements with instant feasibility scoring.',
+    shortDescription: 'Create a personalized study plan based on target score, available time, and subjects.',
+    iconName: 'Compass',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Study Decision Planner – Create a Personalized Study Plan | NAVIKO',
+    metaDescription: 'Create a realistic personalized study plan based on your exam, target score, available time, subjects, chapters, and deadlines. Calculate daily study hours and buffer capacity.',
+    relatedToolPaths: [
+      '/student-tools/backlog-recovery-planner',
+      '/student-tools/can-i-finish-my-syllabus',
+      '/student-tools/mock-test-analyzer',
+      '/tools/study-timetable-generator',
+      '/tools/attendance-calculator'
+    ],
+    tags: ['study decision planner', 'study plan generator', 'exam study planner', 'neet study plan', 'jee study schedule', 'cbse study plan', 'personalized study schedule', 'study planner'],
+    features: [
+      'Personalized study capacity math based on exam deadline and daily available hours',
+      'Realistic feasibility verdict (Green / Yellow / Red) without false guarantees',
+      'Subject prioritization weighted by difficulty and remaining chapters',
+      'Daily time allocation and weekly chapter targets across all subjects',
+      'Built-in buffer days, mock test schedule, and revision time allocation',
+      'One-click plan export, printable view, clipboard copy, and Web Share'
+    ],
+    howToUse: [
+      'Select your exam preset (e.g. NEET, JEE, CBSE, CUET, College Finals) or create a custom exam.',
+      'Enter your exam target date, current score baseline, and target score goal.',
+      'Adjust your available daily study hours, weekly rest days, and study session length.',
+      'Add or modify subjects, remaining chapter counts, and proficiency levels (Strong/Average/Weak).',
+      'Review your feasibility status, daily subject breakdown, and copy or download your personalized study plan.'
+    ],
+    faqs: [
+      {
+        question: 'How is the feasibility verdict calculated?',
+        answer: 'The planner compares your total available study hours (effective study days × daily hours) against the total hours required (core chapter hours adjusted for subject difficulty + 18% revision + 10% mock tests). A capacity ratio ≥ 105% indicates a realistic schedule.'
+      },
+      {
+        question: 'Can I export or print my study plan?',
+        answer: 'Yes. You can copy the complete structured plan to your clipboard, save it as a text file to your device, or print it directly with clean formatting.'
+      }
+    ]
+  },
+  {
+    id: 'backlog-recovery-planner',
+    name: 'Backlog Recovery Planner',
+    slug: 'student-tools/backlog-recovery-planner',
+    path: '/student-tools/backlog-recovery-planner',
+    category: 'student',
+    categoryName: 'Student & Study Tools',
+    description: 'Recover from a large syllabus backlog with a structured step-by-step daily recovery schedule. Calculates difficulty-adjusted workload, revision, tests, and tracks daily progress.',
+    shortDescription: 'Recover from large syllabus backlogs with day-by-day schedules and progress tracking.',
+    iconName: 'Layers',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Backlog Recovery Planner – Finish Your Syllabus | NAVIKO',
+    metaDescription: 'Recover from a large syllabus backlog with a structured step-by-step daily recovery schedule. Calculates workload, subject allocation, revision buffers, and tracks chapter progress.',
+    relatedToolPaths: [
+      '/student-tools/study-decision-planner',
+      '/student-tools/can-i-finish-my-syllabus',
+      '/student-tools/mock-test-analyzer',
+      '/tools/study-timetable-generator'
+    ],
+    tags: ['backlog recovery planner', 'syllabus backlog', 'study backlog', 'catch up on syllabus', 'study recovery schedule', 'exam backlog', 'chapter tracker'],
+    features: [
+      'Difficulty-adjusted workload allocation (Easy / Medium / Hard chapters)',
+      'Sequential Day-by-Day recovery schedule with dedicated revision notes and test days',
+      'Interactive Chapter Tracker with Not Started / In Progress / Completed states',
+      'Live progress percentage and pace velocity indicator (Ahead / On Track / Behind)',
+      'Local storage persistence so your marked chapters are saved automatically',
+      'Print and copy options for physical study desk tracking'
+    ],
+    howToUse: [
+      'Enter the number of days available for your backlog recovery sprint.',
+      'Set your daily available study hours and preferred daily revision time.',
+      'Add or organize your subjects and list the specific backlog chapters.',
+      'View your generated day-by-day roadmap in the "Day-by-Day Schedule" tab.',
+      'Mark chapters as completed in the "Interactive Chapter Tracker" as you study.'
+    ],
+    faqs: [
+      {
+        question: 'Does the planner account for chapter difficulty?',
+        answer: 'Yes. The algorithm applies weighted time allocations (Hard = 5.0h, Medium = 3.5h, Easy = 2.5h) to ensure difficult conceptual chapters receive proportional focus.'
+      },
+      {
+        question: 'Will my completed chapter progress be saved?',
+        answer: 'Yes. Your chapter statuses and subject lists are automatically saved locally in your browser memory so you can return anytime.'
+      }
+    ]
+  },
+  {
+    id: 'can-i-finish-my-syllabus',
+    name: 'Can I Finish My Syllabus?',
+    slug: 'can-i-finish-my-syllabus',
+    path: '/student-tools/can-i-finish-my-syllabus',
+    category: 'student',
+    categoryName: 'Student & Study Tools',
+    description: 'Instant study time calculator to determine if you have enough hours to complete your remaining syllabus before your exam with buffer margin analysis.',
+    shortDescription: 'Instant calculator to check if you have enough study time before exams.',
+    iconName: 'Clock',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Can I Finish My Syllabus? – Study Time Calculator | NAVIKO',
+    metaDescription: 'Instantly calculate if you have enough study hours to complete your remaining syllabus before exams. See your buffer margin, required chapters per day, and pace adjustments.',
+    relatedToolPaths: [
+      '/student-tools/study-decision-planner',
+      '/student-tools/backlog-recovery-planner',
+      '/student-tools/mock-test-analyzer',
+      '/tools/attendance-calculator'
+    ],
+    tags: ['can i finish my syllabus', 'study time calculator', 'exam time calculator', 'syllabus completion calculator', 'study hours required', 'study buffer calculator'],
+    features: [
+      'Instant feasibility verdict (Comfortable / Possible / Unlikely) without fear-based messaging',
+      'Accurate buffer margin calculation in extra hours and days',
+      'Required daily and weekly chapter completion velocity',
+      'What-if scenario modeling (+1h and +2h daily study adjustments)',
+      '100% client-side calculation with zero delay'
+    ],
+    howToUse: [
+      'Enter the number of chapters remaining in your syllabus.',
+      'Enter the estimated average study hours required per chapter.',
+      'Enter the number of days remaining until your exam.',
+      'Set your available daily study hours and study days per week.',
+      'Check your instant feasibility verdict and practical adjustments.'
+    ],
+    faqs: [
+      {
+        question: 'How do you calculate if I can finish my syllabus?',
+        answer: 'The tool multiplies remaining chapters by average hours per chapter to calculate Total Hours Required, and multiplies available study days by daily study hours to find Total Hours Available. The difference is your Buffer Margin.'
+      },
+      {
+        question: 'What if the verdict is "Unlikely"?',
+        answer: 'An unlikely verdict simply means your current daily study hours create a time deficit. The tool gives practical tips on increasing daily hours or prioritizing high-yield chapters to eliminate the deficit.'
+      }
+    ]
+  },
+  {
+    id: 'mock-test-analyzer',
+    name: 'Mock Test Performance Analyzer',
+    slug: 'mock-test-analyzer',
+    path: '/student-tools/mock-test-analyzer',
+    category: 'student',
+    categoryName: 'Student & Study Tools',
+    description: 'Track and analyze your mock test scores, accuracy, attempt rate, score trajectory, and subject strengths with clean visual charts and actionable insights.',
+    shortDescription: 'Track mock test scores, accuracy %, score trajectory, and weak subject areas.',
+    iconName: 'TrendingUp',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Mock Test Performance Analyzer – Track Your Scores | NAVIKO',
+    metaDescription: 'Track and analyze your mock test scores, accuracy, attempt rate, score trajectory, and subject strengths with clean charts and actionable study recommendations.',
+    relatedToolPaths: [
+      '/student-tools/study-decision-planner',
+      '/student-tools/backlog-recovery-planner',
+      '/student-tools/can-i-finish-my-syllabus',
+      '/tools/cgpa-calculator'
+    ],
+    tags: ['mock test analyzer', 'mock test score tracker', 'test series analysis', 'accuracy calculator', 'neet mock analysis', 'jee test tracker', 'exam performance tracker'],
+    features: [
+      'Interactive score progression line chart across all attempted mock tests',
+      'Accuracy vs Attempt Rate analytics to identify negative marking leaks',
+      'Subject-wise strength and weakness ranking',
+      'Score trajectory detection (Upward trend / Review required / Steady)',
+      'Mistake and error notebook tracking per mock test',
+      'Local storage persistence and printable performance summaries'
+    ],
+    howToUse: [
+      'Click "Log New Mock Test" to enter your test score, total marks, and date.',
+      'Optionally input correct, incorrect, and unattempted question counts.',
+      'Add subject-wise score breakdowns (e.g. Physics, Chemistry, Biology, Math).',
+      'View your score progression trajectory on the interactive chart.',
+      'Review your strongest and weakest subject areas to guide your next study sprint.'
+    ],
+    faqs: [
+      {
+        question: 'How does the analyzer determine score trends?',
+        answer: 'It calculates the score delta between consecutive mock tests and compares the latest performance against your historical average to detect upward momentum or score dips.'
+      },
+      {
+        question: 'Why is tracking accuracy important in mock tests?',
+        answer: 'In competitive exams with negative marking (like NEET and JEE), incorrect guesses drastically lower your rank. Tracking accuracy helps you focus on cutting negative marks before attempting more questions.'
+      }
+    ]
   }
 ];
 
 export const getToolByPath = (path: string): ToolMeta | undefined => {
   const cleanPath = path.split('?')[0].replace(/\/$/, '') || '/';
-  return TOOLS_DATA.find((t) => t.path === cleanPath);
+  
+  // Direct match
+  const direct = TOOLS_DATA.find((t) => t.path === cleanPath);
+  if (direct) return direct;
+
+  // Match /student-tools/... vs /tools/...
+  if (cleanPath.startsWith('/student-tools/')) {
+    const slug = cleanPath.replace('/student-tools/', '');
+    return TOOLS_DATA.find((t) => t.slug === slug || t.path === cleanPath || t.path === `/tools/${slug}`);
+  }
+  if (cleanPath.startsWith('/tools/')) {
+    const slug = cleanPath.replace('/tools/', '');
+    return TOOLS_DATA.find((t) => t.slug === slug || t.path === cleanPath || t.path === `/student-tools/${slug}`);
+  }
+
+  return undefined;
 };
 
 export const getToolBySlug = (slug: string): ToolMeta | undefined => {
@@ -1523,10 +1730,10 @@ export const CATEGORIES_META = [
   {
     id: 'student',
     title: 'Student Tools',
-    description: 'Attendance calculator, CGPA converters, Study timetables, and question flashcards for exam productivity.',
+    description: 'Study Decision Planner, Backlog Recovery, Syllabus Calculator, Mock Test Analyzer, Attendance, CGPA, and Timetables.',
     icon: 'GraduationCap',
     path: '/student-tools',
-    toolsCount: 7
+    toolsCount: 11
   },
   {
     id: 'pdf',

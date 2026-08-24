@@ -108,6 +108,26 @@
 
   <!-- Student & Education Tools -->
   <url>
+    <loc>https://naviko.in/student-tools/study-decision-planner</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/student-tools/backlog-recovery-planner</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/student-tools/can-i-finish-my-syllabus</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/student-tools/mock-test-analyzer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://naviko.in/tools/attendance-calculator</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>

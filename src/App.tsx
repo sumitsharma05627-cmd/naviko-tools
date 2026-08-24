@@ -36,6 +36,10 @@ import { JpgToPng } from './components/tools/JpgToPng';
 import { PngToJpg } from './components/tools/PngToJpg';
 import { BackgroundRemover } from './components/tools/BackgroundRemover';
 import { AttendanceCalculator } from './components/tools/AttendanceCalculator';
+import { StudyDecisionPlanner } from './components/tools/StudyDecisionPlanner';
+import { BacklogRecoveryPlanner } from './components/tools/BacklogRecoveryPlanner';
+import { CanIFinishMySyllabus } from './components/tools/CanIFinishMySyllabus';
+import { MockTestAnalyzer } from './components/tools/MockTestAnalyzer';
 
 // Finance Tool Components
 import { SipCalculator } from './components/tools/SipCalculator';
@@ -190,8 +194,20 @@ export default function App() {
     }
 
     // Student Tools Routes
-    if (path === '/tools/attendance-calculator') {
+    if (path === '/tools/attendance-calculator' || path === '/student-tools/attendance-calculator') {
       return renderTool(path, AttendanceCalculator);
+    }
+    if (path === '/student-tools/study-decision-planner' || path === '/tools/study-decision-planner') {
+      return renderTool(path, StudyDecisionPlanner);
+    }
+    if (path === '/student-tools/backlog-recovery-planner' || path === '/tools/backlog-recovery-planner') {
+      return renderTool(path, BacklogRecoveryPlanner);
+    }
+    if (path === '/student-tools/can-i-finish-my-syllabus' || path === '/tools/can-i-finish-my-syllabus') {
+      return renderTool(path, CanIFinishMySyllabus);
+    }
+    if (path === '/student-tools/mock-test-analyzer' || path === '/tools/mock-test-analyzer') {
+      return renderTool(path, MockTestAnalyzer);
     }
 
     // Finance Tools

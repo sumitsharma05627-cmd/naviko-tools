@@ -293,6 +293,34 @@ export const ChatBot: React.FC<ChatBotProps> = ({ onNavigate }) => {
     }
 
     // --- Student & Academic Tools ---
+    if (q.includes('decision') || q.includes('study decision') || q.includes('study plan') || q.includes('personalized study plan')) {
+      return {
+        text: '🧭 **Study Decision Planner**\n\nCreate a realistic, personalized study plan based on your exam deadline, target score, available hours, subject difficulty, and revision needs with instant feasibility scoring.',
+        action: { label: 'Open Study Decision Planner', path: '/student-tools/study-decision-planner' },
+      };
+    }
+
+    if (q.includes('backlog') || q.includes('syllabus backlog') || q.includes('recover backlog') || q.includes('catch up on syllabus') || q.includes('behind schedule')) {
+      return {
+        text: '📚 **Backlog Recovery Planner**\n\nGenerate a day-by-day structured recovery roadmap with difficulty-adjusted workloads, revision buffers, and an interactive chapter tracker to clear pending chapters without burning out.',
+        action: { label: 'Open Backlog Recovery Planner', path: '/student-tools/backlog-recovery-planner' },
+      };
+    }
+
+    if (q.includes('can i finish') || q.includes('finish syllabus') || q.includes('complete syllabus') || q.includes('finish my syllabus') || q.includes('syllabus calculator')) {
+      return {
+        text: '⏱️ **Can I Finish My Syllabus? Calculator**\n\nInstantly check if your available daily study hours are enough to finish remaining chapters before your exam date, with exact buffer calculations and what-if pace adjustments.',
+        action: { label: 'Check Syllabus Feasibility', path: '/student-tools/can-i-finish-my-syllabus' },
+      };
+    }
+
+    if (q.includes('mock test') || q.includes('mock analyzer') || q.includes('test series') || q.includes('mock score') || q.includes('test accuracy') || q.includes('score trajectory')) {
+      return {
+        text: '📈 **Mock Test Performance Analyzer**\n\nLog mock test scores, view your score trajectory on interactive charts, calculate net accuracy vs negative marking, and identify your strongest and weakest subjects.',
+        action: { label: 'Open Mock Test Analyzer', path: '/student-tools/mock-test-analyzer' },
+      };
+    }
+
     if (q.includes('attendance') || q.includes('bunk') || q.includes('75%') || q.includes('75 percent') || q.includes('skip class') || q.includes('how many classes')) {
       return {
         text: '🎓 **Attendance & Bunk Calculator**\n\nCalculate your exact attendance percentage and see how many classes you can safely bunk while staying above 75%, or how many consecutive classes you must attend to recover.',
