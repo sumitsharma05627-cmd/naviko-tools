@@ -19,14 +19,120 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   examples = []
 }) => {
   useEffect(() => {
-    document.title = `${tool.name} — Free Online Tool | NAVIKO`;
+    // 1. Title
+    const title = tool.seoTitle || `${tool.name} — Free Online Tool | NAVIKO`;
+    document.title = title;
+
+    // 2. Meta description
+    const desc = tool.metaDescription || tool.description;
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', desc);
+
+    // 3. Canonical
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', `https://naviko.in${tool.path}`);
+
+    // 4. OpenGraph tags
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('property', property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    setMeta('og:title', title);
+    setMeta('og:description', desc);
+    setMeta('og:url', `https://naviko.in${tool.path}`);
+
+    // 5. JSON-LD Schema
+    const scriptId = 'tool-jsonld-schema';
+    let scriptEl = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.id = scriptId;
+      scriptEl.type = 'application/ld+json';
+      document.head.appendChild(scriptEl);
+    }
+
+    const schemaData = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebApplication',
+          'name': tool.name,
+          'url': `https://naviko.in${tool.path}`,
+          'description': desc,
+          'applicationCategory': 'UtilitiesApplication',
+          'operatingSystem': 'All',
+          'offers': {
+            '@type': 'Offer',
+            'price': '0',
+            'priceCurrency': 'USD'
+          }
+        },
+        {
+          '@type': 'BreadcrumbList',
+          'itemListElement': [
+            {
+              '@type': 'ListItem',
+              'position': 1,
+              'name': 'Home',
+              'item': 'https://naviko.in/'
+            },
+            {
+              '@type': 'ListItem',
+              'position': 2,
+              'name': tool.categoryName,
+              'item': `https://naviko.in/tools?category=${tool.category}`
+            },
+            {
+              '@type': 'ListItem',
+              'position': 3,
+              'name': tool.name,
+              'item': `https://naviko.in${tool.path}`
+            }
+          ]
+        }
+      ]
+    };
+
+    scriptEl.textContent = JSON.stringify(schemaData);
+
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    return () => {
+      if (scriptEl && scriptEl.parentNode) {
+        scriptEl.parentNode.removeChild(scriptEl);
+      }
+    };
   }, [tool]);
 
-  // Find related tools in same or related categories
-  const relatedTools = TOOLS_DATA.filter(
-    (t) => t.id !== tool.id && (t.category === tool.category || t.popular)
-  ).slice(0, 3);
+  // Find related tools prioritized by tool.relatedToolPaths
+  let relatedTools: ToolMeta[] = [];
+  if (tool.relatedToolPaths && tool.relatedToolPaths.length > 0) {
+    relatedTools = tool.relatedToolPaths
+      .map((p) => TOOLS_DATA.find((t) => t.path === p))
+      .filter((t): t is ToolMeta => t !== undefined)
+      .slice(0, 4);
+  }
+  if (relatedTools.length < 3) {
+    const fallbacks = TOOLS_DATA.filter(
+      (t) => t.id !== tool.id && !relatedTools.some((r) => r.id === t.id) && (t.category === tool.category || t.popular)
+    );
+    relatedTools = [...relatedTools, ...fallbacks].slice(0, 4);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 transition-colors">

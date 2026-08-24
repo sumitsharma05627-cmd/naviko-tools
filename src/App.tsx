@@ -25,6 +25,18 @@ import { SimpleInterestCalculator } from './components/tools/SimpleInterestCalcu
 import { RandomQuestionGenerator } from './components/tools/RandomQuestionGenerator';
 import { StudyTimetableGenerator } from './components/tools/StudyTimetableGenerator';
 
+// New PDF & Image & Student Tools
+import { PdfMerge } from './components/tools/PdfMerge';
+import { PdfCompressor } from './components/tools/PdfCompressor';
+import { JpgToPdf } from './components/tools/JpgToPdf';
+import { PdfToJpg } from './components/tools/PdfToJpg';
+import { PdfSplit } from './components/tools/PdfSplit';
+import { ImageCropper } from './components/tools/ImageCropper';
+import { JpgToPng } from './components/tools/JpgToPng';
+import { PngToJpg } from './components/tools/PngToJpg';
+import { BackgroundRemover } from './components/tools/BackgroundRemover';
+import { AttendanceCalculator } from './components/tools/AttendanceCalculator';
+
 // Finance Tool Components
 import { SipCalculator } from './components/tools/SipCalculator';
 import { LumpSumCalculator } from './components/tools/LumpSumCalculator';
@@ -144,6 +156,42 @@ export default function App() {
     }
     if (path === '/tools/study-timetable-generator') {
       return renderTool(path, StudyTimetableGenerator);
+    }
+
+    // PDF Tools Routes
+    if (path === '/tools/pdf-merge') {
+      return renderTool(path, PdfMerge);
+    }
+    if (path === '/tools/pdf-compressor') {
+      return renderTool(path, PdfCompressor);
+    }
+    if (path === '/tools/jpg-to-pdf') {
+      return renderTool(path, JpgToPdf);
+    }
+    if (path === '/tools/pdf-to-jpg') {
+      return renderTool(path, PdfToJpg);
+    }
+    if (path === '/tools/pdf-split') {
+      return renderTool(path, PdfSplit);
+    }
+
+    // Image Tools Routes
+    if (path === '/tools/image-cropper') {
+      return renderTool(path, ImageCropper);
+    }
+    if (path === '/tools/jpg-to-png') {
+      return renderTool(path, JpgToPng);
+    }
+    if (path === '/tools/png-to-jpg') {
+      return renderTool(path, PngToJpg);
+    }
+    if (path === '/tools/background-remover') {
+      return renderTool(path, BackgroundRemover);
+    }
+
+    // Student Tools Routes
+    if (path === '/tools/attendance-calculator') {
+      return renderTool(path, AttendanceCalculator);
     }
 
     // Finance Tools

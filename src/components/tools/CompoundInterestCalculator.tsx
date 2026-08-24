@@ -50,9 +50,9 @@ export const CompoundInterestCalculator: React.FC = () => {
     let totalInvestedPrincipal = P;
     const yearlyBreakdown = [];
 
-    // Monthly simulation step for maximum precision
+    // Monthly simulation step with accurate compounding frequency conversion
     const totalMonths = t * 12;
-    const monthlyRate = r / 12;
+    const effectiveMonthlyRate = n === 12 ? r / 12 : Math.pow(1 + r / n, n / 12) - 1;
 
     yearlyBreakdown.push({
       year: 'Start',
@@ -81,7 +81,7 @@ export const CompoundInterestCalculator: React.FC = () => {
       }
       
       // Add interest
-      currentBalance += currentBalance * monthlyRate;
+      currentBalance += currentBalance * effectiveMonthlyRate;
 
       if (depositTiming === 'end') {
         currentBalance += addedThisMonth;

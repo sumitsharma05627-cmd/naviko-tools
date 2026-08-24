@@ -60,8 +60,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
   const navLinks = [
     { name: t('nav.home', 'Home'), path: '/' },
     { name: t('nav.student', 'Student Tools'), path: '/student-tools' },
-    { name: t('nav.career', 'Career Tools'), path: '/career-tools' },
+    { name: t('nav.pdf', 'PDF Tools'), path: '/pdf-tools' },
     { name: t('nav.image', 'Image Tools'), path: '/image-tools' },
+    { name: t('nav.career', 'Career Tools'), path: '/career-tools' },
     { name: t('nav.allTools', 'All Tools'), path: '/tools' },
     { name: t('nav.blog', 'Blog'), path: '/blog' },
   ];

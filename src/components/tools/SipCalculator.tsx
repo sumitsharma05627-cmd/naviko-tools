@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { 
   TrendingUp, Copy, Check, Sparkles, PieChart as PieIcon, 
-  Table as TableIcon, Zap, DollarSign, RefreshCw 
+  Table as TableIcon, Zap, DollarSign, RefreshCw, Info, Calendar 
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import confetti from 'canvas-confetti';
 import { formatCurrency, formatNumberWords, CurrencyCode, CURRENCIES } from '../../utils/finance';
 
 export const SipCalculator: React.FC = () => {
-  const [monthlyInvestment, setMonthlyInvestment] = useState<number>(5000);
+  const [monthlyInvestment, setMonthlyInvestment] = useState<number>(10000);
   const [expectedRate, setExpectedRate] = useState<number>(12);
   const [years, setYears] = useState<number>(10);
+  const [investmentTiming, setInvestmentTiming] = useState<'end' | 'beginning'>('end');
   const [stepUpPercent, setStepUpPercent] = useState<number>(0);
   const [adjustInflation, setAdjustInflation] = useState<boolean>(false);
   const [inflationRate, setInflationRate] = useState<number>(6);
@@ -48,19 +49,29 @@ export const SipCalculator: React.FC = () => {
       totalInvested += yearInvestment;
 
       // Compound calculation month by month for accuracy with optional step-up
+      // Ordinary annuity (End of month): balance compounds, then deposit added
+      // Annuity due (Beginning of month): deposit added first, then whole balance compounds
       for (let m = 1; m <= 12; m++) {
-        maturityValue = (maturityValue + currentMonthlySIP) * (1 + monthlyRate);
+        if (investmentTiming === 'beginning') {
+          maturityValue = (maturityValue + currentMonthlySIP) * (1 + monthlyRate);
+        } else {
+          maturityValue = maturityValue * (1 + monthlyRate) + currentMonthlySIP;
+        }
       }
 
       // Inflation adjustment
       const realValue = maturityValue / Math.pow(1 + inflationRate / 100, y);
 
+      const roundedInvested = Math.round(totalInvested);
+      const roundedFuture = Math.round(adjustInflation ? realValue : maturityValue);
+      const roundedGain = Math.max(0, roundedFuture - roundedInvested);
+
       yearlyBreakdown.push({
         year: y,
         investedThisYear: Math.round(yearInvestment),
-        totalInvested: Math.round(totalInvested),
-        wealthGain: Math.round(Math.max(0, maturityValue - totalInvested)),
-        futureValue: Math.round(maturityValue),
+        totalInvested: roundedInvested,
+        wealthGain: roundedGain,
+        futureValue: roundedFuture,
         realValue: Math.round(realValue),
       });
 
@@ -70,12 +81,10 @@ export const SipCalculator: React.FC = () => {
       }
     }
 
-    const finalMaturity = adjustInflation 
-      ? (yearlyBreakdown[yearlyBreakdown.length - 1]?.realValue || 0)
-      : Math.round(maturityValue);
-    
-    const finalInvested = Math.round(totalInvested);
-    const estReturns = Math.round(Math.max(0, finalMaturity - finalInvested));
+    const lastRow = yearlyBreakdown[yearlyBreakdown.length - 1];
+    const finalInvested = lastRow ? lastRow.totalInvested : Math.round(totalInvested);
+    const finalMaturity = lastRow ? lastRow.futureValue : Math.round(maturityValue);
+    const estReturns = lastRow ? lastRow.wealthGain : Math.max(0, finalMaturity - finalInvested);
     const returnsPercentage = finalInvested > 0 ? ((estReturns / finalInvested) * 100).toFixed(1) : '0';
 
     return {
@@ -85,7 +94,7 @@ export const SipCalculator: React.FC = () => {
       returnsPercentage,
       yearlyBreakdown,
     };
-  }, [monthlyInvestment, expectedRate, years, stepUpPercent, adjustInflation, inflationRate]);
+  }, [monthlyInvestment, expectedRate, years, investmentTiming, stepUpPercent, adjustInflation, inflationRate]);
 
   // Trigger celebration on high milestones
   const triggerConfetti = () => {
@@ -103,10 +112,14 @@ export const SipCalculator: React.FC = () => {
 Monthly SIP: ${formatCurrency(monthlyInvestment, currency)}
 Expected Return Rate: ${expectedRate}% p.a.
 Duration: ${years} Years ${stepUpPercent > 0 ? `(Step-up: ${stepUpPercent}%/yr)` : ''}
+Investment Timing: ${investmentTiming === 'end' ? 'End of month (Standard)' : 'Beginning of month'}
 Total Invested: ${formatCurrency(calculation.totalInvested, currency)}
 Est. Wealth Gained: ${formatCurrency(calculation.estReturns, currency)} (+${calculation.returnsPercentage}%)
 Total Future Value: ${formatCurrency(calculation.maturityValue, currency)}
 ${adjustInflation ? `(Adjusted for ${inflationRate}% annual inflation)` : ''}
+
+Calculation method: Monthly SIP with monthly compounding. SIP contributions are assumed to be made at the ${investmentTiming === 'end' ? 'end' : 'beginning'} of each month. Returns shown are estimates and actual investment returns may vary.
+Illustration only. This calculator does not guarantee investment returns.
 Calculated on: https://naviko.in/tools/sip-calculator`;
 
     navigator.clipboard.writeText(text);
@@ -298,6 +311,52 @@ Calculated on: https://naviko.in/tools/sip-calculator`;
             </div>
           </div>
 
+          {/* Investment Timing Setting */}
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                <span>Investment timing</span>
+              </label>
+              <span className="text-xs text-slate-500 font-medium">
+                {investmentTiming === 'end' ? 'Ordinary Annuity' : 'Annuity Due'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setInvestmentTiming('end')}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-0.5 cursor-pointer ${
+                  investmentTiming === 'end'
+                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-2xs ring-1 ring-indigo-500/30'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="flex items-center justify-between">
+                  <span>End of month</span>
+                  {investmentTiming === 'end' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                </span>
+                <span className="text-[11px] font-normal text-slate-500">(Standard)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInvestmentTiming('beginning')}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-0.5 cursor-pointer ${
+                  investmentTiming === 'beginning'
+                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-2xs ring-1 ring-indigo-500/30'
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="flex items-center justify-between">
+                  <span>Beginning of month</span>
+                  {investmentTiming === 'beginning' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                </span>
+                <span className="text-[11px] font-normal text-slate-500">(Compounded)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Advanced Options: Step-Up SIP & Inflation Adjust */}
           <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -462,6 +521,19 @@ Calculated on: https://naviko.in/tools/sip-calculator`;
                 </PieChart>
               </ResponsiveContainer>
             </div>
+          </div>
+
+          {/* Calculation Method Note & Disclaimer */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 text-slate-600 text-xs space-y-2">
+            <div className="flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed text-[11px] sm:text-xs">
+                <strong>Calculation method:</strong> Monthly SIP with monthly compounding. SIP contributions are assumed to be made at the {investmentTiming === 'end' ? 'end' : 'beginning'} of each month. Returns shown are estimates and actual investment returns may vary.
+              </p>
+            </div>
+            <p className="text-[10.5px] text-slate-500 italic pl-6.5">
+              Illustration only. This calculator does not guarantee investment returns.
+            </p>
           </div>
         </div>
       </div>

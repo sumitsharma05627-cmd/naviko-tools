@@ -24,6 +24,9 @@ export interface ToolMeta {
   features?: string[];
   faqs?: { question: string; answer: string }[];
   howToUse?: string[];
+  seoTitle?: string;
+  metaDescription?: string;
+  relatedToolPaths?: string[];
 }
 
 export interface BlogPost {

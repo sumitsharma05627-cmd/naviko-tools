@@ -17,11 +17,11 @@ export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }
   const studentTools = TOOLS_DATA.filter((t) => t.studentHub);
 
   const upcomingTools = [
-    { name: 'Attendance & Bunk Calculator', desc: 'Calculate how many classes you can skip or need to attend for 75% criteria.' },
     { name: 'Pomodoro Study Timer', desc: 'Focus sessions with structured break intervals to maximize retention.' },
     { name: 'Semester Exam Countdown', desc: 'Custom countdown timers for college finals and board exams.' },
     { name: 'Marks to Percentage Converter', desc: 'Multi-subject exam total and grade rank calculator.' },
     { name: 'Essay Citation Generator', desc: 'Format APA, MLA, and Harvard citations easily.' },
+    { name: 'Grade Curve Calculator', desc: 'Standard deviation and percentile-based bell curve calculator.' },
   ];
 
   return (

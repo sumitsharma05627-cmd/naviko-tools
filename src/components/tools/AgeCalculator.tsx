@@ -9,8 +9,13 @@ export const AgeCalculator: React.FC = () => {
   const calculateAge = () => {
     if (!dob || !asOfDate) return null;
 
-    const birthDate = new Date(dob);
-    const targetDate = new Date(asOfDate);
+    const [bY, bM, bD] = dob.split('-').map(Number);
+    const [tY, tM, tD] = asOfDate.split('-').map(Number);
+
+    if (!bY || !bM || !bD || !tY || !tM || !tD) return null;
+
+    const birthDate = new Date(bY, bM - 1, bD);
+    const targetDate = new Date(tY, tM - 1, tD);
 
     if (isNaN(birthDate.getTime()) || isNaN(targetDate.getTime())) return null;
     if (birthDate > targetDate) {

@@ -1081,6 +1081,416 @@ export const TOOLS_DATA: ToolMeta[] = [
         answer: 'High-priority and difficult subjects are scheduled during peak energy hours based on your chronotype, while weekends automatically integrate active recall and revision blocks.'
       }
     ]
+  },
+  {
+    id: 'pdf-merge',
+    name: 'Merge PDF Files',
+    slug: 'pdf-merge',
+    path: '/tools/pdf-merge',
+    category: 'pdf',
+    categoryName: 'PDF Tools',
+    description: 'Combine multiple PDF documents into a single organized file in seconds. Drag-and-drop file reordering, individual page previews, and 100% private in-browser client-side merging.',
+    shortDescription: 'Combine multiple PDF files into one in your browser securely.',
+    iconName: 'FileSpreadsheet',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Merge PDF Online Free — Combine Multiple PDF Files | NAVIKO',
+    metaDescription: 'Merge and combine multiple PDF documents into a single PDF file online for free. 100% secure client-side browser processing with drag-and-drop page reordering.',
+    relatedToolPaths: ['/tools/pdf-split', '/tools/pdf-compressor', '/tools/jpg-to-pdf', '/tools/pdf-to-jpg'],
+    tags: ['pdf merge', 'merge pdf', 'combine pdf', 'join pdf files', 'pdf binder', 'pdf joiner', 'free pdf merger'],
+    features: [
+      'Drag and drop upload for unlimited PDF documents',
+      'Interactive drag-to-reorder cards to adjust document sequence',
+      '100% client-side WebAssembly & JavaScript execution — your files never touch any server',
+      'Shows individual file names, page counts, and sizes',
+      'Instant one-click high-speed merged PDF download'
+    ],
+    howToUse: [
+      'Upload two or more PDF files using drag-and-drop or the file selector.',
+      'Reorder your documents using the up/down controls or drag handles.',
+      'Click "Merge PDF Files" to combine them instantly.',
+      'Click "Download Merged PDF" to save your single combined file.'
+    ],
+    faqs: [
+      {
+        question: 'Are my confidential PDF documents uploaded to your servers?',
+        answer: 'No! NAVIKO processes PDF files directly in your browser using client-side JavaScript. Your files never leave your device.'
+      },
+      {
+        question: 'Is there a limit on how many PDFs I can merge?',
+        answer: 'You can merge as many PDF files as your device memory supports, with zero restrictions or daily quotas.'
+      }
+    ]
+  },
+  {
+    id: 'pdf-compressor',
+    name: 'Compress PDF',
+    slug: 'pdf-compressor',
+    path: '/tools/pdf-compressor',
+    category: 'pdf',
+    categoryName: 'PDF Tools',
+    description: 'Reduce PDF file size quickly without losing text clarity or quality. Perfect for meeting portal upload limits (under 2MB, 500KB, or 100KB) with 3 optimization presets.',
+    shortDescription: 'Reduce PDF file size securely in your browser for job and exam portals.',
+    iconName: 'Minimize2',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Compress PDF Online Free — Reduce PDF File Size | NAVIKO',
+    metaDescription: 'Compress and reduce PDF file size online without losing readability. Meet exam and job application upload limits with fast, private client-side compression.',
+    relatedToolPaths: ['/tools/pdf-merge', '/tools/pdf-split', '/tools/jpg-to-pdf', '/tools/image-compressor'],
+    tags: ['pdf compress', 'compress pdf', 'reduce pdf size', 'shrink pdf', 'pdf under 100kb', 'pdf under 200kb', 'pdf optimizer'],
+    features: [
+      '3 Compression modes: Extreme Compression, Recommended Balance, and High Quality',
+      'Calculates exact percentage and megabyte savings in real-time',
+      'Optimizes document objects, uncompressed metadata, and redundant streams',
+      '100% private browser-based execution with zero file uploads',
+      'Quick target preset badges for government and university portal limits'
+    ],
+    howToUse: [
+      'Select or drop your PDF document.',
+      'Choose your preferred compression level (Recommended, Extreme, or High Quality).',
+      'Click "Compress PDF Document".',
+      'Compare original vs compressed size and download the optimized PDF.'
+    ],
+    faqs: [
+      {
+        question: 'Will text in my compressed PDF remain sharp and searchable?',
+        answer: 'Yes! PDF structure optimization retains standard font vectors and selectable text while stripping duplicate metadata streams.'
+      },
+      {
+        question: 'Is it safe to compress sensitive financial or identity PDFs?',
+        answer: 'Yes, because compression runs 100% locally in your web browser. No files are transmitted across the internet.'
+      }
+    ]
+  },
+  {
+    id: 'jpg-to-pdf',
+    name: 'JPG to PDF Converter',
+    slug: 'jpg-to-pdf',
+    path: '/tools/jpg-to-pdf',
+    category: 'pdf',
+    categoryName: 'PDF Tools',
+    description: 'Convert JPG, PNG, and WebP images into a single professional PDF document. Customize page orientation (Portrait/Landscape), margin spacing, and page sizing (A4, Letter, Fit to Image).',
+    shortDescription: 'Convert JPG & PNG images into a clean multi-page PDF document.',
+    iconName: 'FileText',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'JPG to PDF Converter Free — Convert Images to PDF Online | NAVIKO',
+    metaDescription: 'Convert JPG, PNG, and WebP images to PDF online for free. Arrange pages, set A4 margins, customize orientation, and download high-quality PDFs instantly.',
+    relatedToolPaths: ['/tools/pdf-to-jpg', '/tools/pdf-merge', '/tools/pdf-compressor', '/tools/jpg-to-png'],
+    tags: ['jpg to pdf', 'image to pdf', 'photos to pdf', 'png to pdf', 'convert jpg to pdf', 'create pdf from images', 'photo pdf maker'],
+    features: [
+      'Convert single or batch JPG, PNG, and WebP photos into one organized PDF',
+      'Page size selector: A4 (Standard Document), US Letter, or Fit to Image Dimensions',
+      'Page Orientation: Auto, Portrait (Vertical), or Landscape (Horizontal)',
+      'Margin controls: None, Small (15pt), or Normal (30pt) for printing',
+      'Reorder images before generating the PDF document'
+    ],
+    howToUse: [
+      'Upload one or more JPG, PNG, or WebP images.',
+      'Drag and drop cards or use arrow buttons to arrange your desired page sequence.',
+      'Select your target page size (e.g. A4) and orientation.',
+      'Click "Convert to PDF" and download your document.'
+    ],
+    faqs: [
+      {
+        question: 'Can I combine multiple JPG photos into a single PDF document?',
+        answer: 'Yes! You can select multiple images at once, and each image will be converted into an organized page in your generated PDF.'
+      },
+      {
+        question: 'Which page size should I use for official document submission?',
+        answer: 'A4 is the international standard for most university, job, and government application documents.'
+      }
+    ]
+  },
+  {
+    id: 'pdf-to-jpg',
+    name: 'PDF to JPG Converter',
+    slug: 'pdf-to-jpg',
+    path: '/tools/pdf-to-jpg',
+    category: 'pdf',
+    categoryName: 'PDF Tools',
+    description: 'Extract and convert PDF pages into high-resolution JPG images directly in your browser. Choose render DPI (Standard, High, Ultra-HD), preview all pages, and download as single images or ZIP archive.',
+    shortDescription: 'Convert PDF pages into high-resolution JPG pictures in your browser.',
+    iconName: 'Image',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'PDF to JPG Converter Online Free — Extract High Quality Images | NAVIKO',
+    metaDescription: 'Convert PDF pages into high-quality JPG images for free. Extract individual pages or download all rendered pages in a single ZIP file. 100% private in-browser tool.',
+    relatedToolPaths: ['/tools/jpg-to-pdf', '/tools/pdf-split', '/tools/pdf-merge', '/tools/png-to-jpg'],
+    tags: ['pdf to jpg', 'pdf to image', 'convert pdf to jpeg', 'extract pdf pages as images', 'pdf to picture', 'save pdf as jpg'],
+    features: [
+      'Renders every PDF page to crisp, high-resolution JPG format',
+      'Selectable Render Resolution: Standard (150 DPI), High (200 DPI), or Ultra (300 DPI)',
+      'Live visual thumbnails of all rendered pages with page number badges',
+      'Download individual pages or one-click batch download in a ZIP archive',
+      '100% private client-side rendering with PDF.js'
+    ],
+    howToUse: [
+      'Upload your PDF document by clicking or dropping the file.',
+      'Select your preferred rendering quality (150 DPI to 300 DPI).',
+      'Click "Convert All Pages to JPG".',
+      'Download individual JPG pages or click "Download All (ZIP)".'
+    ],
+    faqs: [
+      {
+        question: 'Can I extract a specific single page from my PDF?',
+        answer: 'Yes! Once converted, every page has its own "Download Page" button so you can save just the pages you need.'
+      },
+      {
+        question: 'How clear will the extracted images be?',
+        answer: 'You can choose between 150 DPI (fast and lightweight) up to 300 DPI (print-quality Ultra HD clarity).'
+      }
+    ]
+  },
+  {
+    id: 'pdf-split',
+    name: 'Split PDF Pages',
+    slug: 'pdf-split',
+    path: '/tools/pdf-split',
+    category: 'pdf',
+    categoryName: 'PDF Tools',
+    description: 'Extract specific pages, page ranges (e.g. 1-3, 5, 8-10), or split all pages into separate PDF files. Fast, secure, and client-side with zero server transmission.',
+    shortDescription: 'Extract page ranges or split all pages into separate PDF files.',
+    iconName: 'Scissors',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Split PDF Online Free — Extract Pages from PDF | NAVIKO',
+    metaDescription: 'Split PDF files online for free. Extract specific page ranges, separate individual pages, or delete unneeded pages from any PDF document safely in your browser.',
+    relatedToolPaths: ['/tools/pdf-merge', '/tools/pdf-compressor', '/tools/pdf-to-jpg', '/tools/jpg-to-pdf'],
+    tags: ['split pdf', 'extract pdf pages', 'separate pdf', 'cut pdf', 'divide pdf', 'extract pages from pdf', 'pdf splitter'],
+    features: [
+      'Extract custom page ranges with intuitive syntax (e.g., "1-3, 5, 8-12")',
+      'Separate every page into individual single-page PDF files bundled in a ZIP',
+      'Interactive visual thumbnail grid with page count indicators',
+      '100% private browser-based PDF processing',
+      'Instant download with zero file size restrictions'
+    ],
+    howToUse: [
+      'Upload the PDF file you want to split or extract from.',
+      'Choose "Custom Range" to extract specific pages (e.g. 1-4, 7) or "Split Every Page".',
+      'Click "Split & Extract PDF".',
+      'Download your extracted PDF or ZIP archive.'
+    ],
+    faqs: [
+      {
+        question: 'How do I specify multiple page ranges?',
+        answer: 'You can use commas and hyphens, for example: "1-3, 5, 8-10" will extract pages 1, 2, 3, 5, 8, 9, and 10 into your new PDF.'
+      },
+      {
+        question: 'Are my original PDF files modified or overwritten?',
+        answer: 'No. The tool generates a new output document in your browser memory; your original source file remains untouched.'
+      }
+    ]
+  },
+  {
+    id: 'image-cropper',
+    name: 'Image Cropper',
+    slug: 'image-cropper',
+    path: '/tools/image-cropper',
+    category: 'image',
+    categoryName: 'Image Tools',
+    description: 'Crop images with precision aspect ratios (1:1 Square, 16:9 Landscape, 4:3, 3:2, Passport Photo 35x45mm, and Freeform). Rotate, flip, zoom, and download in PNG, JPG, or WebP.',
+    shortDescription: 'Crop, rotate, and frame photos with standard aspect ratios and passport presets.',
+    iconName: 'Crop',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    seoTitle: 'Image Cropper Online Free — Crop Photos to Exact Aspect Ratio | NAVIKO',
+    metaDescription: 'Crop images online for free with exact aspect ratios (1:1, 16:9, 4:3, Passport photo 35x45mm). Rotate, zoom, and export in PNG, JPG, or WebP format.',
+    relatedToolPaths: ['/tools/image-resizer', '/tools/image-compressor', '/tools/background-remover', '/tools/jpg-to-png'],
+    tags: ['image cropper', 'crop photo', 'crop image online', 'aspect ratio crop', 'passport photo crop', 'square crop', 'photo trimmer'],
+    features: [
+      'Aspect ratio presets: Freeform, 1:1 Square, 16:9 Banner, 4:3 Standard, 3:2 Photography, and 35×45mm Passport',
+      'Interactive draggable crop handles with rule-of-thirds grid alignment overlay',
+      'Image transformations: 90° Clockwise Rotation, Horizontal Flip, and Zoom Controls',
+      'Export format options: PNG (Lossless), JPG (Optimized), or WebP with quality slider',
+      'Displays live output pixel dimensions and estimated file size'
+    ],
+    howToUse: [
+      'Upload a JPG, PNG, or WebP photo.',
+      'Select your desired aspect ratio preset (e.g. 1:1 for Instagram or 35x45mm for Passport).',
+      'Drag and resize the crop selection box over your subject.',
+      'Click "Apply Crop & Download" to save the cropped picture.'
+    ],
+    faqs: [
+      {
+        question: 'Can I crop photos for passport and visa applications?',
+        answer: 'Yes! Select the "Passport (35×45mm)" ratio preset to frame your head and shoulders according to standard official visa requirements.'
+      },
+      {
+        question: 'Does cropping reduce photo quality?',
+        answer: 'Cropping extracts your chosen pixel region directly from the original source image at maximum clarity.'
+      }
+    ]
+  },
+  {
+    id: 'jpg-to-png',
+    name: 'JPG to PNG Converter',
+    slug: 'jpg-to-png',
+    path: '/tools/jpg-to-png',
+    category: 'image',
+    categoryName: 'Image Tools',
+    description: 'Convert JPG and JPEG photos into lossless PNG format with transparent background color replacement options, batch processing, and ZIP download.',
+    shortDescription: 'Convert JPG images to lossless PNG format with transparency options.',
+    iconName: 'Image',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    seoTitle: 'JPG to PNG Converter Online Free — Convert JPEG to PNG Lossless | NAVIKO',
+    metaDescription: 'Convert JPG images to lossless PNG format online for free. Support for batch conversion, optional transparent backdrop replacement, and ZIP download.',
+    relatedToolPaths: ['/tools/png-to-jpg', '/tools/image-cropper', '/tools/image-compressor', '/tools/background-remover'],
+    tags: ['jpg to png', 'jpeg to png', 'convert jpg to png', 'image converter', 'lossless png', 'photo to png'],
+    features: [
+      'Batch conversion of multiple JPG images to lossless PNG in seconds',
+      'Smart transparency option: key out white backgrounds into transparent alpha channels',
+      'Side-by-side preview with original and converted pixel metrics',
+      'Download individual PNG files or all at once via ZIP archive',
+      '100% private in-browser HTML5 Canvas conversion'
+    ],
+    howToUse: [
+      'Upload one or more JPG images.',
+      'Optionally toggle transparent background if converting logos or graphics with white backdrops.',
+      'Click "Convert to PNG".',
+      'Download individual PNG files or click "Download All (ZIP)".'
+    ],
+    faqs: [
+      {
+        question: 'Why convert JPG to PNG?',
+        answer: 'PNG uses lossless compression and supports alpha channel transparency, making it ideal for graphics, logos, icons, and text-heavy images.'
+      },
+      {
+        question: 'Can I convert multiple JPGs at the same time?',
+        answer: 'Yes! You can drag and drop dozens of photos and download them all with one click in a ZIP archive.'
+      }
+    ]
+  },
+  {
+    id: 'png-to-jpg',
+    name: 'PNG to JPG Converter',
+    slug: 'png-to-jpg',
+    path: '/tools/png-to-jpg',
+    category: 'image',
+    categoryName: 'Image Tools',
+    description: 'Convert heavy PNG images into lightweight, optimized JPG files. Customize background color for transparent areas (White, Black, or Custom Color) and adjust quality.',
+    shortDescription: 'Convert PNG images to lightweight JPG photos with background color controls.',
+    iconName: 'Image',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    seoTitle: 'PNG to JPG Converter Online Free — Reduce Image Size | NAVIKO',
+    metaDescription: 'Convert PNG images to JPG format online for free. Replace transparency with white or custom background color and reduce file size by up to 80%.',
+    relatedToolPaths: ['/tools/jpg-to-png', '/tools/image-compressor', '/tools/image-resizer', '/tools/background-remover'],
+    tags: ['png to jpg', 'convert png to jpeg', 'png to jpg converter', 'reduce png size', 'png converter', 'image format converter'],
+    features: [
+      'Convert transparent or opaque PNGs to high-compression JPG format',
+      'Custom background color selection (White, Black, Off-White, or Hex Color Picker) for transparent PNGs',
+      'Adjustable JPG compression quality slider (50% to 100%)',
+      'Calculates file size reduction percentage for each image',
+      'Batch conversion with one-click ZIP download'
+    ],
+    howToUse: [
+      'Select or drop your PNG image files.',
+      'Choose the background fill color for transparent sections (White is standard).',
+      'Adjust compression quality to your preference (default is 92%).',
+      'Click "Convert to JPG" and download your converted images.'
+    ],
+    faqs: [
+      {
+        question: 'What happens to transparent backgrounds when converted to JPG?',
+        answer: 'Because JPG does not support transparency, transparent areas are filled with your chosen background color (e.g. pure white).'
+      },
+      {
+        question: 'How much file size reduction can I expect?',
+        answer: 'PNG to JPG conversion frequently reduces file size by 60% to 85%, making pictures load much faster on websites and emails.'
+      }
+    ]
+  },
+  {
+    id: 'background-remover',
+    name: 'Background Remover',
+    slug: 'background-remover',
+    path: '/tools/background-remover',
+    category: 'image',
+    categoryName: 'Image Tools',
+    description: 'Isolate subjects and remove image backgrounds instantly in your browser. Color keying, eyedropper sampling, edge feathering, and solid backdrop replacement with transparent PNG download.',
+    shortDescription: 'Remove image backgrounds and isolate subjects 100% in your browser.',
+    iconName: 'Scissors',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    seoTitle: 'Background Remover Online Free — Remove Image Backgrounds | NAVIKO',
+    metaDescription: 'Remove photo backgrounds online for free. Isolate product photos, signatures, and portraits with edge feathering and instant transparent PNG download.',
+    relatedToolPaths: ['/tools/image-cropper', '/tools/jpg-to-png', '/tools/png-to-jpg', '/tools/image-compressor'],
+    tags: ['background remover', 'remove background', 'transparent background', 'transparent png', 'cutout photo', 'remove white background', 'bg remover'],
+    features: [
+      'Client-side color segmentation and edge-detection engine',
+      'Interactive Eyedropper tool: sample any background color directly on your image',
+      'Tolerance and edge softness sliders for smooth, halo-free subject boundaries',
+      'Background replacement modes: Transparent PNG, Pure White, or Solid Color Backdrop',
+      '100% private browser processing — zero image uploads to any remote server'
+    ],
+    howToUse: [
+      'Upload your photo, signature, or graphic.',
+      'The tool auto-detects the background color, or use the Eyedropper to click any background pixel.',
+      'Adjust the Tolerance and Edge Softness sliders until your subject is cleanly isolated.',
+      'Click "Download Transparent PNG".'
+    ],
+    faqs: [
+      {
+        question: 'Can I remove backgrounds from signatures and scanned logos?',
+        answer: 'Yes! Use the eyedropper to click the paper background, adjust tolerance, and download a clean transparent PNG signature for digital documents.'
+      },
+      {
+        question: 'Are my private photos uploaded to a cloud server?',
+        answer: 'No. The entire background removal algorithm executes locally in your browser memory using HTML5 Canvas.'
+      }
+    ]
+  },
+  {
+    id: 'attendance-calculator',
+    name: 'Attendance Calculator',
+    slug: 'attendance-calculator',
+    path: '/tools/attendance-calculator',
+    category: 'student',
+    categoryName: 'Student & Study Tools',
+    description: 'Calculate college and school attendance percentage, find out how many classes you MUST attend to reach 75% or 80%, or how many classes you can safely miss (bunk) without falling short.',
+    shortDescription: 'Calculate attendance %, safe bunks allowed, and classes needed for 75%.',
+    iconName: 'GraduationCap',
+    popular: true,
+    studentHub: true,
+    status: 'active',
+    seoTitle: 'Attendance Calculator — Calculate 75% Criteria & Safe Bunks | NAVIKO',
+    metaDescription: 'Calculate your college attendance percentage online. Find out how many classes you can safely miss or how many consecutive classes you must attend to reach 75% or 80%.',
+    relatedToolPaths: ['/tools/cgpa-calculator', '/tools/study-timetable-generator', '/tools/percentage-calculator', '/tools/random-question-generator'],
+    tags: ['attendance calculator', 'college attendance', 'bunk calculator', '75 percent attendance', 'attendance percentage', 'student attendance', 'semester attendance'],
+    features: [
+      'Instant attendance percentage calculation with live visual progress meter',
+      'Safe Bunks Calculator: calculates exact number of classes you can miss while staying above target',
+      'Shortage Recovery: calculates consecutive classes required to reach 75%, 80%, or 85%',
+      'Subject-Wise Multi-Course Tracker: monitor individual subjects and total aggregate attendance',
+      'Quick target preset buttons (65%, 75%, 80%, 85%)'
+    ],
+    howToUse: [
+      'Enter your total classes conducted and classes attended.',
+      'Set your target attendance percentage (e.g. 75%).',
+      'Read your customized advice (Safe bunks buffer vs Required recovery classes).',
+      'Switch to the "Subject-Wise Tracker" tab to calculate attendance across multiple course subjects.'
+    ],
+    faqs: [
+      {
+        question: 'How do you calculate how many classes you can safely bunk?',
+        answer: 'Formula: Safe Bunks = Floor((Attended Classes - (Target% / 100) × Total Classes) / (Target% / 100)). If positive, you can miss that many classes without dropping below your target.'
+      },
+      {
+        question: 'How do you calculate classes needed to reach 75% attendance?',
+        answer: 'Formula: Required Classes = Ceil(((Target% / 100) × Total Classes - Attended Classes) / (1 - (Target% / 100))).'
+      }
+    ]
   }
 ];
 
@@ -1105,26 +1515,35 @@ export const CATEGORIES_META = [
   {
     id: 'calculators',
     title: 'Calculators',
-    description: 'Standard number, scientific, percentage, age, and numerical math calculators.',
+    description: 'Standard number, scientific, percentage, age, discount, and numerical math calculators.',
     icon: 'Calculator',
     path: '/calculators',
-    toolsCount: 5
+    toolsCount: 6
   },
   {
     id: 'student',
     title: 'Student Tools',
-    description: 'Essential utilities for students, exams, grading, and everyday study productivity.',
+    description: 'Attendance calculator, CGPA converters, Study timetables, and question flashcards for exam productivity.',
     icon: 'GraduationCap',
     path: '/student-tools',
-    toolsCount: 6
+    toolsCount: 7
+  },
+  {
+    id: 'pdf',
+    title: 'PDF Tools',
+    description: 'Merge, split, compress, and convert PDF documents 100% privately in your browser.',
+    icon: 'FileSpreadsheet',
+    path: '/pdf-tools',
+    toolsCount: 5,
+    isComingSoon: false
   },
   {
     id: 'image',
     title: 'Image Tools',
-    description: 'Fast, browser-based image compression and dimension resizing without privacy risks.',
+    description: 'Crop, resize, compress, convert JPG/PNG, and remove backgrounds with client-side privacy.',
     icon: 'Image',
     path: '/image-tools',
-    toolsCount: 2
+    toolsCount: 6
   },
   {
     id: 'career',
@@ -1133,15 +1552,6 @@ export const CATEGORIES_META = [
     icon: 'Briefcase',
     path: '/career-tools',
     toolsCount: 2
-  },
-  {
-    id: 'pdf',
-    title: 'PDF Tools',
-    description: 'Upcoming suite of browser-based PDF utilities: Merge, Split, Compress, and Convert.',
-    icon: 'FileSpreadsheet',
-    path: '/pdf-tools',
-    toolsCount: 5,
-    isComingSoon: true
   },
   {
     id: 'other',

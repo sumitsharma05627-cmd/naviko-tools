@@ -40,9 +40,7 @@ export const WordCounter: React.FC = () => {
     setText(
       text
         .toLowerCase()
-        .split(' ')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ')
+        .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase())
     );
   };
   const removeExtraSpaces = () => {

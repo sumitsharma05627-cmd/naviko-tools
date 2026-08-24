@@ -23,12 +23,118 @@
   </url>
   <url>
     <loc>https://naviko.in/pdf-tools</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/image-tools</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/career-tools</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://naviko.in/blog</loc>
     <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- PDF Tools -->
+  <url>
+    <loc>https://naviko.in/tools/pdf-merge</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/pdf-compressor</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/jpg-to-pdf</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/pdf-to-jpg</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/pdf-split</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Image Tools -->
+  <url>
+    <loc>https://naviko.in/tools/image-cropper</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/jpg-to-png</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/png-to-jpg</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/background-remover</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/image-compressor</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/image-resizer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/qr-code-generator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Student & Education Tools -->
+  <url>
+    <loc>https://naviko.in/tools/attendance-calculator</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/cgpa-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/random-question-generator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/study-timetable-generator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/typing-speed-test</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/tools/resume-builder</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
@@ -50,11 +156,6 @@
   </url>
   <url>
     <loc>https://naviko.in/tools/age-calculator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/cgpa-calculator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -142,45 +243,6 @@
   </url>
   <url>
     <loc>https://naviko.in/tools/budget-calculator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Image & Media Tools -->
-  <url>
-    <loc>https://naviko.in/tools/image-compressor</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/image-resizer</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/qr-code-generator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Career & Education Tools -->
-  <url>
-    <loc>https://naviko.in/tools/typing-speed-test</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/resume-builder</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/random-question-generator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://naviko.in/tools/study-timetable-generator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

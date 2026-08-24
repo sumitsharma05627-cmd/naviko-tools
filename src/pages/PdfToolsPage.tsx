@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { FileSpreadsheet, ArrowRight, Sparkles, ShieldCheck, Clock, Layers, Scissors, Minimize2, FileImage, Image } from 'lucide-react';
+import {
+  FileSpreadsheet,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  Layers,
+  Scissors,
+  Minimize2,
+  FileImage,
+  Image as ImageIcon
+} from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 
 interface PdfToolsPageProps {
@@ -8,89 +18,100 @@ interface PdfToolsPageProps {
 
 export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
   useEffect(() => {
-    document.title = 'PDF Tools (Coming Soon) — NAVIKO';
+    document.title = 'Free Online PDF Tools (100% Private & Browser-Based) — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
   const pdfTools = [
     {
-      id: 'merge-pdf',
-      name: 'Merge PDF',
+      id: 'pdf-merge',
+      name: 'Merge PDF Files',
+      path: '/tools/pdf-merge',
       description: 'Combine multiple PDF documents into one organized file in your preferred order.',
       icon: Layers,
+      tag: 'Popular'
     },
     {
-      id: 'split-pdf',
-      name: 'Split PDF',
-      description: 'Extract specific page ranges or split large multi-page PDF documents into individual pages.',
-      icon: Scissors,
-    },
-    {
-      id: 'compress-pdf',
+      id: 'pdf-compressor',
       name: 'Compress PDF',
-      description: 'Reduce PDF file size for fast email attachments while maintaining optimal text sharpness.',
+      path: '/tools/pdf-compressor',
+      description: 'Reduce PDF file size for fast portal uploads and emails while maintaining optimal text sharpness.',
       icon: Minimize2,
+      tag: 'Optimized'
     },
     {
       id: 'jpg-to-pdf',
-      name: 'JPG to PDF',
-      description: 'Convert JPG, PNG, and photo scans into high-quality standardized PDF documents.',
+      name: 'JPG to PDF Converter',
+      path: '/tools/jpg-to-pdf',
+      description: 'Convert JPG, PNG, and photo scans into high-quality standardized A4/Letter PDF documents.',
       icon: FileImage,
+      tag: 'Fast'
     },
     {
       id: 'pdf-to-jpg',
-      name: 'PDF to JPG',
-      description: 'Convert each page of a PDF document into high-resolution JPG or PNG image files.',
-      icon: Image,
+      name: 'PDF to JPG Converter',
+      path: '/tools/pdf-to-jpg',
+      description: 'Extract and convert each page of a PDF document into high-resolution JPG pictures.',
+      icon: ImageIcon,
+      tag: 'High-Res'
     },
+    {
+      id: 'pdf-split',
+      name: 'Split PDF Pages',
+      path: '/tools/pdf-split',
+      description: 'Extract specific page ranges (e.g., 1-4, 7) or separate large multi-page PDFs into single pages.',
+      icon: Scissors,
+      tag: 'Instant'
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-10">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold mb-3">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Currently in Active Development</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold mb-3">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>100% Client-Side Privacy — Zero Server Uploads</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Browser-Based PDF Utilities
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Free Online PDF Utilities
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-slate-600">
-            We are building 100% private, client-side WebAssembly PDF tools with zero server uploads. Coming in our next scheduled release.
+          <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400">
+            Merge, compress, split, and convert PDF documents directly in your browser. Fast, secure, and completely free with no file limits.
           </p>
         </div>
 
-        {/* Coming Soon Tool Cards */}
+        {/* Active Tool Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {pdfTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <div
                 key={tool.id}
-                className="p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between"
+                onClick={() => onNavigate(tool.path)}
+                className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider font-extrabold bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                      Coming Soon
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
+                      {tool.tag}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {tool.name}
                   </h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                     {tool.description}
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                  <span>100% Client-Side Engine</span>
-                  <span className="font-mono text-[11px]">v1.1 Release</span>
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-bold">
+                  <span>Open Tool</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             );
@@ -102,21 +123,21 @@ export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
         <MobileAdSlot className="mb-8" />
 
         {/* Privacy Note */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center max-w-2xl mx-auto shadow-xs">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-8 text-center max-w-2xl mx-auto shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">
-            Why We Don't Use Server-Side PDF Converters
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            Why NAVIKO PDF Tools Are 100% Secure
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-            Most online PDF tools upload your sensitive contracts, marksheets, and personal documents to unknown remote servers. At NAVIKO, we are committed to client-only WebAssembly execution so your documents never leave your device.
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+            Most online PDF tools upload your sensitive contracts, marksheets, and personal documents to remote cloud servers. At NAVIKO, all PDF processing executes locally in your browser memory using WebAssembly &amp; JavaScript. Your documents never leave your computer or phone.
           </p>
           <button
             onClick={() => onNavigate('/tools')}
-            className="mt-5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+            className="mt-5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
           >
-            Explore Active Working Tools →
+            Explore All 25+ Tools →
           </button>
         </div>
       </div>
