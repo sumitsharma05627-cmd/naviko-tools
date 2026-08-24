@@ -1,0 +1,3 @@
+# SPA Routing Fallback for Netlify, Cloudflare Pages, and static web servers
+# Redirect all routes to index.html with 200 HTTP status
+/*    /index.html   200

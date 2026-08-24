@@ -1545,7 +1545,7 @@ export const TOOLS_DATA: ToolMeta[] = [
   {
     id: 'backlog-recovery-planner',
     name: 'Backlog Recovery Planner',
-    slug: 'student-tools/backlog-recovery-planner',
+    slug: 'backlog-recovery-planner',
     path: '/student-tools/backlog-recovery-planner',
     category: 'student',
     categoryName: 'Student & Study Tools',
@@ -1688,20 +1688,36 @@ export const TOOLS_DATA: ToolMeta[] = [
 ];
 
 export const getToolByPath = (path: string): ToolMeta | undefined => {
-  const cleanPath = path.split('?')[0].replace(/\/$/, '') || '/';
+  const cleanPath = path.split('?')[0].toLowerCase().replace(/\/$/, '') || '/';
   
-  // Direct match
-  const direct = TOOLS_DATA.find((t) => t.path === cleanPath);
+  // 1. Direct exact path match
+  const direct = TOOLS_DATA.find((t) => t.path.toLowerCase() === cleanPath);
   if (direct) return direct;
 
-  // Match /student-tools/... vs /tools/...
-  if (cleanPath.startsWith('/student-tools/')) {
-    const slug = cleanPath.replace('/student-tools/', '');
-    return TOOLS_DATA.find((t) => t.slug === slug || t.path === cleanPath || t.path === `/tools/${slug}`);
+  // 2. Direct slug or id match
+  const directSlug = TOOLS_DATA.find((t) => t.slug.toLowerCase() === cleanPath || t.id.toLowerCase() === cleanPath);
+  if (directSlug) return directSlug;
+
+  // 3. Extract last segment (slug) from path prefixes like /tools/..., /student-tools/..., /finance-tools/..., /pdf-tools/..., /image-tools/..., /career-tools/..., /calculators/...
+  const segments = cleanPath.split('/').filter(Boolean);
+  if (segments.length > 0) {
+    const lastSegment = segments[segments.length - 1];
+    const matchBySlug = TOOLS_DATA.find((t) => 
+      t.slug.toLowerCase() === lastSegment || 
+      t.id.toLowerCase() === lastSegment
+    );
+    if (matchBySlug) return matchBySlug;
   }
-  if (cleanPath.startsWith('/tools/')) {
-    const slug = cleanPath.replace('/tools/', '');
-    return TOOLS_DATA.find((t) => t.slug === slug || t.path === cleanPath || t.path === `/student-tools/${slug}`);
+
+  // 4. Check specific legacy/alias paths
+  if (cleanPath === '/tools/budget-planner' || cleanPath === '/budget' || cleanPath === '/budget-planner') {
+    return TOOLS_DATA.find((t) => t.id === 'budget-calculator');
+  }
+  if (cleanPath === '/tools/india-debt-clock' || cleanPath === '/debt-clock') {
+    return TOOLS_DATA.find((t) => t.id === 'debt-clock');
+  }
+  if (cleanPath === '/tools/random-study-question-generator') {
+    return TOOLS_DATA.find((t) => t.id === 'random-question-generator');
   }
 
   return undefined;

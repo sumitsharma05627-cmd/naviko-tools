@@ -69,8 +69,59 @@ import { ContactPage } from './pages/ContactPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsPage } from './pages/TermsPage';
 import { DisclaimerPage } from './pages/DisclaimerPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 import { getToolByPath } from './data/toolsData';
+
+// Central Tool Component Registry for dynamic routing
+const TOOL_COMPONENTS: Record<string, React.FC> = {
+  'number-calculator': NumberCalculator,
+  'scientific-calculator': ScientificCalculator,
+  'percentage-calculator': PercentageCalculator,
+  'age-calculator': AgeCalculator,
+  'cgpa-calculator': CgpaCalculator,
+  'unit-converter': UnitConverter,
+  'word-counter': WordCounter,
+  'image-compressor': ImageCompressor,
+  'image-resizer': ImageResizer,
+  'qr-code-generator': QrCodeGenerator,
+  'typing-speed-test': TypingSpeedTest,
+  'resume-builder': ResumeBuilder,
+  'discount-calculator': DiscountCalculator,
+  'simple-interest-calculator': SimpleInterestCalculator,
+  'random-question-generator': RandomQuestionGenerator,
+  'random-study-question-generator': RandomQuestionGenerator,
+  'study-timetable-generator': StudyTimetableGenerator,
+  'pdf-merge': PdfMerge,
+  'pdf-compressor': PdfCompressor,
+  'jpg-to-pdf': JpgToPdf,
+  'pdf-to-jpg': PdfToJpg,
+  'pdf-split': PdfSplit,
+  'image-cropper': ImageCropper,
+  'jpg-to-png': JpgToPng,
+  'png-to-jpg': PngToJpg,
+  'background-remover': BackgroundRemover,
+  'attendance-calculator': AttendanceCalculator,
+  'study-decision-planner': StudyDecisionPlanner,
+  'backlog-recovery-planner': BacklogRecoveryPlanner,
+  'can-i-finish-my-syllabus': CanIFinishMySyllabus,
+  'mock-test-analyzer': MockTestAnalyzer,
+  'sip-calculator': SipCalculator,
+  'lump-sum-calculator': LumpSumCalculator,
+  'emi-calculator': EmiCalculator,
+  'loan-calculator': LoanCalculator,
+  'gst-calculator': GstCalculator,
+  'compound-interest-calculator': CompoundInterestCalculator,
+  'salary-calculator': SalaryCalculator,
+  'cagr-calculator': CagrCalculator,
+  'fd-calculator': FdCalculator,
+  'fire-calculator': FireCalculator,
+  'inflation-calculator': InflationCalculator,
+  'debt-clock': DebtClock,
+  'india-debt-clock': DebtClock,
+  'budget-calculator': BudgetCalculator,
+  'budget-planner': BudgetCalculator,
+};
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => {
@@ -99,7 +150,15 @@ export default function App() {
   // Render Tool wrapper
   const renderTool = (path: string, Component: React.FC) => {
     const toolMeta = getToolByPath(path);
-    if (!toolMeta) return <HomePage onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    if (!toolMeta) {
+      return (
+        <NotFoundPage
+          onNavigate={navigate}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          requestedPath={path}
+        />
+      );
+    }
 
     return (
       <ToolLayout tool={toolMeta} onNavigate={navigate}>
@@ -110,153 +169,26 @@ export default function App() {
 
   // Route matching
   const renderContent = () => {
-    const path = currentPath.toLowerCase().replace(/\/$/, '') || '/';
+    const rawPath = currentPath.toLowerCase().trim();
+    const path = rawPath.replace(/\/$/, '') || '/';
 
-    // Tool Routes
-    if (path === '/tools/number-calculator') {
-      return renderTool(path, NumberCalculator);
-    }
-    if (path === '/tools/scientific-calculator') {
-      return renderTool(path, ScientificCalculator);
-    }
-    if (path === '/tools/percentage-calculator') {
-      return renderTool(path, PercentageCalculator);
-    }
-    if (path === '/tools/age-calculator') {
-      return renderTool(path, AgeCalculator);
-    }
-    if (path === '/tools/cgpa-calculator') {
-      return renderTool(path, CgpaCalculator);
-    }
-    if (path === '/tools/unit-converter') {
-      return renderTool(path, UnitConverter);
-    }
-    if (path === '/tools/word-counter') {
-      return renderTool(path, WordCounter);
-    }
-    if (path === '/tools/image-compressor') {
-      return renderTool(path, ImageCompressor);
-    }
-    if (path === '/tools/image-resizer') {
-      return renderTool(path, ImageResizer);
-    }
-    if (path === '/tools/qr-code-generator') {
-      return renderTool(path, QrCodeGenerator);
-    }
-    if (path === '/tools/typing-speed-test') {
-      return renderTool(path, TypingSpeedTest);
-    }
-    if (path === '/tools/resume-builder') {
-      return renderTool(path, ResumeBuilder);
-    }
-    if (path === '/tools/discount-calculator') {
-      return renderTool(path, DiscountCalculator);
-    }
-    if (path === '/tools/simple-interest-calculator') {
-      return renderTool(path, SimpleInterestCalculator);
-    }
-    if (path === '/tools/random-question-generator' || path === '/tools/random-study-question-generator') {
-      return renderTool('/tools/random-question-generator', RandomQuestionGenerator);
-    }
-    if (path === '/tools/study-timetable-generator') {
-      return renderTool(path, StudyTimetableGenerator);
+    // 1. Home Route
+    if (path === '/' || path === '') {
+      return <HomePage onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
     }
 
-    // PDF Tools Routes
-    if (path === '/tools/pdf-merge') {
-      return renderTool(path, PdfMerge);
+    // 2. Hub & Category Pages
+    if (path === '/tools') {
+      return <AllToolsPage onNavigate={navigate} />;
     }
-    if (path === '/tools/pdf-compressor') {
-      return renderTool(path, PdfCompressor);
+    if (path === '/student-tools') {
+      return <StudentToolsPage onNavigate={navigate} />;
     }
-    if (path === '/tools/jpg-to-pdf') {
-      return renderTool(path, JpgToPdf);
-    }
-    if (path === '/tools/pdf-to-jpg') {
-      return renderTool(path, PdfToJpg);
-    }
-    if (path === '/tools/pdf-split') {
-      return renderTool(path, PdfSplit);
-    }
-
-    // Image Tools Routes
-    if (path === '/tools/image-cropper') {
-      return renderTool(path, ImageCropper);
-    }
-    if (path === '/tools/jpg-to-png') {
-      return renderTool(path, JpgToPng);
-    }
-    if (path === '/tools/png-to-jpg') {
-      return renderTool(path, PngToJpg);
-    }
-    if (path === '/tools/background-remover') {
-      return renderTool(path, BackgroundRemover);
-    }
-
-    // Student Tools Routes
-    if (path === '/tools/attendance-calculator' || path === '/student-tools/attendance-calculator') {
-      return renderTool(path, AttendanceCalculator);
-    }
-    if (path === '/student-tools/study-decision-planner' || path === '/tools/study-decision-planner') {
-      return renderTool(path, StudyDecisionPlanner);
-    }
-    if (path === '/student-tools/backlog-recovery-planner' || path === '/tools/backlog-recovery-planner') {
-      return renderTool(path, BacklogRecoveryPlanner);
-    }
-    if (path === '/student-tools/can-i-finish-my-syllabus' || path === '/tools/can-i-finish-my-syllabus') {
-      return renderTool(path, CanIFinishMySyllabus);
-    }
-    if (path === '/student-tools/mock-test-analyzer' || path === '/tools/mock-test-analyzer') {
-      return renderTool(path, MockTestAnalyzer);
-    }
-
-    // Finance Tools
-    if (path === '/tools/sip-calculator') {
-      return renderTool(path, SipCalculator);
-    }
-    if (path === '/tools/lump-sum-calculator') {
-      return renderTool(path, LumpSumCalculator);
-    }
-    if (path === '/tools/emi-calculator') {
-      return renderTool(path, EmiCalculator);
-    }
-    if (path === '/tools/loan-calculator') {
-      return renderTool(path, LoanCalculator);
-    }
-    if (path === '/tools/gst-calculator') {
-      return renderTool(path, GstCalculator);
-    }
-    if (path === '/tools/compound-interest-calculator') {
-      return renderTool(path, CompoundInterestCalculator);
-    }
-    if (path === '/tools/salary-calculator') {
-      return renderTool(path, SalaryCalculator);
-    }
-    if (path === '/tools/cagr-calculator') {
-      return renderTool(path, CagrCalculator);
-    }
-    if (path === '/tools/fd-calculator') {
-      return renderTool(path, FdCalculator);
-    }
-    if (path === '/tools/fire-calculator') {
-      return renderTool(path, FireCalculator);
-    }
-    if (path === '/tools/inflation-calculator') {
-      return renderTool(path, InflationCalculator);
-    }
-    if (path === '/tools/debt-clock' || path === '/debt-clock' || path === '/tools/india-debt-clock') {
-      return renderTool('/tools/debt-clock', DebtClock);
-    }
-    if (path === '/tools/budget-calculator' || path === '/budget' || path === '/budget-planner' || path === '/tools/budget-planner') {
-      return renderTool('/tools/budget-calculator', BudgetCalculator);
-    }
-
-    // Category Shortcuts
     if (path === '/finance-tools' || path === '/calculators/finance') {
       return <FinanceToolsPage onNavigate={navigate} />;
     }
-    if (path === '/calculators') {
-      return <AllToolsPage onNavigate={navigate} initialCategory="calculators" />;
+    if (path === '/pdf-tools') {
+      return <PdfToolsPage onNavigate={navigate} />;
     }
     if (path === '/image-tools') {
       return <AllToolsPage onNavigate={navigate} initialCategory="image" />;
@@ -264,19 +196,11 @@ export default function App() {
     if (path === '/career-tools') {
       return <AllToolsPage onNavigate={navigate} initialCategory="career" />;
     }
-
-    // Hub Pages
-    if (path === '/tools') {
-      return <AllToolsPage onNavigate={navigate} />;
-    }
-    if (path === '/student-tools') {
-      return <StudentToolsPage onNavigate={navigate} />;
-    }
-    if (path === '/pdf-tools') {
-      return <PdfToolsPage onNavigate={navigate} />;
+    if (path === '/calculators') {
+      return <AllToolsPage onNavigate={navigate} initialCategory="calculators" />;
     }
 
-    // Blog
+    // 3. Blog Routes
     if (path === '/blog') {
       return <BlogPage onNavigate={navigate} />;
     }
@@ -285,25 +209,49 @@ export default function App() {
       return <BlogPostDetail slug={slug} onNavigate={navigate} />;
     }
 
-    // Legal / Info
+    // 4. Legal / Info Pages
     if (path === '/about') {
       return <AboutPage onNavigate={navigate} />;
     }
     if (path === '/contact') {
       return <ContactPage />;
     }
-    if (path === '/privacy-policy') {
+    if (path === '/privacy-policy' || path === '/privacy') {
       return <PrivacyPolicyPage />;
     }
-    if (path === '/terms') {
+    if (path === '/terms' || path === '/terms-of-service') {
       return <TermsPage />;
     }
     if (path === '/disclaimer') {
       return <DisclaimerPage />;
     }
 
-    // Default: Home Page
-    return <HomePage onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    // 5. Legacy & E-commerce Redirect Handlers (e.g. old NAVIKO Shop URLs)
+    const oldShopRoutes = [
+      '/shop', '/products', '/cart', '/checkout', '/collections',
+      '/t-shirts', '/tshirts', '/apparel', '/store', '/order-status', '/track-order'
+    ];
+    if (oldShopRoutes.includes(path)) {
+      return <AllToolsPage onNavigate={navigate} />;
+    }
+
+    // 6. Dynamic Tool Route Lookup (Supports /tools/xyz, /student-tools/xyz, /finance-tools/xyz, /pdf-tools/xyz, etc.)
+    const toolMeta = getToolByPath(path);
+    if (toolMeta) {
+      const Component = TOOL_COMPONENTS[toolMeta.id] || TOOL_COMPONENTS[toolMeta.slug];
+      if (Component) {
+        return renderTool(toolMeta.path, Component);
+      }
+    }
+
+    // 7. Dedicated 404 Fallback when route is truly invalid
+    return (
+      <NotFoundPage
+        onNavigate={navigate}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        requestedPath={currentPath}
+      />
+    );
   };
 
   return (
