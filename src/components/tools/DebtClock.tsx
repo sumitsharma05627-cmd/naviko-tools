@@ -826,37 +826,37 @@ export const DebtClock: React.FC = () => {
   return (
     <div className="space-y-8" id="debt-clock-container">
       {/* 1. Country Selection Bar & Quick Toggles */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-2xl text-white">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-5 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Globe className="w-6 h-6" />
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-2xl text-white">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 sm:pb-5 border-b border-slate-800">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <Globe className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                  <span>{activeCountry.flag}</span>
-                  <span>{activeCountry.name} Government Debt Estimator</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h2 className="text-base sm:text-xl font-black text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                  <span className="shrink-0">{activeCountry.flag}</span>
+                  <span className="truncate">{activeCountry.name} Debt Estimator</span>
                 </h2>
-                <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full border ${getCategoryColor(activeCountry.debtCategory)}`}>
+                <span className={`text-[9px] sm:text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full border shrink-0 ${getCategoryColor(activeCountry.debtCategory)}`}>
                   {activeCountry.debtCategory}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 line-clamp-2 sm:line-clamp-none">
                 Deterministic mathematical model based on official Ministry of Finance &amp; Central Bank baselines.
               </p>
             </div>
           </div>
 
           {/* Unit & Currency View Controls */}
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             {/* Currency Selector */}
-            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+            <div className="flex items-center bg-slate-950 p-0.5 sm:p-1 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-bold w-full sm:w-auto justify-between sm:justify-start">
               <button
                 onClick={() => setCurrencyView('LOCAL')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer text-center ${
                   currencyView === 'LOCAL'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
                 title={`View in ${activeCountry.currencyCode}`}
@@ -865,9 +865,9 @@ export const DebtClock: React.FC = () => {
               </button>
               <button
                 onClick={() => setCurrencyView('USD')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer text-center ${
                   currencyView === 'USD'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -875,9 +875,9 @@ export const DebtClock: React.FC = () => {
               </button>
               <button
                 onClick={() => setCurrencyView('EUR')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer text-center ${
                   currencyView === 'EUR'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                    ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -887,12 +887,12 @@ export const DebtClock: React.FC = () => {
 
             {/* Indian numbering toggle for India */}
             {activeCountry.id === 'india' && currencyView === 'LOCAL' && (
-              <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+              <div className="flex items-center bg-slate-950 p-0.5 sm:p-1 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-bold w-full sm:w-auto justify-between sm:justify-start">
                 <button
                   onClick={() => setNumberScale('INDIAN')}
-                  className={`px-2.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg transition-all cursor-pointer text-center ${
                     numberScale === 'INDIAN'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -900,9 +900,9 @@ export const DebtClock: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setNumberScale('STANDARD')}
-                  className={`px-2.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg transition-all cursor-pointer text-center ${
                     numberScale === 'STANDARD'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -915,41 +915,41 @@ export const DebtClock: React.FC = () => {
 
         {/* India Sector Toggle: Central Government vs General Government */}
         {rawCountry.id === 'india' && (
-          <div className="pt-3 pb-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-slate-300">Debt Definition Scope:</span>
+          <div className="pt-3 pb-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 border-b border-slate-800/80">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+              <span className="text-[11px] sm:text-xs font-bold text-slate-300">Debt Definition Scope:</span>
             </div>
-            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 w-full md:w-auto bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-bold">
               <button
                 onClick={() => setIndiaViewMode('CENTRAL')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center sm:justify-start gap-1.5 text-center sm:text-left ${
                   indiaViewMode === 'CENTRAL'
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Building className="w-3.5 h-3.5" />
-                <span>Central Govt Liabilities (56.8% GDP)</span>
+                <Building className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Central Govt (56.8% GDP)</span>
               </button>
               <button
                 onClick={() => setIndiaViewMode('GENERAL')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center sm:justify-start gap-1.5 text-center sm:text-left ${
                   indiaViewMode === 'GENERAL'
                     ? 'bg-amber-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" />
-                <span>General Govt — Centre + States (81.3% GDP)</span>
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">General Govt — Centre+States (81.3%)</span>
               </button>
             </div>
           </div>
         )}
 
         {/* Quick Country Pills */}
-        <div className="pt-4 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-800">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+        <div className="pt-3 sm:pt-4 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-800 -mx-1 px-1">
+          <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
             Country:
           </span>
           {COUNTRIES_DEBT_DB.map((c) => (
@@ -959,13 +959,13 @@ export const DebtClock: React.FC = () => {
                 setSelectedCountryId(c.id);
                 setIndiaViewMode('CENTRAL');
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border ${
                 selectedCountryId === c.id
                   ? 'bg-indigo-500/20 text-white border-indigo-500/50 shadow-md shadow-indigo-500/10'
                   : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <span>{c.flag}</span>
+              <span className="text-sm">{c.flag}</span>
               <span>{c.name}</span>
             </button>
           ))}
@@ -973,44 +973,44 @@ export const DebtClock: React.FC = () => {
       </div>
 
       {/* 2. THE MAIN MASTER ESTIMATED DEBT TICKER DISPLAY */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl text-center">
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 shadow-2xl text-center">
         {/* Glow Accent */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-6">
+        <div className="relative z-10 space-y-4 sm:space-y-6">
           {/* Transparent Status Tag */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] sm:text-xs font-bold tracking-wide">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-400 animate-ping shrink-0" />
             <span>ESTIMATED SOVEREIGN DEBT COUNTER</span>
           </div>
 
-          {/* Big Odometer Display */}
-          <div>
-            <div className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-1.5">
+          {/* Big Odometer Display - Optimized for Mobile Viewports */}
+          <div className="px-1">
+            <div className="text-slate-400 text-[11px] sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest mb-1.5 line-clamp-2 max-w-2xl mx-auto">
               {activeCountry.debtDefinition}
             </div>
-            <div className="font-mono text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white select-all">
-              <span className="text-rose-400 mr-2">{liveStats.currSymbol}</span>
-              <span>{formatTicker(liveStats.totalDebtDisplay)}</span>
+            <div className="font-mono text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white select-all break-all sm:break-normal max-w-full overflow-hidden">
+              <span className="text-rose-400 mr-1 sm:mr-2">{liveStats.currSymbol}</span>
+              <span className="tabular-nums">{formatTicker(liveStats.totalDebtDisplay)}</span>
             </div>
 
             {/* Indian system breakdown if India is selected */}
             {activeCountry.id === 'india' && currencyView === 'LOCAL' && (
-              <div className="mt-3 inline-block px-4 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-bold">
+              <div className="mt-2.5 sm:mt-3 inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-sm font-bold max-w-full truncate">
                 ≈ ₹{(liveStats.totalDebtLocal / 1e12).toFixed(3)} Lakh Crore (Trillion INR)
               </div>
             )}
             {activeCountry.id === 'usa' && currencyView === 'LOCAL' && (
-              <div className="mt-3 inline-block px-4 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-bold">
+              <div className="mt-2.5 sm:mt-3 inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-sm font-bold max-w-full truncate">
                 ≈ ${(liveStats.totalDebtLocal / 1e12).toFixed(3)} Trillion USD
               </div>
             )}
           </div>
 
           {/* Transparent Model Disclaimer */}
-          <div className="max-w-3xl mx-auto p-3 rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] sm:text-xs text-slate-400 text-left flex items-start gap-2.5">
+          <div className="max-w-3xl mx-auto p-3 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] sm:text-xs text-slate-400 text-left flex items-start gap-2 sm:gap-2.5">
             <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-            <div>
+            <div className="leading-relaxed">
               <span className="font-bold text-slate-300">Methodology &amp; Transparency: </span>
               This counter is a deterministic estimate calculated from the latest available official baseline figure (
               <span className="text-slate-200 font-semibold">{activeCountry.primarySource}</span>, {activeCountry.referencePeriod}) and the annual budgetary net borrowing change. It is an illustrative educational model, not an official real-time government telemetry measurement.
@@ -1018,28 +1018,26 @@ export const DebtClock: React.FC = () => {
           </div>
 
           {/* Growth Speed Highlight */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 border-t border-slate-800/80 text-xs sm:text-sm">
-            <div className="flex items-center gap-2 text-slate-300">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span>Estimated Annual Borrowing:</span>
-              <span className="font-mono font-bold text-amber-300">
-                +{formatCurrency(liveStats.growthPerSecDisplay, 2)} / second
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 pt-4 border-t border-slate-800/80 text-xs sm:text-sm text-left sm:text-center">
+            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Est. Borrowing:</span>
+              <span className="font-mono font-bold text-amber-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                +{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s
               </span>
             </div>
-            <div className="hidden md:inline text-slate-600">•</div>
-            <div className="flex items-center gap-2 text-slate-300">
-              <Clock className="w-4 h-4 text-rose-400" />
-              <span>Daily Net Addition:</span>
-              <span className="font-mono font-bold text-rose-300">
-                +{formatCurrency(liveStats.growthPerDayDisplay, 0, true)} / day
+            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+              <Clock className="w-4 h-4 text-rose-400 shrink-0" />
+              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Daily Addition:</span>
+              <span className="font-mono font-bold text-rose-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                +{formatCurrency(liveStats.growthPerDayDisplay, 0, true)}/d
               </span>
             </div>
-            <div className="hidden md:inline text-slate-600">•</div>
-            <div className="flex items-center gap-2 text-slate-300">
-              <Activity className="w-4 h-4 text-indigo-400" />
-              <span>Effective Interest Cost:</span>
-              <span className="font-mono font-bold text-indigo-300">
-                {liveStats.effectiveBorrowingRate.toFixed(2)}% / yr
+            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+              <Activity className="w-4 h-4 text-indigo-400 shrink-0" />
+              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Interest Rate:</span>
+              <span className="font-mono font-bold text-indigo-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                {liveStats.effectiveBorrowingRate.toFixed(2)}%/yr
               </span>
             </div>
           </div>
@@ -1047,22 +1045,20 @@ export const DebtClock: React.FC = () => {
       </div>
 
       {/* 3. CORE METRIC CARDS GRID (Per Citizen, Per Tax Filer, Debt-to-GDP, Interest Expenditure) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
         {/* Card 1: Debt Equivalent Per Citizen */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Debt Equiv. Per Citizen</span>
-              <div className="group/tip relative">
-                <Users className="w-4 h-4 text-blue-400 cursor-help" />
-              </div>
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt Per Citizen</span>
+              <Users className="w-4 h-4 text-blue-400 shrink-0" />
             </div>
-            <div className="font-mono text-2xl sm:text-3xl font-extrabold text-white">
+            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-white break-words">
               {formatCurrency(liveStats.debtPerCitizen, 0)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between">
-              <span>Population ({activeCountry.populationPeriod}):</span>
-              <span className="font-semibold text-slate-300">{(activeCountry.population / 1e6).toFixed(1)}M citizens</span>
+            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+              <span className="truncate">Population ({activeCountry.populationPeriod}):</span>
+              <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.population / 1e6).toFixed(1)}M</span>
             </div>
           </div>
           <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
@@ -1071,61 +1067,61 @@ export const DebtClock: React.FC = () => {
         </div>
 
         {/* Card 2: Debt Equivalent Per Tax Filer */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Per Income-Tax Filer</span>
-              <DollarSign className="w-4 h-4 text-emerald-400 cursor-help" />
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Per Tax Filer</span>
+              <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
             </div>
-            <div className="font-mono text-2xl sm:text-3xl font-extrabold text-emerald-400">
+            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-emerald-400 break-words">
               {formatCurrency(liveStats.debtPerTaxpayer, 0)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between">
-              <span>{activeCountry.taxpayerDefinition}:</span>
-              <span className="font-semibold text-slate-300">{(activeCountry.taxpayers / 1e6).toFixed(1)}M filers</span>
+            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+              <span className="truncate">{activeCountry.taxpayerDefinition}:</span>
+              <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.taxpayers / 1e6).toFixed(1)}M filers</span>
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
-            Source: {activeCountry.taxpayerSource}. Debt is sovereign-backed, not personal debt.
+          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate" title={activeCountry.taxpayerSource}>
+            Source: {activeCountry.taxpayerSource}.
           </div>
         </div>
 
         {/* Card 3: Debt to GDP Ratio */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Debt-to-GDP Ratio</span>
-              <Scale className="w-4 h-4 text-amber-400 cursor-help" />
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt-to-GDP Ratio</span>
+              <Scale className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="font-mono text-2xl sm:text-3xl font-extrabold text-amber-400 flex items-center gap-1">
+            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-400 flex items-center gap-1">
               <span>{liveStats.debtToGdpRatio.toFixed(1)}%</span>
-              <span className="text-xs font-bold text-slate-400 uppercase">of GDP</span>
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase">of GDP</span>
             </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
               <span>Nominal GDP:</span>
-              <span className="font-semibold text-slate-300">
+              <span className="font-semibold text-slate-300 shrink-0">
                 {formatCurrency(activeCountry.annualGdpLocal * liveStats.convFactor, 0, true)}
               </span>
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
+          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate">
             {activeCountry.gdpSource} ({activeCountry.gdpReferencePeriod}).
           </div>
         </div>
 
         {/* Card 4: Annual Interest Expenditure */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Budget Interest Service</span>
-              <TrendingUp className="w-4 h-4 text-rose-400 cursor-help" />
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Budget Interest</span>
+              <TrendingUp className="w-4 h-4 text-rose-400 shrink-0" />
             </div>
-            <div className="font-mono text-2xl sm:text-3xl font-extrabold text-rose-400">
+            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-rose-400 break-words">
               {formatCurrency(liveStats.annualInterestCost, 0, true)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between">
-              <span>Avg Budget Rate / Sec:</span>
-              <span className="font-semibold text-rose-300 font-mono">
+            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+              <span>Rate / Sec:</span>
+              <span className="font-semibold text-rose-300 font-mono shrink-0">
                 +{formatCurrency(liveStats.interestPerSecond, 1)}/s
               </span>
             </div>
@@ -1137,74 +1133,74 @@ export const DebtClock: React.FC = () => {
       </div>
 
       {/* 4. LIVE SESSION IMPACT: "Estimated Growth While Visiting This Page" */}
-      <div className="bg-indigo-950/40 border border-indigo-800/60 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0">
-            <Clock className="w-6 h-6 animate-spin-slow" />
+      <div className="bg-indigo-950/40 border border-indigo-800/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <span>Estimated Debt Added During Your Visit</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-base font-bold text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span>Estimated Debt Added During Visit</span>
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
                 {Math.floor(liveStats.sessionElapsedSeconds)}s elapsed
               </span>
             </h3>
-            <p className="text-xs text-slate-300 mt-1">
-              Calculated from {activeCountry.name}&apos;s annualized net borrowing rate of +{formatCurrency(liveStats.growthPerSecDisplay, 2)}/sec:
+            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
+              Calculated from {activeCountry.name}&apos;s annualized borrowing rate (+{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s):
             </p>
           </div>
         </div>
 
-        <div className="text-right shrink-0">
-          <div className="font-mono text-2xl sm:text-3xl font-black text-rose-400">
+        <div className="w-full md:w-auto text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-indigo-900/60 shrink-0">
+          <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-rose-400">
             +{formatCurrency(liveStats.sessionDebtAccumulated, 2)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Includes ~{formatCurrency(liveStats.sessionInterest, 2)} in annualized interest service cost
+          <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+            Includes ~{formatCurrency(liveStats.sessionInterest, 2)} in interest service cost
           </div>
         </div>
       </div>
 
       {/* 5. INTERACTIVE: DOCUMENTED REAL-WORLD SCALE PERSPECTIVE */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3 sm:pb-4">
           <div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-400" />
-              <span>{activeCountry.name} Sovereign Debt in Project Benchmark Scale</span>
+            <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 shrink-0" />
+              <span>{activeCountry.name} Debt in Project Scale</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
               Illustrative comparison visualizing total sovereign debt against official project budgets.
             </p>
           </div>
-          <div className="text-[11px] text-slate-400 bg-slate-950 px-3 py-1 rounded-full border border-slate-800">
-            Illustrative scale only (not debt liquidation)
+          <div className="text-[10px] sm:text-[11px] text-slate-400 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800 shrink-0">
+            Illustrative scale only
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
           {activeCountry.equivalents.map((item, idx) => {
             const count = Math.floor(liveStats.totalDebtLocal / item.costLocal);
             return (
               <div
                 key={idx}
-                className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between"
+                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="text-xs font-bold text-slate-300 mb-1">{item.label}</div>
-                  <div className="font-mono text-2xl font-black text-indigo-400 mt-2">
+                  <div className="text-xs font-bold text-slate-300 mb-1 leading-snug">{item.label}</div>
+                  <div className="font-mono text-xl sm:text-2xl font-black text-indigo-400 mt-1.5 sm:mt-2">
                     {count.toLocaleString()}
                   </div>
-                  <div className="text-xs text-slate-300 mt-1 font-medium">
+                  <div className="text-[11px] sm:text-xs text-slate-300 mt-1 font-medium">
                     {item.unit}
                   </div>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-4 pt-2.5 border-t border-slate-800/80 space-y-0.5">
-                  <div className="flex justify-between">
-                    <span>Source:</span>
-                    <span className="text-slate-300 font-semibold">{item.source}</span>
+                <div className="text-[10px] sm:text-[11px] text-slate-400 mt-3 sm:mt-4 pt-2.5 border-t border-slate-800/80 space-y-0.5">
+                  <div className="flex justify-between gap-1">
+                    <span className="shrink-0">Source:</span>
+                    <span className="text-slate-300 font-semibold truncate">{item.source}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-1">
                     <span>Benchmark Year:</span>
                     <span className="text-slate-300">{item.year}</span>
                   </div>
@@ -1216,27 +1212,27 @@ export const DebtClock: React.FC = () => {
       </div>
 
       {/* 6. CITIZEN AMORTIZATION SIMULATION CALCULATOR */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white space-y-6">
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Calculator className="w-5 h-5" />
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-800 pb-3 sm:pb-4">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black text-white">
+            <h3 className="text-sm sm:text-base md:text-lg font-black text-white">
               Hypothetical Citizen Amortization Calculator
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400">
               Mathematical simulation showing the theoretical timeframe if citizen contributions were allocated to amortize sovereign debt.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          <div className="lg:col-span-6 space-y-4">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center">
+          <div className="lg:col-span-6 space-y-3 sm:space-y-4">
+            <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 block">
               If every citizen contributed monthly ({activeCountry.currencySymbol}):
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               <input
                 type="range"
                 min="100"
@@ -1246,72 +1242,72 @@ export const DebtClock: React.FC = () => {
                 onChange={(e) => setSimMonthlyPerCitizen(Number(e.target.value))}
                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
               />
-              <div className="w-32 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-sm font-bold text-right text-emerald-400">
+              <div className="w-24 sm:w-32 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs sm:text-sm font-bold text-right text-emerald-400 shrink-0">
                 {activeCountry.currencySymbol} {simMonthlyPerCitizen.toLocaleString()}
               </div>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400">
               Theoretical annual contribution: {formatCurrency(simMonthlyPerCitizen * 12 * activeCountry.population * liveStats.convFactor, 0, true)} / year across {(activeCountry.population / 1e6).toFixed(0)}M citizens.
             </p>
           </div>
 
-          <div className="lg:col-span-6 p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-400">
+          <div className="lg:col-span-6 p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 sm:space-y-3">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400">
               <span>Time to amortize current debt:</span>
-              <span className="font-mono text-base font-bold text-white">
+              <span className="font-mono text-sm sm:text-base font-bold text-white">
                 {Math.ceil(liveStats.totalDebtLocal / (simMonthlyPerCitizen * 12 * activeCountry.population))} Years
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80 pt-2">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 border-t border-slate-800/80 pt-2">
               <span>Current debt per citizen (statistical):</span>
-              <span className="font-mono text-base font-bold text-emerald-400">
+              <span className="font-mono text-sm sm:text-base font-bold text-emerald-400">
                 {formatCurrency(liveStats.debtPerCitizen, 0)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80 pt-2">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 border-t border-slate-800/80 pt-2">
               <span>Current debt per tax filer (statistical):</span>
-              <span className="font-mono text-base font-bold text-amber-400">
+              <span className="font-mono text-sm sm:text-base font-bold text-amber-400">
                 {formatCurrency(liveStats.debtPerTaxpayer, 0)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60 text-[11px] text-slate-400">
+        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 leading-relaxed">
           <span className="font-semibold text-slate-300">Economic Context:</span> Sovereign governments do not typically pay off their total national debt through citizen lump sums. Modern sovereign debt is rolled over and managed sustainably by keeping the debt growth rate lower than the nominal GDP growth rate.
         </div>
       </div>
 
       {/* 7. GLOBAL COMPARISON MATRIX & LEADERBOARD TABLE */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-slate-800 pb-4 sm:pb-5">
           <div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <Globe className="w-5 h-5 text-indigo-400" />
-              <span>World Sovereign Debt Leaderboard (Official Baselines)</span>
+            <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 shrink-0" />
+              <span>World Sovereign Debt Leaderboard</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
               Standardized comparison across sovereign economies normalized in USD ($)
             </p>
           </div>
 
           {/* Search & Sorter */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
+            <div className="relative w-full sm:w-auto">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search country..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full sm:w-44 pl-8 sm:pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-bold justify-between sm:justify-start">
               <button
                 onClick={() => setSortBy('debt')}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2 sm:px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-center ${
                   sortBy === 'debt' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -1319,7 +1315,7 @@ export const DebtClock: React.FC = () => {
               </button>
               <button
                 onClick={() => setSortBy('ratio')}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2 sm:px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-center ${
                   sortBy === 'ratio' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -1327,7 +1323,7 @@ export const DebtClock: React.FC = () => {
               </button>
               <button
                 onClick={() => setSortBy('perCapita')}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                className={`flex-1 sm:flex-none px-2 sm:px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-center ${
                   sortBy === 'perCapita' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -1337,122 +1333,127 @@ export const DebtClock: React.FC = () => {
           </div>
         </div>
 
-        {/* Responsive Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-bold border-b border-slate-800">
-              <tr>
-                <th className="py-3 px-4">Country</th>
-                <th className="py-3 px-4 text-right">Total Debt (USD)</th>
-                <th className="py-3 px-4 text-right">Debt-to-GDP</th>
-                <th className="py-3 px-4 text-right">Per Capita (USD)</th>
-                <th className="py-3 px-4 text-right">Est. Borrowing / s</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {tableData.map((c) => (
-                <tr
-                  key={c.id}
-                  className={`hover:bg-slate-800/50 transition-colors ${
-                    selectedCountryId === c.id ? 'bg-indigo-950/30' : ''
-                  }`}
-                >
-                  <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
-                    <span className="text-base">{c.flag}</span>
-                    <span>{c.name}</span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
-                    ${(c.totalUsd / 1e12).toFixed(2)} Trillion
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-mono font-bold">
-                    <span
-                      className={
-                        c.ratio > 100
-                          ? 'text-rose-400'
-                          : c.ratio > 75
-                          ? 'text-amber-400'
-                          : 'text-emerald-400'
-                      }
-                    >
-                      {c.ratio.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-mono text-slate-300">
-                    ${Math.round(c.perCapitaUsd).toLocaleString()}
-                  </td>
-                  <td className="py-3.5 px-4 text-right font-mono text-amber-300">
-                    +${Math.round(c.growthPerSecUsd).toLocaleString()}/s
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    <span
-                      className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${getCategoryColor(
-                        c.debtCategory
-                      )}`}
-                    >
-                      {c.debtCategory}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    <button
-                      onClick={() => {
-                        setSelectedCountryId(c.id);
-                        setIndiaViewMode('CENTRAL');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Inspect
-                    </button>
-                  </td>
+        {/* Responsive Table with Mobile Scroll Hint */}
+        <div className="relative">
+          <div className="sm:hidden text-[10px] text-slate-400 text-right pb-1.5 flex items-center justify-end gap-1">
+            <span>Scroll horizontally</span> →
+          </div>
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-thin scrollbar-thumb-slate-800">
+            <table className="w-full min-w-[620px] text-left text-xs text-slate-300">
+              <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-bold border-b border-slate-800">
+                <tr>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4">Country</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Total Debt (USD)</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Debt-to-GDP</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Per Capita</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">Est. Borrowing</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Status</th>
+                  <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {tableData.map((c) => (
+                  <tr
+                    key={c.id}
+                    className={`hover:bg-slate-800/50 transition-colors ${
+                      selectedCountryId === c.id ? 'bg-indigo-950/30' : ''
+                    }`}
+                  >
+                    <td className="py-3 px-3 sm:px-4 font-bold text-white flex items-center gap-2">
+                      <span className="text-base shrink-0">{c.flag}</span>
+                      <span className="truncate">{c.name}</span>
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-right font-mono font-bold text-slate-200">
+                      ${(c.totalUsd / 1e12).toFixed(2)}T
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-right font-mono font-bold">
+                      <span
+                        className={
+                          c.ratio > 100
+                            ? 'text-rose-400'
+                            : c.ratio > 75
+                            ? 'text-amber-400'
+                            : 'text-emerald-400'
+                        }
+                      >
+                        {c.ratio.toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-right font-mono text-slate-300">
+                      ${Math.round(c.perCapitaUsd).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-right font-mono text-amber-300">
+                      +${Math.round(c.growthPerSecUsd).toLocaleString()}/s
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-center">
+                      <span
+                        className={`text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border whitespace-nowrap ${getCategoryColor(
+                          c.debtCategory
+                        )}`}
+                      >
+                        {c.debtCategory}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 sm:px-4 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedCountryId(c.id);
+                          setIndiaViewMode('CENTRAL');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                      >
+                        Inspect
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* 8. DATA, METHODOLOGY & OFFICIAL SOURCES SECTION */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white space-y-6">
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-            <Database className="w-5 h-5" />
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-800 pb-3 sm:pb-4">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+            <Database className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-white">
+            <h3 className="text-base sm:text-lg font-black text-white">
               Data Sources, Methodology &amp; Definitions
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400">
               Detailed breakdown of official source documents, formulas, and reporting boundaries.
             </p>
           </div>
         </div>
 
         {/* Definition Differences Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
             <div className="font-bold text-indigo-300">1. Central Govt Liabilities</div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
               Total debt obligations of the Union Government alone (e.g. ₹185.27 Lakh Cr in India ~56.8% GDP), tracked directly in Union Budget Receipt documents.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
             <div className="font-bold text-amber-300">2. General Government Debt</div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
               Consolidated debt of Central + all State/Provincial governments combined (e.g. ~81.3% GDP for India), used by IMF and RBI for macroeconomic health assessments.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
             <div className="font-bold text-emerald-300">3. Sovereign External Debt</div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
               Debt owed to foreign creditors denominated in foreign currencies. For India, sovereign external debt is under 4% of total liabilities, insulating it from currency runs.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5">
             <div className="font-bold text-rose-300">4. Fiscal Deficit vs Total Debt</div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
               Total Debt is the accumulated historical liability. Fiscal deficit is the net new borrowing in a single financial year (e.g. ₹16.13 Lakh Cr in FY 2024-25/26).
@@ -1461,34 +1462,34 @@ export const DebtClock: React.FC = () => {
         </div>
 
         {/* Detailed Country Data Sheet */}
-        <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-          <h4 className="text-sm font-bold text-white flex items-center gap-2">
-            <FileText className="w-4 h-4 text-indigo-400" />
+        <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950 border border-slate-800 space-y-3 sm:space-y-4">
+          <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+            <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>Active Country Source Dossier: {activeCountry.name}</span>
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs text-slate-300">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 text-[11px] sm:text-xs text-slate-300">
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Primary Source:</div>
               <div className="text-white font-medium mt-0.5">{activeCountry.primarySource}</div>
             </div>
-            <div>
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Reference Period:</div>
               <div className="text-white font-medium mt-0.5">{activeCountry.referencePeriod}</div>
             </div>
-            <div>
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Data Nature:</div>
               <div className="text-emerald-400 font-medium mt-0.5">Official Reported Baseline + Deterministic Model</div>
             </div>
-            <div>
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Annual Net Borrowing Basis:</div>
               <div className="text-white font-medium mt-0.5">{activeCountry.annualGrowthBasis}</div>
             </div>
-            <div>
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Interest Expenditure Source:</div>
               <div className="text-white font-medium mt-0.5">{activeCountry.interestExpSource}</div>
             </div>
-            <div>
+            <div className="break-words">
               <div className="text-slate-500 font-semibold">Taxpayer / Filer Baseline:</div>
               <div className="text-white font-medium mt-0.5">{activeCountry.taxpayerDefinition} ({activeCountry.taxpayerSource})</div>
             </div>
@@ -1496,9 +1497,9 @@ export const DebtClock: React.FC = () => {
         </div>
 
         {/* Educational Note on FRBM Act */}
-        <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs text-slate-300 leading-relaxed">
-          <h4 className="text-sm font-bold text-white flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2 text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+          <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>Understanding India&apos;s FRBM Act &amp; Fiscal Glide Path</span>
           </h4>
           <p>
