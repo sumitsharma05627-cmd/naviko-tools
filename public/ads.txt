@@ -1,0 +1,2 @@
+# ads.txt file for naviko.in
+# Placeholder: Google AdSense publisher line will be placed here once provided by the publisher.
