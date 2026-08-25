@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
-import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { InFeedAd } from '../components/InFeedAd';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HomePageProps {
@@ -214,12 +214,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
         </div>
       </section>
 
-      {/* Hero Ad Slot */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <DesktopAdSlot />
-        <MobileAdSlot />
-      </div>
-
       {/* Privacy & Guarantee Section */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -339,6 +333,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
           </div>
         </div>
       </section>
+
+      {/* Google AdSense In-Feed Ad Placement */}
+      <InFeedAd />
 
       {/* Tool Categories */}
       <section className="py-12 bg-white dark:bg-slate-900 border-y border-slate-200/80 dark:border-slate-800 transition-colors">
