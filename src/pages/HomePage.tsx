@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
-import { InFeedAd } from '../components/InFeedAd';
+import { AdSenseDisplayAd } from '../components/AdSenseDisplayAd';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HomePageProps {
@@ -334,8 +334,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
         </div>
       </section>
 
-      {/* Google AdSense In-Feed Ad Placement */}
-      <InFeedAd />
+      {/* Google AdSense Responsive Display Ad Placement (Slot 5557042993) */}
+      <AdSenseDisplayAd />
 
       {/* Tool Categories */}
       <section className="py-12 bg-white dark:bg-slate-900 border-y border-slate-200/80 dark:border-slate-800 transition-colors">

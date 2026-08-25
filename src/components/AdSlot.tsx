@@ -1,5 +1,6 @@
 import React from 'react';
 export { InFeedAd } from './InFeedAd';
+export { AdSenseDisplayAd } from './AdSenseDisplayAd';
 
 interface AdSlotProps {
   slotId?: string;
