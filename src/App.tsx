@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/Header';
@@ -6,75 +6,82 @@ import { Footer } from './components/Footer';
 import { SearchModal } from './components/SearchModal';
 import { ToolLayout } from './components/ToolLayout';
 import { ChatBot } from './components/ChatBot';
-
-// Tool Components
-import { NumberCalculator } from './components/tools/NumberCalculator';
-import { ScientificCalculator } from './components/tools/ScientificCalculator';
-import { PercentageCalculator } from './components/tools/PercentageCalculator';
-import { AgeCalculator } from './components/tools/AgeCalculator';
-import { CgpaCalculator } from './components/tools/CgpaCalculator';
-import { UnitConverter } from './components/tools/UnitConverter';
-import { WordCounter } from './components/tools/WordCounter';
-import { ImageCompressor } from './components/tools/ImageCompressor';
-import { ImageResizer } from './components/tools/ImageResizer';
-import { QrCodeGenerator } from './components/tools/QrCodeGenerator';
-import { TypingSpeedTest } from './components/tools/TypingSpeedTest';
-import { ResumeBuilder } from './components/tools/ResumeBuilder';
-import { DiscountCalculator } from './components/tools/DiscountCalculator';
-import { SimpleInterestCalculator } from './components/tools/SimpleInterestCalculator';
-import { RandomQuestionGenerator } from './components/tools/RandomQuestionGenerator';
-import { StudyTimetableGenerator } from './components/tools/StudyTimetableGenerator';
-
-// New PDF & Image & Student Tools
-import { PdfMerge } from './components/tools/PdfMerge';
-import { PdfCompressor } from './components/tools/PdfCompressor';
-import { JpgToPdf } from './components/tools/JpgToPdf';
-import { PdfToJpg } from './components/tools/PdfToJpg';
-import { PdfSplit } from './components/tools/PdfSplit';
-import { ImageCropper } from './components/tools/ImageCropper';
-import { JpgToPng } from './components/tools/JpgToPng';
-import { PngToJpg } from './components/tools/PngToJpg';
-import { BackgroundRemover } from './components/tools/BackgroundRemover';
-import { AttendanceCalculator } from './components/tools/AttendanceCalculator';
-import { StudyDecisionPlanner } from './components/tools/StudyDecisionPlanner';
-import { BacklogRecoveryPlanner } from './components/tools/BacklogRecoveryPlanner';
-import { CanIFinishMySyllabus } from './components/tools/CanIFinishMySyllabus';
-import { MockTestAnalyzer } from './components/tools/MockTestAnalyzer';
-
-// Finance Tool Components
-import { SipCalculator } from './components/tools/SipCalculator';
-import { LumpSumCalculator } from './components/tools/LumpSumCalculator';
-import { EmiCalculator } from './components/tools/EmiCalculator';
-import { LoanCalculator } from './components/tools/LoanCalculator';
-import { GstCalculator } from './components/tools/GstCalculator';
-import { CompoundInterestCalculator } from './components/tools/CompoundInterestCalculator';
-import { SalaryCalculator } from './components/tools/SalaryCalculator';
-import { CagrCalculator } from './components/tools/CagrCalculator';
-import { FdCalculator } from './components/tools/FdCalculator';
-import { FireCalculator } from './components/tools/FireCalculator';
-import { InflationCalculator } from './components/tools/InflationCalculator';
-import { DebtClock } from './components/tools/DebtClock';
-import { BudgetCalculator } from './components/tools/BudgetCalculator';
-
-// Pages
 import { HomePage } from './pages/HomePage';
-import { AllToolsPage } from './pages/AllToolsPage';
-import { StudentToolsPage } from './pages/StudentToolsPage';
-import { FinanceToolsPage } from './pages/FinanceToolsPage';
-import { PdfToolsPage } from './pages/PdfToolsPage';
-import { BlogPage } from './pages/BlogPage';
-import { BlogPostDetail } from './pages/BlogPostDetail';
-import { AboutPage } from './pages/AboutPage';
-import { ContactPage } from './pages/ContactPage';
-import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
-import { TermsPage } from './pages/TermsPage';
-import { DisclaimerPage } from './pages/DisclaimerPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-
 import { getToolByPath } from './data/toolsData';
 
+// Fallback loader for lazy-loaded tools and secondary routes
+const PageLoadingFallback: React.FC = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center p-8">
+    <div className="w-9 h-9 border-3 border-indigo-500/20 border-t-indigo-600 rounded-full animate-spin" />
+    <span className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Loading NAVIKO...</span>
+  </div>
+);
+
+// Lazy Loaded Tool Components
+const NumberCalculator = lazy(() => import('./components/tools/NumberCalculator').then(m => ({ default: m.NumberCalculator })));
+const ScientificCalculator = lazy(() => import('./components/tools/ScientificCalculator').then(m => ({ default: m.ScientificCalculator })));
+const PercentageCalculator = lazy(() => import('./components/tools/PercentageCalculator').then(m => ({ default: m.PercentageCalculator })));
+const AgeCalculator = lazy(() => import('./components/tools/AgeCalculator').then(m => ({ default: m.AgeCalculator })));
+const CgpaCalculator = lazy(() => import('./components/tools/CgpaCalculator').then(m => ({ default: m.CgpaCalculator })));
+const UnitConverter = lazy(() => import('./components/tools/UnitConverter').then(m => ({ default: m.UnitConverter })));
+const WordCounter = lazy(() => import('./components/tools/WordCounter').then(m => ({ default: m.WordCounter })));
+const ImageCompressor = lazy(() => import('./components/tools/ImageCompressor').then(m => ({ default: m.ImageCompressor })));
+const ImageResizer = lazy(() => import('./components/tools/ImageResizer').then(m => ({ default: m.ImageResizer })));
+const QrCodeGenerator = lazy(() => import('./components/tools/QrCodeGenerator').then(m => ({ default: m.QrCodeGenerator })));
+const TypingSpeedTest = lazy(() => import('./components/tools/TypingSpeedTest').then(m => ({ default: m.TypingSpeedTest })));
+const ResumeBuilder = lazy(() => import('./components/tools/ResumeBuilder').then(m => ({ default: m.ResumeBuilder })));
+const DiscountCalculator = lazy(() => import('./components/tools/DiscountCalculator').then(m => ({ default: m.DiscountCalculator })));
+const SimpleInterestCalculator = lazy(() => import('./components/tools/SimpleInterestCalculator').then(m => ({ default: m.SimpleInterestCalculator })));
+const RandomQuestionGenerator = lazy(() => import('./components/tools/RandomQuestionGenerator').then(m => ({ default: m.RandomQuestionGenerator })));
+const StudyTimetableGenerator = lazy(() => import('./components/tools/StudyTimetableGenerator').then(m => ({ default: m.StudyTimetableGenerator })));
+
+// PDF & Image & Student Tools
+const PdfMerge = lazy(() => import('./components/tools/PdfMerge').then(m => ({ default: m.PdfMerge })));
+const PdfCompressor = lazy(() => import('./components/tools/PdfCompressor').then(m => ({ default: m.PdfCompressor })));
+const JpgToPdf = lazy(() => import('./components/tools/JpgToPdf').then(m => ({ default: m.JpgToPdf })));
+const PdfToJpg = lazy(() => import('./components/tools/PdfToJpg').then(m => ({ default: m.PdfToJpg })));
+const PdfSplit = lazy(() => import('./components/tools/PdfSplit').then(m => ({ default: m.PdfSplit })));
+const ImageCropper = lazy(() => import('./components/tools/ImageCropper').then(m => ({ default: m.ImageCropper })));
+const JpgToPng = lazy(() => import('./components/tools/JpgToPng').then(m => ({ default: m.JpgToPng })));
+const PngToJpg = lazy(() => import('./components/tools/PngToJpg').then(m => ({ default: m.PngToJpg })));
+const BackgroundRemover = lazy(() => import('./components/tools/BackgroundRemover').then(m => ({ default: m.BackgroundRemover })));
+const AttendanceCalculator = lazy(() => import('./components/tools/AttendanceCalculator').then(m => ({ default: m.AttendanceCalculator })));
+const StudyDecisionPlanner = lazy(() => import('./components/tools/StudyDecisionPlanner').then(m => ({ default: m.StudyDecisionPlanner })));
+const BacklogRecoveryPlanner = lazy(() => import('./components/tools/BacklogRecoveryPlanner').then(m => ({ default: m.BacklogRecoveryPlanner })));
+const CanIFinishMySyllabus = lazy(() => import('./components/tools/CanIFinishMySyllabus').then(m => ({ default: m.CanIFinishMySyllabus })));
+const MockTestAnalyzer = lazy(() => import('./components/tools/MockTestAnalyzer').then(m => ({ default: m.MockTestAnalyzer })));
+
+// Finance Tool Components
+const SipCalculator = lazy(() => import('./components/tools/SipCalculator').then(m => ({ default: m.SipCalculator })));
+const LumpSumCalculator = lazy(() => import('./components/tools/LumpSumCalculator').then(m => ({ default: m.LumpSumCalculator })));
+const EmiCalculator = lazy(() => import('./components/tools/EmiCalculator').then(m => ({ default: m.EmiCalculator })));
+const LoanCalculator = lazy(() => import('./components/tools/LoanCalculator').then(m => ({ default: m.LoanCalculator })));
+const GstCalculator = lazy(() => import('./components/tools/GstCalculator').then(m => ({ default: m.GstCalculator })));
+const CompoundInterestCalculator = lazy(() => import('./components/tools/CompoundInterestCalculator').then(m => ({ default: m.CompoundInterestCalculator })));
+const SalaryCalculator = lazy(() => import('./components/tools/SalaryCalculator').then(m => ({ default: m.SalaryCalculator })));
+const CagrCalculator = lazy(() => import('./components/tools/CagrCalculator').then(m => ({ default: m.CagrCalculator })));
+const FdCalculator = lazy(() => import('./components/tools/FdCalculator').then(m => ({ default: m.FdCalculator })));
+const FireCalculator = lazy(() => import('./components/tools/FireCalculator').then(m => ({ default: m.FireCalculator })));
+const InflationCalculator = lazy(() => import('./components/tools/InflationCalculator').then(m => ({ default: m.InflationCalculator })));
+const DebtClock = lazy(() => import('./components/tools/DebtClock').then(m => ({ default: m.DebtClock })));
+const BudgetCalculator = lazy(() => import('./components/tools/BudgetCalculator').then(m => ({ default: m.BudgetCalculator })));
+
+// Lazy Loaded Secondary Pages
+const AllToolsPage = lazy(() => import('./pages/AllToolsPage').then(m => ({ default: m.AllToolsPage })));
+const StudentToolsPage = lazy(() => import('./pages/StudentToolsPage').then(m => ({ default: m.StudentToolsPage })));
+const FinanceToolsPage = lazy(() => import('./pages/FinanceToolsPage').then(m => ({ default: m.FinanceToolsPage })));
+const PdfToolsPage = lazy(() => import('./pages/PdfToolsPage').then(m => ({ default: m.PdfToolsPage })));
+const BlogPage = lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogPostDetail = lazy(() => import('./pages/BlogPostDetail').then(m => ({ default: m.BlogPostDetail })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+
 // Central Tool Component Registry for dynamic routing
-const TOOL_COMPONENTS: Record<string, React.FC> = {
+const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'number-calculator': NumberCalculator,
   'scientific-calculator': ScientificCalculator,
   'percentage-calculator': PercentageCalculator,
@@ -148,7 +155,7 @@ export default function App() {
   };
 
   // Render Tool wrapper
-  const renderTool = (path: string, Component: React.FC) => {
+  const renderTool = (path: string, Component: React.ComponentType<any>) => {
     const toolMeta = getToolByPath(path);
     if (!toolMeta) {
       return (
@@ -172,7 +179,7 @@ export default function App() {
     const rawPath = currentPath.toLowerCase().trim();
     const path = rawPath.replace(/\/$/, '') || '/';
 
-    // 1. Home Route
+    // 1. Home Route (Instant Eager Render for fastest LCP)
     if (path === '/' || path === '') {
       return <HomePage onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
     }
@@ -265,7 +272,9 @@ export default function App() {
           />
 
           <main className="flex-1">
-            {renderContent()}
+            <Suspense fallback={<PageLoadingFallback />}>
+              {renderContent()}
+            </Suspense>
           </main>
 
           <Footer onNavigate={navigate} />
@@ -275,7 +284,7 @@ export default function App() {
           <SearchModal
             isOpen={isSearchOpen}
             onClose={() => setIsSearchOpen(false)}
-            onSelectTool={(path) => navigate(path)}
+            onNavigate={(path) => navigate(path)}
           />
         </div>
       </LanguageProvider>
