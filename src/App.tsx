@@ -3,9 +3,6 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { SearchModal } from './components/SearchModal';
-import { ToolLayout } from './components/ToolLayout';
-import { ChatBot } from './components/ChatBot';
 import { HomePage } from './pages/HomePage';
 import { getToolByPath } from './data/toolsData';
 
@@ -16,6 +13,11 @@ const PageLoadingFallback: React.FC = () => (
     <span className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Loading NAVIKO...</span>
   </div>
 );
+
+// Lazy Loaded Auxiliary Components
+const ToolLayout = lazy(() => import('./components/ToolLayout').then(m => ({ default: m.ToolLayout })));
+const ChatBot = lazy(() => import('./components/ChatBot').then(m => ({ default: m.ChatBot })));
+const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ default: m.SearchModal })));
 
 // Lazy Loaded Tool Components
 const NumberCalculator = lazy(() => import('./components/tools/NumberCalculator').then(m => ({ default: m.NumberCalculator })));
@@ -279,13 +281,19 @@ export default function App() {
 
           <Footer onNavigate={navigate} />
 
-          <ChatBot onNavigate={navigate} />
+          <Suspense fallback={null}>
+            <ChatBot onNavigate={navigate} />
+          </Suspense>
 
-          <SearchModal
-            isOpen={isSearchOpen}
-            onClose={() => setIsSearchOpen(false)}
-            onNavigate={(path) => navigate(path)}
-          />
+          {isSearchOpen && (
+            <Suspense fallback={null}>
+              <SearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                onNavigate={(path) => navigate(path)}
+              />
+            </Suspense>
+          )}
         </div>
       </LanguageProvider>
     </ThemeProvider>

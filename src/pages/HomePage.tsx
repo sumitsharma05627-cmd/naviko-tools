@@ -48,9 +48,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 transition-colors">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white border-b border-indigo-900/50">
-        {/* Glow decorative spheres */}
-        <div className="absolute top-10 left-1/4 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        {/* Optimized radial glow decorations (Zero GPU filter overhead) */}
+        <div className="absolute top-10 left-1/4 w-96 h-96 [background:radial-gradient(circle,_rgba(99,102,241,0.18)_0%,_transparent_70%)] rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-10 right-1/4 w-96 h-96 [background:radial-gradient(circle,_rgba(16,185,129,0.15)_0%,_transparent_70%)] rounded-full pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
