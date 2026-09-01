@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronRight, Home, HelpCircle, BookOpen, Lightbulb, ArrowRight, Sparkles, Lock, Zap } from 'lucide-react';
+import { HelpCircle, BookOpen, Lightbulb, ArrowRight, Sparkles, Lock, Zap } from 'lucide-react';
 import { ToolMeta } from '../types';
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from './DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from './AdSlot';
+import { BreadcrumbNavigation, getCategoryHierarchy } from './BreadcrumbNavigation';
 import { useLanguage } from '../context/LanguageContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { TOOL_ENTITLEMENTS } from '../config/entitlements';
@@ -111,13 +112,13 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
             {
               '@type': 'ListItem',
               'position': 2,
-              'name': tool.categoryName,
-              'item': `https://naviko.in/tools?category=${tool.category}`
+              'name': categoryLabel || tool.categoryName,
+              'item': `https://naviko.in${getCategoryHierarchy(tool.category).path}`
             },
             {
               '@type': 'ListItem',
               'position': 3,
-              'name': tool.name,
+              'name': toolName,
               'item': `https://naviko.in${tool.path}`
             }
           ]
@@ -134,7 +135,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
         scriptEl.parentNode.removeChild(scriptEl);
       }
     };
-  }, [tool, toolName, toolDesc]);
+  }, [tool, toolName, toolDesc, categoryLabel]);
 
   // Find related tools prioritized by tool.relatedToolPaths
   let relatedTools: ToolMeta[] = [];
@@ -153,38 +154,8 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20 transition-colors">
-      {/* 1. Breadcrumbs */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 py-3 transition-colors">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center text-xs text-slate-500 dark:text-slate-400 space-x-2" aria-label="Breadcrumb">
-            <button
-              onClick={() => onNavigate('/')}
-              className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span>{t('nav.home', 'Home')}</span>
-            </button>
-            <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
-            <button
-              onClick={() => onNavigate('/tools')}
-              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              {t('nav.allTools', 'Tools')}
-            </button>
-            <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
-            <button
-              onClick={() => onNavigate(`/tools?category=${tool.category}`)}
-              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-            >
-              {categoryLabel}
-            </button>
-            <ChevronRight className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
-            <span className="text-slate-800 dark:text-slate-200 font-semibold truncate">
-              {toolName}
-            </span>
-          </nav>
-        </div>
-      </div>
+      {/* 1. Dynamic Breadcrumb Navigation */}
+      <BreadcrumbNavigation tool={tool} onNavigate={onNavigate} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* 2 & 3. Header Title & Description */}

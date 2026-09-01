@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { ChevronRight, Home, BookOpen, Clock, Calendar, ArrowLeft, Lightbulb } from 'lucide-react';
+import { BookOpen, Clock, Calendar, ArrowLeft, Lightbulb } from 'lucide-react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/blogData';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { BreadcrumbNavigation } from '../components/BreadcrumbNavigation';
 
 interface BlogPostDetailProps {
   slug: string;
@@ -19,18 +20,15 @@ export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onNavigate
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-200/80 py-3">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center text-xs text-slate-500 space-x-2">
-            <button onClick={() => onNavigate('/')} className="hover:text-indigo-600">Home</button>
-            <ChevronRight className="w-3 h-3 text-slate-400" />
-            <button onClick={() => onNavigate('/blog')} className="hover:text-indigo-600">Blog</button>
-            <ChevronRight className="w-3 h-3 text-slate-400" />
-            <span className="text-slate-800 font-semibold truncate">{post.title}</span>
-          </nav>
-        </div>
-      </div>
+      {/* Dynamic Breadcrumb Navigation */}
+      <BreadcrumbNavigation
+        items={[
+          { label: 'Home', path: '/' },
+          { label: 'Blog', path: '/blog' },
+          { label: post.title, path: `/blog/${post.slug}`, active: true },
+        ]}
+        onNavigate={onNavigate}
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <button
