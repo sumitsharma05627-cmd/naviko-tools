@@ -52,6 +52,14 @@ import {
   File,
   ChevronRight,
   Star,
+  HeartPulse,
+  Heart,
+  Salad,
+  Apple,
+  Utensils,
+  Dumbbell,
+  Info,
+  ShieldAlert,
   LucideIcon
 } from 'lucide-react';
 
@@ -107,7 +115,15 @@ const ICON_MAP: Record<string, LucideIcon> = {
   RefreshCw,
   File,
   ChevronRight,
-  Star
+  Star,
+  HeartPulse,
+  Heart,
+  Salad,
+  Apple,
+  Utensils,
+  Dumbbell,
+  Info,
+  ShieldAlert
 };
 
 interface DynamicIconProps {

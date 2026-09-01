@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
@@ -18,6 +19,10 @@ const PageLoadingFallback: React.FC = () => (
 const ToolLayout = lazy(() => import('./components/ToolLayout').then(m => ({ default: m.ToolLayout })));
 const ChatBot = lazy(() => import('./components/ChatBot').then(m => ({ default: m.ChatBot })));
 const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ default: m.SearchModal })));
+
+// Lazy Loaded Secondary & Monetization Pages
+const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
+const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
 
 // Lazy Loaded Tool Components
 const NumberCalculator = lazy(() => import('./components/tools/NumberCalculator').then(m => ({ default: m.NumberCalculator })));
@@ -67,6 +72,10 @@ const FireCalculator = lazy(() => import('./components/tools/FireCalculator').th
 const InflationCalculator = lazy(() => import('./components/tools/InflationCalculator').then(m => ({ default: m.InflationCalculator })));
 const DebtClock = lazy(() => import('./components/tools/DebtClock').then(m => ({ default: m.DebtClock })));
 const BudgetCalculator = lazy(() => import('./components/tools/BudgetCalculator').then(m => ({ default: m.BudgetCalculator })));
+
+// Health & Wellness Tools
+const BmiCalculator = lazy(() => import('./components/tools/BmiCalculator').then(m => ({ default: m.BmiCalculator })));
+const NutritionScience = lazy(() => import('./components/tools/NutritionScience').then(m => ({ default: m.NutritionScience })));
 
 // Lazy Loaded Secondary Pages
 const AllToolsPage = lazy(() => import('./pages/AllToolsPage').then(m => ({ default: m.AllToolsPage })));
@@ -130,6 +139,10 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'india-debt-clock': DebtClock,
   'budget-calculator': BudgetCalculator,
   'budget-planner': BudgetCalculator,
+  'bmi-calculator': BmiCalculator,
+  'bmi': BmiCalculator,
+  'nutrition-science': NutritionScience,
+  'nutrition': NutritionScience,
 };
 
 export default function App() {
@@ -208,6 +221,17 @@ export default function App() {
     if (path === '/calculators') {
       return <AllToolsPage onNavigate={navigate} initialCategory="calculators" />;
     }
+    if (path === '/health-tools') {
+      return <AllToolsPage onNavigate={navigate} initialCategory="health" />;
+    }
+
+    // 2.1 Monetization & Account Routes
+    if (path === '/premium' || path === '/pricing' || path === '/pro' || path === '/upgrade') {
+      return <PremiumPage onNavigate={navigate} />;
+    }
+    if (path === '/account' || path === '/subscription' || path === '/my-plan') {
+      return <AccountPage onNavigate={navigate} />;
+    }
 
     // 3. Blog Routes
     if (path === '/blog') {
@@ -266,35 +290,37 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
-          <Header
-            onNavigate={navigate}
-            onOpenSearch={() => setIsSearchOpen(true)}
-            currentPath={currentPath}
-          />
+        <SubscriptionProvider>
+          <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
+            <Header
+              onNavigate={navigate}
+              onOpenSearch={() => setIsSearchOpen(true)}
+              currentPath={currentPath}
+            />
 
-          <main className="flex-1">
-            <Suspense fallback={<PageLoadingFallback />}>
-              {renderContent()}
-            </Suspense>
-          </main>
+            <main className="flex-1">
+              <Suspense fallback={<PageLoadingFallback />}>
+                {renderContent()}
+              </Suspense>
+            </main>
 
-          <Footer onNavigate={navigate} />
+            <Footer onNavigate={navigate} />
 
-          <Suspense fallback={null}>
-            <ChatBot onNavigate={navigate} />
-          </Suspense>
-
-          {isSearchOpen && (
             <Suspense fallback={null}>
-              <SearchModal
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                onNavigate={(path) => navigate(path)}
-              />
+              <ChatBot onNavigate={navigate} />
             </Suspense>
-          )}
-        </div>
+
+            {isSearchOpen && (
+              <Suspense fallback={null}>
+                <SearchModal
+                  isOpen={isSearchOpen}
+                  onClose={() => setIsSearchOpen(false)}
+                  onNavigate={(path) => navigate(path)}
+                />
+              </Suspense>
+            )}
+          </div>
+        </SubscriptionProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

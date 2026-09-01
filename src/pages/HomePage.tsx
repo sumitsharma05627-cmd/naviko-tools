@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, ArrowRight, Sparkles, ShieldCheck, Zap, Lock, 
   ChevronRight, Star, TrendingUp, Flame, Landmark,
-  Briefcase
+  Briefcase, HeartPulse, Scale, Apple, BookOpen, Utensils
 } from 'lucide-react';
 import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
@@ -214,6 +214,114 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
         </div>
       </section>
 
+      {/* Health & Wellness Section - Directly Below Main Hero */}
+      <section className="py-12 bg-white dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-2 border border-emerald-200/80 dark:border-emerald-800/80">
+                <HeartPulse className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Health &amp; Wellness Science</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Health &amp; Wellness
+              </h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 max-w-2xl">
+                Evidence-based biometric calculations and interactive nutrition intelligence with 100% private, instant client-side processing.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigate('/health-tools')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <span>Explore All Health Tools</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Health & Wellness Dual Showcase Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Card 1: BMI & Body Metrics */}
+            <div
+              onClick={() => onNavigate('/tools/bmi')}
+              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Scale className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+                    Adult &amp; Pediatric
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  BMI &amp; Body Metrics
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                  Calculate Body Mass Index across metric and imperial units, view healthy reference weight ranges, explore under-18 pediatric growth percentiles, and learn key body composition limits.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Metric &amp; Imperial
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Healthy Range Gauge
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Pediatric Percentiles
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                <span>Calculate Body Mass Index</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 2: Nutrition Science */}
+            <div
+              onClick={() => onNavigate('/tools/nutrition')}
+              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-teal-400/60 dark:hover:border-teal-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Apple className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 text-[11px] font-bold border border-teal-200/80 dark:border-teal-800/80">
+                    Interactive Database
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                  Nutrition Science
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                  Interactive nutrient guide (Macronutrients, Vitamins, Minerals), comprehensive Indian whole food nutrient database, balanced meal plate builder, and packaged food label reader.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Nutrient Guide
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Indian Food DB
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Plate Builder &amp; Label Reader
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                <span>Explore Nutrition Database</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Privacy & Guarantee Section */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -388,6 +496,145 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
                 </div>
               </button>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* NAVIKO 3-Tier Subscription Spotlight Section */}
+      <section className="py-16 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white relative overflow-hidden border-y border-indigo-900/40">
+        <div className="absolute top-0 right-1/4 w-96 h-96 [background:radial-gradient(circle,_rgba(99,102,241,0.15)_0%,_transparent_70%)] rounded-full pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-extrabold uppercase tracking-wider mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Transparent 3-Tier Plans</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+              Start Free. Upgrade When You Need{' '}
+              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
+                More Power
+              </span>
+            </h2>
+
+            <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+              Zero lock-in. Essential tools are 100% free forever. Upgrade to Plus or Pro for meal planning, mock test score projections, and batch processing.
+            </p>
+          </div>
+
+          {/* 3-Tier Compact Preview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* 1. FREE */}
+            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-all">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                    FREE PLAN
+                  </span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
+                    Casual
+                  </span>
+                </div>
+                <div className="text-3xl font-black text-white mb-1">₹0</div>
+                <div className="text-xs text-slate-400 mb-4">Forever free without mandatory registration</div>
+                <ul className="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400">✓</span> 25+ Core Calculators &amp; Student Hub
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400">✓</span> BMI &amp; Pediatric Growth Percentiles
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-emerald-400">✓</span> 5 daily operations on AI / heavy tools
+                  </li>
+                </ul>
+              </div>
+              <button
+                onClick={() => onNavigate('/tools')}
+                className="mt-6 w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                Use Free Tools
+              </button>
+            </div>
+
+            {/* 2. PLUS */}
+            <div className="p-6 rounded-3xl bg-indigo-950/40 border-2 border-indigo-500/80 flex flex-col justify-between relative shadow-lg shadow-indigo-500/10">
+              <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider">
+                POPULAR
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+                    NAVIKO PLUS
+                  </span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200">
+                    Everyday
+                  </span>
+                </div>
+                <div className="text-3xl font-black text-white mb-1">₹99 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
+                <div className="text-xs text-indigo-300 mb-4">Or ₹799/year (Save ~33%)</div>
+                <ul className="text-xs text-slate-200 space-y-2 border-t border-indigo-500/30 pt-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-indigo-400 font-bold">✓</span> 50 daily ops limit (10x Free)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-indigo-400 font-bold">✓</span> 7-Day Nutrition Planner &amp; Grocery List
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-indigo-400 font-bold">✓</span> Mock Test Trend Projections
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-indigo-400 font-bold">✓</span> Saved Items &amp; Persistent Workspace
+                  </li>
+                </ul>
+              </div>
+              <button
+                onClick={() => onNavigate('/premium')}
+                className="mt-6 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                Upgrade to Plus
+              </button>
+            </div>
+
+            {/* 3. PRO */}
+            <div className="p-6 rounded-3xl bg-slate-900/90 border-2 border-purple-500/80 flex flex-col justify-between relative shadow-xl shadow-purple-500/10">
+              <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider">
+                POWER USERS
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
+                    NAVIKO PRO
+                  </span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
+                    Maximum
+                  </span>
+                </div>
+                <div className="text-3xl font-black text-white mb-1">₹199 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
+                <div className="text-xs text-purple-300 mb-4">Or ₹1,499/year (Save ~37%)</div>
+                <ul className="text-xs text-slate-200 space-y-2 border-t border-purple-500/30 pt-4">
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold">✓</span> 200 daily ops limit
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold">✓</span> Batch Document Processing
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold">✓</span> Full Predictive Study Analytics
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-amber-400 font-bold">✓</span> 100% Ad-Free Distractionless
+                  </li>
+                </ul>
+              </div>
+              <button
+                onClick={() => onNavigate('/premium')}
+                className="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
           </div>
         </div>
       </section>

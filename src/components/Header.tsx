@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, Menu, X, Sparkles, ChevronDown, ChevronRight,
   Calculator, PieChart, Landmark, TrendingUp, Sun, Moon, Laptop,
-  Globe, Check, Zap, Layers, DollarSign, Shield, FileText, ArrowRight
+  Globe, Check, Zap, Layers, DollarSign, Shield, FileText, ArrowRight, Crown
 } from 'lucide-react';
 import { useLanguage, LANGUAGES, LanguageCode } from '../context/LanguageContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { PremiumBadge } from './monetization/PremiumBadge';
 
 interface HeaderProps {
   currentPath: string;
@@ -23,6 +25,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
 
   const { currentLanguage, setLanguage, t, activeMeta } = useLanguage();
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+  const { plan, subscriptionStatus } = useSubscription();
+
+  const isPremiumUser = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
 
   const financeRef = useRef<HTMLDivElement>(null);
   const calcRef = useRef<HTMLDivElement>(null);
@@ -59,6 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
 
   const navLinks = [
     { name: t('nav.home', 'Home'), path: '/' },
+    { name: t('nav.health', 'Health & Wellness'), path: '/health-tools' },
     { name: t('nav.student', 'Student Tools'), path: '/student-tools' },
     { name: t('nav.pdf', 'PDF Tools'), path: '/pdf-tools' },
     { name: t('nav.image', 'Image Tools'), path: '/image-tools' },
@@ -329,8 +335,29 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
             })}
           </nav>
 
-          {/* 3. Actions: Quick Budget shortcut, Language Selector, Theme Toggle, Search, Mobile Menu */}
+          {/* 3. Actions: Premium CTA, Quick Budget shortcut, Language Selector, Theme Toggle, Search, Mobile Menu */}
           <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* NAVIKO Premium / Account Button */}
+            {isPremiumUser ? (
+              <button
+                onClick={() => handleNav('/account')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-extrabold transition-all cursor-pointer shadow-2xs"
+                title="Manage NAVIKO Premium Account"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="hidden sm:inline">My Premium</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleNav('/premium')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 hover:from-amber-500/25 hover:to-rose-500/25 text-amber-800 dark:text-amber-300 border border-amber-300/40 dark:border-amber-600/40 text-xs font-extrabold transition-all cursor-pointer shadow-2xs hover:scale-105"
+                title="Explore NAVIKO Premium"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Premium</span>
+              </button>
+            )}
+
             {/* Quick Budget Planner Direct Link in Menu Bar */}
             <button
               onClick={() => handleNav('/tools/budget-calculator')}
@@ -441,6 +468,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 <Search className="w-4 h-4 text-slate-500" /> {t('nav.searchPlaceholder', 'Search 20+ smart tools...')}
               </span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+          </div>
+
+          {/* Premium Callout in Mobile Menu */}
+          <div className="pt-2">
+            <button
+              onClick={() => handleNav(isPremiumUser ? '/account' : '/premium')}
+              className="w-full p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 border border-amber-300/40 dark:border-amber-700/50 flex items-center justify-between text-left cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center font-black">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>{isPremiumUser ? 'My Premium Account' : 'NAVIKO Premium'}</span>
+                    <PremiumBadge size="xs" />
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {isPremiumUser ? 'Manage subscription and limits' : 'Higher daily limits & advanced tools'}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-amber-500" />
             </button>
           </div>
 

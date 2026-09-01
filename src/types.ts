@@ -2,6 +2,7 @@ export type ToolCategory =
   | 'calculators' 
   | 'finance'
   | 'student' 
+  | 'health'
   | 'image' 
   | 'pdf' 
   | 'career' 

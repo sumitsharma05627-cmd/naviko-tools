@@ -1,14 +1,21 @@
 import React, { useEffect, useRef } from 'react';
+import { useSubscription } from '../context/SubscriptionContext';
 
 interface AdSenseDisplayAdProps {
   className?: string;
 }
 
 export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({ className = '' }) => {
+  const { plan, subscriptionStatus } = useSubscription();
   const adRef = useRef<HTMLModElement | null>(null);
   const isPushed = useRef(false);
 
+  const isAdFree = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
+
   useEffect(() => {
+    // If user has subscription, do not push ads
+    if (isAdFree) return;
+
     // Prevent duplicate push calls during React 18 Strict Mode or re-renders
     if (isPushed.current) return;
 
@@ -23,7 +30,11 @@ export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({ className = 
       // Gracefully handle ad blocker or initialization errors
       console.warn('AdSense Display Ad initialization note:', e);
     }
-  }, []);
+  }, [isAdFree]);
+
+  if (isAdFree) {
+    return null; // Ad-free experience for NAVIKO Plus and Pro members
+  }
 
   return (
     <section

@@ -26,8 +26,11 @@ export const AllToolsPage: React.FC<AllToolsPageProps> = ({
 
   const categories = [
     { id: 'all', label: 'All Tools' },
+    { id: 'health', label: 'Health & Wellness' },
+    { id: 'finance', label: 'Finance & Wealth' },
     { id: 'calculators', label: 'Calculators' },
     { id: 'student', label: 'Student' },
+    { id: 'pdf', label: 'PDF Tools' },
     { id: 'image', label: 'Image Tools' },
     { id: 'career', label: 'Career' },
     { id: 'other', label: 'Other Utilities' },

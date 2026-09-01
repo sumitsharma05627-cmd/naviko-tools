@@ -1,10 +1,14 @@
-import React, { useEffect } from 'react';
-import { ChevronRight, Home, HelpCircle, BookOpen, Lightbulb, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ChevronRight, Home, HelpCircle, BookOpen, Lightbulb, ArrowRight, Sparkles, Lock, Zap } from 'lucide-react';
 import { ToolMeta } from '../types';
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from './DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from './AdSlot';
 import { useLanguage } from '../context/LanguageContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { TOOL_ENTITLEMENTS } from '../config/entitlements';
+import { PremiumBadge } from './monetization/PremiumBadge';
+import { LockedFeatureModal } from './monetization/LockedFeatureModal';
 
 interface ToolLayoutProps {
   tool: ToolMeta;
@@ -20,6 +24,12 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   examples = []
 }) => {
   const { t } = useLanguage();
+  const { plan, subscriptionStatus, canAccess, checkQuota } = useSubscription();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const isPremium = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
+  const entitlement = TOOL_ENTITLEMENTS[tool.id];
+  const quota = checkQuota(tool.id);
 
   const toolName = t(`${tool.id}.title`, tool.name);
   const toolDesc = t(`${tool.id}.subtitle`, tool.description);
@@ -179,28 +189,110 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {/* 2 & 3. Header Title & Description */}
         <div className="mb-6 text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold mb-3">
-            <DynamicIcon name={tool.iconName} className="w-3.5 h-3.5" />
-            <span>{categoryLabel}</span>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
+              <DynamicIcon name={tool.iconName} className="w-3.5 h-3.5" />
+              <span>{categoryLabel}</span>
+            </div>
+
+            {(entitlement?.accessLevel === 'PLUS' || entitlement?.accessLevel === 'PRO') && (
+              <PremiumBadge plan={entitlement?.accessLevel === 'PRO' ? 'pro' : 'plus'} size="xs" />
+            )}
+
+            {isPremium && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                <Sparkles className="w-3 h-3 text-amber-500" /> Premium Member
+              </span>
+            )}
           </div>
+
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {toolName}
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
             {toolDesc}
           </p>
+
+          {/* Daily Quota Indicator for FREE_LIMITED tools */}
+          {entitlement?.accessLevel === 'FREE_LIMITED' && (
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400">
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span>
+                {isPremium ? (
+                  <strong className="text-amber-600 dark:text-amber-400">Premium Quota: 50 runs/day</strong>
+                ) : (
+                  <>
+                    Daily Free Quota: <strong className="text-slate-900 dark:text-white">{quota.remaining} of {quota.limit} remaining</strong>
+                  </>
+                )}
+              </span>
+              {!isPremium && (
+                <button
+                  onClick={() => onNavigate('/premium')}
+                  className="font-bold text-amber-600 dark:text-amber-400 hover:underline ml-1 cursor-pointer"
+                >
+                  Get 50/day →
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* 4 & 5. Working Tool Interface Container */}
+        {/* 4 & 5. Working Tool Interface Container OR Locked Feature View */}
         <div className="mb-10">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-4 sm:p-6 lg:p-8 transition-colors">
-            {children}
-          </div>
+          {!canAccess(tool.id) ? (
+            <div className="rounded-3xl bg-white dark:bg-slate-900 border-2 border-amber-500/50 shadow-xl p-8 sm:p-12 text-center max-w-2xl mx-auto transition-colors">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-5 shadow-inner">
+                <Lock className="w-8 h-8" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>NAVIKO Premium Tool</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Unlock {toolName} with NAVIKO Premium
+              </h2>
+
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto">
+                {entitlement?.premiumFeatureSummary ||
+                  entitlement?.description ||
+                  'This advanced utility is part of the NAVIKO Premium Productivity Suite. Upgrade to unlock full access, saved histories, and priority processing.'}
+              </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => onNavigate('/premium')}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-[1.02]"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Upgrade to Premium</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => onNavigate('/tools')}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm transition-colors cursor-pointer"
+                >
+                  Explore 25+ Free Tools
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm p-4 sm:p-6 lg:p-8 transition-colors">
+              {children}
+            </div>
+          )}
         </div>
 
-        {/* Ad Placeholder below tool */}
-        <DesktopAdSlot className="mb-10" />
-        <MobileAdSlot className="mb-8" />
+        {/* Ad Placeholder below tool for Free users */}
+        {!isPremium && (
+          <>
+            <DesktopAdSlot className="mb-10" />
+            <MobileAdSlot className="mb-8" />
+          </>
+        )}
 
         {/* Informational Sections: How to use, Examples, FAQs, Related */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">

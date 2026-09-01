@@ -1684,6 +1684,138 @@ export const TOOLS_DATA: ToolMeta[] = [
         answer: 'In competitive exams with negative marking (like NEET and JEE), incorrect guesses drastically lower your rank. Tracking accuracy helps you focus on cutting negative marks before attempting more questions.'
       }
     ]
+  },
+  {
+    id: 'bmi-calculator',
+    name: 'BMI & Body Metrics',
+    slug: 'bmi',
+    path: '/tools/bmi',
+    category: 'health',
+    categoryName: 'Health & Wellness',
+    description: 'Calculate Body Mass Index (BMI) and understand what the measurement means. Features Metric and Imperial units, healthy weight reference ranges, under-18 pediatric growth guidelines, and educational body metric science.',
+    shortDescription: 'Calculate BMI, view healthy reference weight ranges, and learn body metric science.',
+    iconName: 'Scale',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    tags: [
+      'bmi',
+      'bmi calculator',
+      'body mass index',
+      'body metrics',
+      'weight',
+      'height',
+      'ideal weight',
+      'healthy weight',
+      'obesity calculator',
+      'underweight',
+      'overweight',
+      'health',
+      'wellness',
+      'growth chart',
+      'pediatric bmi',
+      'waist to height'
+    ],
+    features: [
+      'Instant BMI calculation with real-time Metric (cm/kg) and Imperial (ft-in/lbs) unit switching',
+      'Interactive visual BMI category gauge: Underweight, Healthy, Overweight, and Obesity classifications',
+      'Estimated standard healthy reference weight range tailored to entered height',
+      'Specialized under-18 pediatric safety mode with age-specific growth percentile education',
+      'Step-by-step mathematical formula explanation and metric conversions breakdown',
+      'In-depth educational guide on BMI limitations, muscle-to-fat ratios, and holistic body metrics'
+    ],
+    howToUse: [
+      'Select your preferred measurement units: Metric (cm, kg) or Imperial (ft, in, lbs).',
+      'Enter your Age, Height, and Weight.',
+      'View your calculated BMI value, color-coded classification, and healthy reference weight range.',
+      'If age is under 18, review the pediatric growth chart guidelines.',
+      'Explore the educational guides below to understand BMI limitations and complementary metrics.'
+    ],
+    faqs: [
+      {
+        question: 'What is a healthy BMI for adults?',
+        answer: 'The World Health Organization (WHO) defines a healthy adult BMI as between 18.5 and 24.9 kg/m². However, individual body composition and ethnic backgrounds can influence metabolic risk.'
+      },
+      {
+        question: 'Can BMI tell if I have high muscle mass?',
+        answer: 'No. BMI only evaluates total weight relative to height. Muscular athletes and weightlifters often register in the overweight category despite having low body fat and strong cardiovascular health.'
+      },
+      {
+        question: 'Why are pediatric BMI percentiles used for teenagers under 18?',
+        answer: 'Because children and teenagers are developing rapidly, static adult BMI cut-offs do not apply. Healthcare professionals plot BMI-for-age on growth percentiles based on age and sex.'
+      }
+    ]
+  },
+  {
+    id: 'nutrition-science',
+    name: 'Nutrition Science',
+    slug: 'nutrition',
+    path: '/tools/nutrition',
+    category: 'health',
+    categoryName: 'Health & Wellness',
+    description: 'Explore nutrients, foods, and the science behind balanced nutrition. Features interactive Nutrient Explorer (Macronutrients, Vitamins, Minerals), Food Database with Indian staples, Food Comparison, Balanced Meal Plate Builder, and Interactive Label Reading Guide.',
+    shortDescription: 'Explore nutrients, food compositions, balanced meal plate builder, and label reading guide.',
+    iconName: 'Apple',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    tags: [
+      'nutrition',
+      'nutrition science',
+      'nutrients',
+      'protein',
+      'carbohydrates',
+      'fat',
+      'dietary fiber',
+      'vitamins',
+      'minerals',
+      'calcium',
+      'iron',
+      'vitamin c',
+      'vitamin d',
+      'vitamin b12',
+      'food nutrition',
+      'calories',
+      'meal builder',
+      'balanced diet',
+      'nutrition label',
+      'food database',
+      'dal',
+      'paneer',
+      'roti',
+      'rice',
+      'health',
+      'wellness'
+    ],
+    features: [
+      'Comprehensive Nutrient Explorer covering Macronutrients, 13 Essential Vitamins, and Key Minerals',
+      'Extensive Indian and global whole food database with detailed macros, fiber, and micronutrients',
+      'Side-by-side Food Comparison matrix with dietary diversity educational insights',
+      'Interactive Balanced Meal Plate Builder with live calorie, protein, and fiber tally',
+      'Interactive Nutrition Facts Label Guide decoding serving sizes, % Daily Value, and added sugars',
+      'Evidence-informed nutrition articles on protein combining, complex carbs, and healthy fats'
+    ],
+    howToUse: [
+      'Use the top navigation tabs to switch between Nutrients, Foods, Comparison, Meal Builder, Label Guide, and Articles.',
+      'In Nutrient Explorer, filter by Macronutrients, Vitamins, or Minerals and search specific nutrients.',
+      'In Food Database, search common staples (Roti, Dal, Paneer, Rice) and toggle between portion sizes and per 100g.',
+      'In Compare Foods, select two items to review their side-by-side nutritional metrics.',
+      'In Meal Builder, tap items across food groups to construct a balanced plate and track totals.'
+    ],
+    faqs: [
+      {
+        question: 'What is the difference between macronutrients and micronutrients?',
+        answer: 'Macronutrients (carbohydrates, proteins, fats) are needed in large daily quantities (grams) and provide energy (calories). Micronutrients (vitamins and minerals) are needed in trace quantities (milligrams/micrograms) to act as enzymatic cofactors.'
+      },
+      {
+        question: 'Can vegetarians get complete protein without meat?',
+        answer: 'Yes! Combining whole grains with legumes (such as Dal with Rice or Roti, Rajma-Chawal, Khichdi) or consuming dairy (paneer, milk, curd), tofu, and seeds provides all 9 essential amino acids.'
+      },
+      {
+        question: 'How do I know if a packaged food is high in a nutrient?',
+        answer: 'Use the 5/20 Rule: 5% Daily Value (% DV) or less is considered low, while 20% Daily Value or more is considered high. Aim for high % DV in fiber and minerals, and low % DV in added sugars and saturated fats.'
+      }
+    ]
   }
 ];
 
@@ -1698,7 +1830,7 @@ export const getToolByPath = (path: string): ToolMeta | undefined => {
   const directSlug = TOOLS_DATA.find((t) => t.slug.toLowerCase() === cleanPath || t.id.toLowerCase() === cleanPath);
   if (directSlug) return directSlug;
 
-  // 3. Extract last segment (slug) from path prefixes like /tools/..., /student-tools/..., /finance-tools/..., /pdf-tools/..., /image-tools/..., /career-tools/..., /calculators/...
+  // 3. Extract last segment (slug) from path prefixes like /tools/..., /student-tools/..., /finance-tools/..., /pdf-tools/..., /image-tools/..., /career-tools/..., /calculators/..., /health-tools/...
   const segments = cleanPath.split('/').filter(Boolean);
   if (segments.length > 0) {
     const lastSegment = segments[segments.length - 1];
@@ -1719,6 +1851,12 @@ export const getToolByPath = (path: string): ToolMeta | undefined => {
   if (cleanPath === '/tools/random-study-question-generator') {
     return TOOLS_DATA.find((t) => t.id === 'random-question-generator');
   }
+  if (cleanPath === '/bmi' || cleanPath === '/tools/bmi-calculator') {
+    return TOOLS_DATA.find((t) => t.id === 'bmi-calculator');
+  }
+  if (cleanPath === '/nutrition' || cleanPath === '/tools/nutrition-science') {
+    return TOOLS_DATA.find((t) => t.id === 'nutrition-science');
+  }
 
   return undefined;
 };
@@ -1728,6 +1866,14 @@ export const getToolBySlug = (slug: string): ToolMeta | undefined => {
 };
 
 export const CATEGORIES_META = [
+  {
+    id: 'health',
+    title: 'Health & Wellness',
+    description: 'Simple tools and educational resources for understanding health, nutrition and everyday wellbeing.',
+    icon: 'HeartPulse',
+    path: '/health-tools',
+    toolsCount: 2
+  },
   {
     id: 'finance',
     title: 'Finance & Wealth',

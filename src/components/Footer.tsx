@@ -230,12 +230,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Column 5: Student & Career */}
+          {/* Column 5: Student, Health & Career */}
           <div>
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-white mb-3.5 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-sky-400" /> Academic &amp; Career
+              <GraduationCap className="w-3.5 h-3.5 text-sky-400" /> Academic &amp; Health
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
+              <li>
+                <button onClick={() => handleNav('/tools/bmi')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ BMI &amp; Body Metrics
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNav('/tools/nutrition')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Nutrition Science
+                </button>
+              </li>
               <li>
                 <button onClick={() => handleNav('/tools/cgpa-calculator')} className="hover:text-white transition-colors cursor-pointer">
                   CGPA to Percentage (CBSE)
@@ -254,16 +264,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button onClick={() => handleNav('/tools/image-compressor')} className="hover:text-white transition-colors cursor-pointer">
                   Image Compressor (KB)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/tools/image-resizer')} className="hover:text-white transition-colors cursor-pointer">
-                  Image Resizer &amp; DPI
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/tools/word-counter')} className="hover:text-white transition-colors cursor-pointer">
-                  Word &amp; Character Counter
                 </button>
               </li>
             </ul>
