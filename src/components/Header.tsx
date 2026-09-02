@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, Menu, X, Sparkles, ChevronDown, ChevronRight,
   Calculator, PieChart, Landmark, TrendingUp, Sun, Moon, Laptop,
-  Globe, Check, Zap, Layers, DollarSign, Shield, FileText, ArrowRight, Crown
+  Globe, Check, Zap, Layers, DollarSign, Shield, FileText, ArrowRight, Crown,
+  User, LayoutDashboard
 } from 'lucide-react';
 import { useLanguage, LANGUAGES, LanguageCode } from '../context/LanguageContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useAuth } from '../context/AuthContext';
 import { PremiumBadge } from './monetization/PremiumBadge';
 
 interface HeaderProps {
@@ -25,9 +27,12 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
 
   const { currentLanguage, setLanguage, t, activeMeta } = useLanguage();
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
-  const { plan, subscriptionStatus } = useSubscription();
+  const { plan, subscriptionStatus, isTrial } = useSubscription();
+  const { user, isAuthenticated } = useAuth();
 
-  const isPremiumUser = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
+  const isPremiumUser =
+    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
+    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
 
   const financeRef = useRef<HTMLDivElement>(null);
   const calcRef = useRef<HTMLDivElement>(null);
@@ -345,7 +350,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 title="Manage NAVIKO Premium Account"
               >
                 <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="hidden sm:inline">My Premium</span>
+                <span className="hidden sm:inline">{isTrial ? 'Trial Active' : 'My Premium'}</span>
               </button>
             ) : (
               <button
@@ -355,6 +360,29 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span>Premium</span>
+              </button>
+            )}
+
+            {/* Auth / Dashboard Button */}
+            {isAuthenticated && user ? (
+              <button
+                onClick={() => handleNav('/dashboard')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Open User Dashboard"
+              >
+                <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden sm:inline max-w-[90px] truncate">{user.name.split(' ')[0]}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleNav('/login')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Sign in to your account"
+              >
+                <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span className="hidden sm:inline">Sign In</span>
               </button>
             )}
 
@@ -469,6 +497,64 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
               </span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>
+          </div>
+
+          {/* User Account / Dashboard in Mobile Menu */}
+          <div className="pt-2">
+            {isAuthenticated && user ? (
+              <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">
+                        {user.name}
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {user.email}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <button
+                    onClick={() => handleNav('/dashboard')}
+                    className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 text-center border border-indigo-100 dark:border-indigo-900 shadow-2xs cursor-pointer"
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => handleNav('/profile')}
+                    className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 text-center border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => handleNav('/billing')}
+                    className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 text-center border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
+                  >
+                    Billing
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleNav('/login')}
+                  className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs text-center border border-slate-200/80 dark:border-slate-700 cursor-pointer"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => handleNav('/signup')}
+                  className="py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-bold text-xs text-center shadow-xs cursor-pointer"
+                >
+                  Create Account
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Premium Callout in Mobile Menu */}

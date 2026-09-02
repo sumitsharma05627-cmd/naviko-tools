@@ -36,14 +36,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
     renewalDate,
     startDate,
     customerEmail,
+    isTrial,
+    trialUsed,
+    remainingTrialDays,
+    remainingTrialHours,
+    trialEndsAt,
     cancelSubscription,
     upgradeToTier,
-    setTestPlan,
     savedItems,
     deleteUserItem,
     resetTodayUsage,
-    isTestMode,
-    toggleTestMode,
     totalDailyUsage,
     dailyAiLimit,
   } = useSubscription();
@@ -131,19 +133,26 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
                   </span>
                   <div className="flex items-center gap-2 mt-1">
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white capitalize">
-                      NAVIKO {plan}
+                      {subscriptionStatus === 'TRIAL_ACTIVE' ? 'NAVIKO ₹1 Trial' : `NAVIKO ${plan}`}
                     </h2>
                     <PremiumBadge plan={plan} />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {plan !== 'free'
+                    {subscriptionStatus === 'TRIAL_ACTIVE'
+                      ? '₹1 7-day trial active with full Premium access. No automatic renewal • Returns to Free after expiry.'
+                      : plan !== 'free'
                       ? `Billed ${billingInterval} at ${currentPriceFormatted} / ${billingInterval === 'yearly' ? 'year' : 'month'}`
                       : 'Free forever. Upgrade anytime to Plus or Pro for higher quotas, meal planning, and advanced analytics.'}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {plan !== 'free' ? (
+                  {subscriptionStatus === 'TRIAL_ACTIVE' ? (
+                    <div className="px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Trial Active ({remainingTrialDays}d {remainingTrialHours}h left)</span>
+                    </div>
+                  ) : plan !== 'free' && subscriptionStatus === 'ACTIVE' ? (
                     <div className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Active</span>
@@ -158,7 +167,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
                     </button>
                   )}
 
-                  {plan === 'plus' && (
+                  {subscriptionStatus === 'TRIAL_ACTIVE' && (
+                    <button
+                      onClick={() => onNavigate('/premium')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                    >
+                      <Crown className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Keep Premium (Select Plan)</span>
+                    </button>
+                  )}
+
+                  {plan === 'plus' && subscriptionStatus === 'ACTIVE' && (
                     <button
                       onClick={() => onNavigate('/premium')}
                       className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
@@ -181,10 +200,21 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
 
                 <div>
                   <div className="text-[10px] uppercase font-bold text-slate-400">
-                    {plan !== 'free' ? 'Next Renewal Date' : 'Account Status'}
+                    {subscriptionStatus === 'TRIAL_ACTIVE'
+                      ? 'Trial Ends (Returns to Free)'
+                      : plan !== 'free'
+                      ? 'Next Renewal Date'
+                      : 'Account Status'}
                   </div>
                   <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                    {plan !== 'free' && renewalDate
+                    {subscriptionStatus === 'TRIAL_ACTIVE' && trialEndsAt
+                      ? `${new Date(trialEndsAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })} (${remainingTrialDays}d left)`
+                      : plan !== 'free' && renewalDate
                       ? new Date(renewalDate).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'short',
@@ -195,15 +225,28 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
                 </div>
 
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Privacy Status</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400">Privacy &amp; Renewal</div>
                   <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4" /> 100% Client-Side Safe
+                    <ShieldCheck className="w-4 h-4" />{' '}
+                    {subscriptionStatus === 'TRIAL_ACTIVE' ? 'No Auto-Renewal' : '100% Client-Side Safe'}
                   </div>
                 </div>
               </div>
 
               {/* Actions & Cancellation */}
-              {plan !== 'free' && (
+              {subscriptionStatus === 'TRIAL_ACTIVE' ? (
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    Your ₹1 trial does not renew or charge automatically. When it expires, your account simply returns to Free.
+                  </div>
+                  <button
+                    onClick={() => onNavigate('/premium')}
+                    className="px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer"
+                  >
+                    View All Plans
+                  </button>
+                </div>
+              ) : plan !== 'free' && (
                 <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     Need to change your plan or cancel subscription?
@@ -241,44 +284,20 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onNavigate }) => {
               )}
             </div>
 
-            {/* Sandbox Developer Controls */}
-            <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-              <div>
-                <div className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                  <Sliders className="w-4 h-4 text-indigo-600" />
-                  <span>Sandbox Testing Controls</span>
-                </div>
-                <p className="text-indigo-700 dark:text-indigo-300 mt-0.5">
-                  Switch instantly between Free, Plus, and Pro tiers to test access entitlement rules.
-                </p>
+            {/* Secure Billing Status Note */}
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4 text-xs">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>
+                  All subscriptions and upgrades are secured with real-time Razorpay cryptographic verification.
+                </span>
               </div>
-
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <button
-                  onClick={() => setTestPlan('free')}
-                  className={`px-2.5 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${plan === 'free' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}
-                >
-                  Set Free
-                </button>
-                <button
-                  onClick={() => setTestPlan('plus')}
-                  className={`px-2.5 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${plan === 'plus' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}
-                >
-                  Set Plus
-                </button>
-                <button
-                  onClick={() => setTestPlan('pro')}
-                  className={`px-2.5 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${plan === 'pro' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}
-                >
-                  Set Pro
-                </button>
-                <button
-                  onClick={resetTodayUsage}
-                  className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Reset Daily Quotas
-                </button>
-              </div>
+              <button
+                onClick={resetTodayUsage}
+                className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer shrink-0"
+              >
+                Reset Daily Quotas
+              </button>
             </div>
           </div>
         )}

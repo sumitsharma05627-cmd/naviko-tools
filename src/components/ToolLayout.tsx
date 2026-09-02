@@ -28,7 +28,9 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   const { plan, subscriptionStatus, canAccess, checkQuota } = useSubscription();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  const isPremium = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
+  const isPremium =
+    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
+    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
   const entitlement = TOOL_ENTITLEMENTS[tool.id];
   const quota = checkQuota(tool.id);
 

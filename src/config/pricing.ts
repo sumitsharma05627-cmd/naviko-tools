@@ -1,6 +1,6 @@
 import { ToolCategory } from '../types';
 
-export type PlanType = 'free' | 'plus' | 'pro';
+export type PlanType = 'free' | 'plus' | 'pro' | 'trial';
 export type BillingInterval = 'monthly' | 'yearly';
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'SGD' | 'AED' | 'SAR' | 'JPY';
 

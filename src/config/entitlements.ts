@@ -1,3 +1,5 @@
+import { PlanType } from './pricing';
+
 export type AccessLevel = 'FREE' | 'FREE_LIMITED' | 'PLUS' | 'PRO';
 
 export interface PlanCapabilities {
@@ -12,7 +14,7 @@ export interface PlanCapabilities {
   maxFileSizeMb: number;
 }
 
-export const PLAN_CAPABILITIES: Record<'free' | 'plus' | 'pro', PlanCapabilities> = {
+export const PLAN_CAPABILITIES: Record<PlanType, PlanCapabilities> = {
   free: {
     aiDailyLimit: 5,
     savedHistory: false,
@@ -36,6 +38,17 @@ export const PLAN_CAPABILITIES: Record<'free' | 'plus' | 'pro', PlanCapabilities
     maxFileSizeMb: 50,
   },
   pro: {
+    aiDailyLimit: 200,
+    savedHistory: true,
+    advancedAnalytics: true,
+    advancedExports: true,
+    customDashboard: true,
+    batchProcessing: true,
+    priorityFeatures: true,
+    adExperience: 'ad_free',
+    maxFileSizeMb: 200,
+  },
+  trial: {
     aiDailyLimit: 200,
     savedHistory: true,
     advancedAnalytics: true,

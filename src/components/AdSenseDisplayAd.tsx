@@ -10,7 +10,9 @@ export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({ className = 
   const adRef = useRef<HTMLModElement | null>(null);
   const isPushed = useRef(false);
 
-  const isAdFree = (plan === 'plus' || plan === 'pro') && subscriptionStatus === 'active';
+  const isAdFree =
+    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
+    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
 
   useEffect(() => {
     // If user has subscription, do not push ads

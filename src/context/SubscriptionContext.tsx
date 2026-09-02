@@ -6,9 +6,9 @@ import {
   detectDefaultCurrency,
 } from '../config/pricing';
 import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
-import { paymentService } from '../services/payment';
+import { paymentService, SubscriptionState } from '../services/payment';
 
-export type SubscriptionStatus = 'active' | 'inactive' | 'canceled' | 'past_due';
+export type SubscriptionStatus = SubscriptionState;
 
 export interface UsageQuotaInfo {
   allowed: boolean;
@@ -35,7 +35,14 @@ interface SubscriptionContextType {
   startDate: string | null;
   renewalDate: string | null;
   customerEmail: string | null;
+  userId: string;
   isTestMode: boolean;
+  isTrial: boolean;
+  trialUsed: boolean;
+  trialStartAt: string | null;
+  trialEndsAt: string | null;
+  remainingTrialDays: number;
+  remainingTrialHours: number;
   toggleTestMode: () => void;
   setCurrency: (currency: CurrencyCode) => void;
   setBillingInterval: (interval: BillingInterval) => void;
@@ -51,8 +58,13 @@ interface SubscriptionContextType {
     interval: BillingInterval,
     email?: string
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  startTrial: (email?: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   setTestPlan: (plan: PlanType) => void;
-  cancelSubscription: () => void;
+  cancelSubscription: () => Promise<void>;
+  refreshSubscriptionStatus: () => Promise<void>;
+  authorizeFeature: (
+    requiredTier?: 'plus' | 'pro'
+  ) => Promise<{ authorized: boolean; plan: string; isTrial?: boolean; message?: string }>;
   savedItems: UserSavedItem[];
   saveUserItem: (category: string, title: string, data: any) => UserSavedItem;
   deleteUserItem: (id: string) => void;
@@ -72,7 +84,24 @@ function getTodayKey(): string {
   ).padStart(2, '0')}`;
 }
 
+// Persistent anonymous client device user identifier
+function getOrCreateUserId(): string {
+  if (typeof window === 'undefined') return 'usr_server_render';
+  try {
+    let uid = localStorage.getItem('naviko_uid');
+    if (!uid) {
+      uid = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      localStorage.setItem('naviko_uid', uid);
+    }
+    return uid;
+  } catch {
+    return `usr_${Date.now()}_temp`;
+  }
+}
+
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userId] = useState<string>(() => getOrCreateUserId());
+
   // 1. Currency state
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     if (typeof window !== 'undefined') {
@@ -82,43 +111,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return detectDefaultCurrency();
   });
 
-  // 2. Plan state
-  const [plan, setPlan] = useState<PlanType>(() => {
-    if (typeof window !== 'undefined') {
-      const savedPlan = localStorage.getItem('naviko_subscription_plan') as PlanType;
-      if (savedPlan && ['free', 'plus', 'pro'].includes(savedPlan)) {
-        return savedPlan;
-      }
-    }
-    return 'free';
-  });
+  // 2. Authoritative Plan state: FREE is the strict default for all users!
+  const [plan, setPlan] = useState<PlanType>('free');
 
   const [billingInterval, setBillingIntervalState] = useState<BillingInterval>('yearly');
 
-  // 3. Subscription Status
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('naviko_sub_status') as SubscriptionStatus;
-      if (saved) return saved;
-      const savedPlan = localStorage.getItem('naviko_subscription_plan');
-      if (savedPlan === 'plus' || savedPlan === 'pro') return 'active';
-    }
-    return 'inactive';
-  });
+  // 3. Subscription Status: strictly FREE by default.
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>('FREE');
 
-  const [startDate, setStartDate] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('naviko_sub_start_date') || null;
-    }
-    return null;
-  });
-
-  const [renewalDate, setRenewalDate] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('naviko_sub_renewal_date') || null;
-    }
-    return null;
-  });
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [renewalDate, setRenewalDate] = useState<string | null>(null);
 
   const [customerEmail, setCustomerEmail] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
@@ -127,14 +129,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return null;
   });
 
-  // 4. Test Mode state
-  const [isTestMode, setIsTestMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('naviko_payment_test_mode');
-      return saved !== 'false';
-    }
-    return true;
-  });
+  // Test mode flag indicates if backend Razorpay keys are test keys (rzp_test_...)
+  const [isTestMode, setIsTestMode] = useState<boolean>(false);
+
+  // Authoritative trial states synced directly from server
+  const [isTrial, setIsTrial] = useState<boolean>(false);
+  const [trialUsed, setTrialUsed] = useState<boolean>(false);
+  const [trialStartAt, setTrialStartAt] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [remainingTrialDays, setRemainingTrialDays] = useState<number>(0);
+  const [remainingTrialHours, setRemainingTrialHours] = useState<number>(0);
 
   // 5. Daily Usage state (Stored per UTC date)
   const [dailyUsage, setDailyUsage] = useState<Record<string, number>>(() => {
@@ -169,6 +173,98 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return [];
   });
 
+  /**
+   * Authoritative backend status synchronizer.
+   * Runs on mount, on focus, and after payments.
+   */
+  const refreshSubscriptionStatus = useCallback(async () => {
+    try {
+      const uid = getOrCreateUserId();
+      const statusRes = await paymentService.getSubscriptionStatus(uid);
+
+      // Synchronize server trial flags
+      setTrialUsed(!!statusRes.trialUsed);
+      setTrialStartAt(statusRes.trialStartAt || null);
+      setTrialEndsAt(statusRes.trialEndsAt || null);
+      setRemainingTrialDays(statusRes.remainingTrialDays || 0);
+      setRemainingTrialHours(statusRes.remainingTrialHours || 0);
+
+      if (statusRes && statusRes.hasActiveSubscription) {
+        if (statusRes.status === 'TRIAL_ACTIVE') {
+          setPlan('trial');
+          setSubscriptionStatus('TRIAL_ACTIVE');
+          setIsTrial(true);
+          setStartDate(statusRes.trialStartAt || null);
+          setRenewalDate(statusRes.trialEndsAt || null);
+        } else if (statusRes.status === 'ACTIVE') {
+          setPlan(statusRes.plan);
+          setSubscriptionStatus('ACTIVE');
+          setIsTrial(false);
+          setStartDate(statusRes.startDate);
+          setRenewalDate(statusRes.renewalDate);
+          if (statusRes.billingInterval) {
+            setBillingIntervalState(statusRes.billingInterval);
+          }
+        }
+      } else {
+        // Enforce FREE tier when server does not verify an active subscription
+        setPlan('free');
+        setSubscriptionStatus(statusRes?.status || 'FREE');
+        setIsTrial(false);
+        setStartDate(null);
+        setRenewalDate(null);
+
+        // Security wipe of any legacy/tampered localStorage keys
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('naviko_subscription_plan');
+          localStorage.removeItem('naviko_sub_status');
+          localStorage.removeItem('naviko_sub_start_date');
+          localStorage.removeItem('naviko_sub_renewal_date');
+          localStorage.removeItem('naviko_payment_test_mode');
+        }
+      }
+
+      // Check gateway configuration (is it in Razorpay test mode?)
+      const config = await paymentService.getGatewayConfig();
+      setIsTestMode(config.isTestKey);
+    } catch (err) {
+      console.warn('Subscription sync error:', err);
+      setPlan('free');
+      setSubscriptionStatus('FREE');
+      setIsTrial(false);
+    }
+  }, []);
+
+  // Initial synchronization and URL tampering protection
+  useEffect(() => {
+    refreshSubscriptionStatus();
+
+    // Protection against URL bypass (?premium=true, ?plan=pro, etc.)
+    if (typeof window !== 'undefined' && window.location.search) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const bypassKeys = ['premium', 'plan', 'tier', 'subscription', 'pro', 'plus'];
+      let hasTamperedParam = false;
+      bypassKeys.forEach((key) => {
+        if (searchParams.has(key)) {
+          searchParams.delete(key);
+          hasTamperedParam = true;
+        }
+      });
+      if (hasTamperedParam) {
+        const cleanUrl =
+          window.location.pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '') + window.location.hash;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+    }
+
+    // Window focus refresh
+    const handleFocus = () => {
+      refreshSubscriptionStatus();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshSubscriptionStatus]);
+
   const setCurrency = useCallback((newCurrency: CurrencyCode) => {
     setCurrencyState(newCurrency);
     if (typeof window !== 'undefined') {
@@ -181,41 +277,28 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const toggleTestMode = useCallback(() => {
-    const next = !isTestMode;
-    setIsTestMode(next);
-    paymentService.setTestMode(next);
-  }, [isTestMode]);
-
-  const setTestPlan = useCallback((newPlan: PlanType) => {
-    const newStatus: SubscriptionStatus = newPlan === 'free' ? 'inactive' : 'active';
-    setPlan(newPlan);
-    setSubscriptionStatus(newStatus);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('naviko_subscription_plan', newPlan);
-      localStorage.setItem('naviko_sub_status', newStatus);
-      if (newPlan !== 'free') {
-        const now = new Date().toISOString();
-        setStartDate(now);
-        localStorage.setItem('naviko_sub_start_date', now);
-        const ren = new Date();
-        ren.setFullYear(ren.getFullYear() + 1);
-        setRenewalDate(ren.toISOString());
-        localStorage.setItem('naviko_sub_renewal_date', ren.toISOString());
-      } else {
-        setStartDate(null);
-        setRenewalDate(null);
-        localStorage.removeItem('naviko_sub_start_date');
-        localStorage.removeItem('naviko_sub_renewal_date');
-      }
-    }
+    // Deprecated: Test mode is governed solely by whether server uses rzp_test_ keys.
   }, []);
 
-  // Check if a tool/feature is accessible by the current plan tier
+  /**
+   * Deprecated direct override.
+   * Explicitly prevented from bypassing payment.
+   */
+  const setTestPlan = useCallback((_newPlan: PlanType) => {
+    console.warn(
+      '[SECURITY] Direct plan overrides are disabled. Premium subscriptions require verified Razorpay payment.'
+    );
+  }, []);
+
+  // Check if a tool/feature is accessible by current subscription
   const canAccess = useCallback(
     (id: string): boolean => {
-      const effectivePlan: PlanType = subscriptionStatus === 'active' ? plan : 'free';
+      // ONLY 'ACTIVE' or 'TRIAL_ACTIVE' subscription status unlocks premium features!
+      const isSubscriptionActive =
+        subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE';
+      const effectivePlan: PlanType = isSubscriptionActive ? plan : 'free';
 
-      if (effectivePlan === 'pro') return true;
+      if (effectivePlan === 'pro' || effectivePlan === 'trial') return true;
 
       const tool = TOOL_ENTITLEMENTS[id];
       if (tool) {
@@ -241,7 +324,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Check usage quota for limited tools
   const checkQuota = useCallback(
     (id: string): UsageQuotaInfo => {
-      const effectivePlan: PlanType = subscriptionStatus === 'active' ? plan : 'free';
+      const isSubscriptionActive =
+        subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE';
+      const effectivePlan: PlanType = isSubscriptionActive ? plan : 'free';
       const entitlement = TOOL_ENTITLEMENTS[id] || FEATURE_ENTITLEMENTS[id];
 
       if (!entitlement || entitlement.accessLevel === 'FREE') {
@@ -249,21 +334,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       if (entitlement.accessLevel === 'PLUS') {
-        if (effectivePlan === 'plus' || effectivePlan === 'pro') {
+        if (effectivePlan === 'plus' || effectivePlan === 'pro' || effectivePlan === 'trial') {
           return { allowed: true, remaining: Infinity, limit: Infinity };
         }
         return { allowed: false, remaining: 0, limit: 0, isUpgradeRequired: true, requiredTier: 'plus' };
       }
 
       if (entitlement.accessLevel === 'PRO') {
-        if (effectivePlan === 'pro') {
+        if (effectivePlan === 'pro' || effectivePlan === 'trial') {
           return { allowed: true, remaining: Infinity, limit: Infinity };
         }
         return { allowed: false, remaining: 0, limit: 0, isUpgradeRequired: true, requiredTier: 'pro' };
       }
 
       let limit = 5;
-      if (effectivePlan === 'pro') {
+      if (effectivePlan === 'pro' || effectivePlan === 'trial') {
         limit = (entitlement as any).proDailyLimit ?? PLAN_CAPABILITIES.pro.aiDailyLimit;
       } else if (effectivePlan === 'plus') {
         limit = (entitlement as any).plusDailyLimit ?? PLAN_CAPABILITIES.plus.aiDailyLimit;
@@ -300,7 +385,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const next = { ...prev, [id]: currentCount + 1 };
         if (typeof window !== 'undefined') {
           localStorage.setItem('naviko_usage_date', today);
-          localStorage.setItem('naviko_usage_counts', JSON.stringify({}));
+          localStorage.setItem('naviko_usage_counts', JSON.stringify(next));
         }
         return next;
       });
@@ -310,7 +395,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [checkQuota]
   );
 
-  // Upgrade Flow
+  /**
+   * Upgrade Flow — Initiates real Razorpay Checkout.
+   * The button click NEVER unlocks Premium.
+   * Subscription is only activated if the backend cryptographically verifies the payment.
+   */
   const upgradeToTier = useCallback(
     async (
       tier: 'plus' | 'pro',
@@ -318,61 +407,49 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       email?: string
     ): Promise<{ success: boolean; message?: string; error?: string }> => {
       try {
+        const uid = getOrCreateUserId();
+        if (email) {
+          setCustomerEmail(email);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('naviko_user_email', email);
+          }
+        }
+
+        // 1. Process payment via Razorpay + Backend verification
         const result = await paymentService.processPlanPayment({
           tier,
           interval,
           currency,
           customerEmail: email || customerEmail || undefined,
+          userId: uid,
         });
 
-        if (result.success) {
-          setPlan(tier);
-          setSubscriptionStatus('active');
-          setBillingIntervalState(interval);
-          const timestamp = result.transactionDetails?.timestamp || new Date().toISOString();
-          setStartDate(timestamp);
-
-          const ren = new Date(timestamp);
-          if (interval === 'yearly') {
-            ren.setFullYear(ren.getFullYear() + 1);
-          } else {
-            ren.setMonth(ren.getMonth() + 1);
-          }
-          const renIso = ren.toISOString();
-          setRenewalDate(renIso);
-
-          if (email) {
-            setCustomerEmail(email);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('naviko_user_email', email);
-            }
-          }
-
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('naviko_subscription_plan', tier);
-            localStorage.setItem('naviko_sub_status', 'active');
-            localStorage.setItem('naviko_sub_start_date', timestamp);
-            localStorage.setItem('naviko_sub_renewal_date', renIso);
-          }
-
+        // 2. Only after backend verified the payment:
+        if (result.success && result.status === 'ACTIVE') {
+          await refreshSubscriptionStatus();
           return {
             success: true,
             message: result.message || `Upgraded to NAVIKO ${tier.toUpperCase()} successfully!`,
           };
         }
 
+        // If cancelled, abandoned, or failed: ensure state stays FREE
+        await refreshSubscriptionStatus();
         return {
           success: false,
-          error: result.error || 'Payment failed or was cancelled.',
+          error:
+            result.error ||
+            'Payment was cancelled or could not be completed. Your subscription remains unchanged.',
         };
       } catch (err: any) {
+        await refreshSubscriptionStatus();
         return {
           success: false,
           error: err?.message || 'Payment processing error.',
         };
       }
     },
-    [currency, customerEmail]
+    [currency, customerEmail, refreshSubscriptionStatus]
   );
 
   // Legacy alias for upgradeToPremium (maps to 'plus')
@@ -386,19 +463,81 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [upgradeToTier]
   );
 
+  /**
+   * Start ₹1 7-day Trial Flow via Razorpay Checkout.
+   * Clicking the button NEVER unlocks trial access directly.
+   * Trial is ONLY granted after server verifies cryptographic HMAC SHA256 signature and captures payment.
+   */
+  const startTrial = useCallback(
+    async (email?: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+      try {
+        const uid = getOrCreateUserId();
+        if (email) {
+          setCustomerEmail(email);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('naviko_user_email', email);
+          }
+        }
+
+        // Check if trial was already used according to authoritative server state
+        if (trialUsed) {
+          return {
+            success: false,
+            error: 'Your ₹1 trial has already been used.',
+          };
+        }
+
+        const result = await paymentService.processTrialPayment({
+          userId: uid,
+          customerEmail: email || customerEmail || undefined,
+        });
+
+        // Always sync with authoritative backend
+        await refreshSubscriptionStatus();
+
+        if (result.success && result.status === 'TRIAL_ACTIVE') {
+          return {
+            success: true,
+            message: result.message || '₹1 trial activated! Enjoy 7 days of full NAVIKO Premium access.',
+          };
+        }
+
+        return {
+          success: false,
+          error:
+            result.error ||
+            'Payment was cancelled or could not be completed. Your account remains on the Free plan.',
+        };
+      } catch (err: any) {
+        await refreshSubscriptionStatus();
+        return {
+          success: false,
+          error: err?.message || 'Trial payment error.',
+        };
+      }
+    },
+    [customerEmail, trialUsed, refreshSubscriptionStatus]
+  );
+
   // Cancel Subscription
-  const cancelSubscription = useCallback(() => {
-    setPlan('free');
-    setSubscriptionStatus('inactive');
-    setStartDate(null);
-    setRenewalDate(null);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('naviko_subscription_plan', 'free');
-      localStorage.setItem('naviko_sub_status', 'inactive');
-      localStorage.removeItem('naviko_sub_start_date');
-      localStorage.removeItem('naviko_sub_renewal_date');
+  const cancelSubscription = useCallback(async () => {
+    try {
+      const uid = getOrCreateUserId();
+      await paymentService.cancelSubscription(uid);
+      await refreshSubscriptionStatus();
+    } catch (err) {
+      console.error('Failed to cancel subscription:', err);
     }
-  }, []);
+  }, [refreshSubscriptionStatus]);
+
+  // Authorize Feature via trusted backend
+  const authorizeFeature = useCallback(
+    async (requiredTier: 'plus' | 'pro' = 'plus') => {
+      const uid = getOrCreateUserId();
+      return paymentService.authorizeFeature(uid, requiredTier);
+    },
+    []
+  );
 
   // Save User Item
   const saveUserItem = useCallback(
@@ -469,7 +608,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         startDate,
         renewalDate,
         customerEmail,
+        userId,
         isTestMode,
+        isTrial,
+        trialUsed,
+        trialStartAt,
+        trialEndsAt,
+        remainingTrialDays,
+        remainingTrialHours,
         toggleTestMode,
         setCurrency,
         setBillingInterval,
@@ -478,8 +624,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         recordUsage,
         upgradeToTier,
         upgradeToPremium,
+        startTrial,
         setTestPlan,
         cancelSubscription,
+        refreshSubscriptionStatus,
+        authorizeFeature,
         savedItems,
         saveUserItem,
         deleteUserItem,

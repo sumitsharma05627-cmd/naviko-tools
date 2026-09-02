@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SubscriptionProvider } from './context/SubscriptionContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
@@ -23,6 +24,16 @@ const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ d
 // Lazy Loaded Secondary & Monetization Pages
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
+
+// Lazy Loaded Auth & User Dashboard Pages
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('./pages/SignupPage').then(m => ({ default: m.SignupPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const BillingPage = lazy(() => import('./pages/BillingPage').then(m => ({ default: m.BillingPage })));
 
 // Lazy Loaded Tool Components
 const NumberCalculator = lazy(() => import('./components/tools/NumberCalculator').then(m => ({ default: m.NumberCalculator })));
@@ -145,6 +156,29 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'nutrition': NutritionScience,
 };
 
+// Tool Runner with automatic recent tool tracking
+interface ToolWrapperProps {
+  toolMeta: any;
+  Component: React.ComponentType<any>;
+  navigate: (path: string) => void;
+}
+
+const ToolWrapper: React.FC<ToolWrapperProps> = ({ toolMeta, Component, navigate }) => {
+  const { recordToolUsage } = useAuth();
+
+  useEffect(() => {
+    if (toolMeta?.id) {
+      recordToolUsage(toolMeta.id);
+    }
+  }, [toolMeta?.id, recordToolUsage]);
+
+  return (
+    <ToolLayout tool={toolMeta} onNavigate={navigate}>
+      <Component />
+    </ToolLayout>
+  );
+};
+
 export default function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => {
     return window.location.pathname || '/';
@@ -183,9 +217,11 @@ export default function App() {
     }
 
     return (
-      <ToolLayout tool={toolMeta} onNavigate={navigate}>
-        <Component />
-      </ToolLayout>
+      <ToolWrapper
+        toolMeta={toolMeta}
+        Component={Component}
+        navigate={navigate}
+      />
     );
   };
 
@@ -231,6 +267,42 @@ export default function App() {
     }
     if (path === '/account' || path === '/subscription' || path === '/my-plan') {
       return <AccountPage onNavigate={navigate} />;
+    }
+
+    // 2.2 Auth & User Dashboard Routes
+    if (path === '/login' || path === '/signin') {
+      return <LoginPage onNavigate={navigate} />;
+    }
+    if (path === '/signup' || path === '/register') {
+      return <SignupPage onNavigate={navigate} />;
+    }
+    if (path === '/forgot-password') {
+      return <ForgotPasswordPage onNavigate={navigate} />;
+    }
+    if (path === '/reset-password') {
+      return <ResetPasswordPage onNavigate={navigate} />;
+    }
+    if (path === '/dashboard' || path === '/user-dashboard' || path === '/home-dashboard') {
+      return (
+        <DashboardPage
+          onNavigate={navigate}
+          onOpenPricing={() => navigate('/premium')}
+          onOpenTool={(toolId) => {
+            const tool = getToolByPath(`/tools/${toolId}`) || getToolByPath(`/tool/${toolId}`);
+            if (tool) navigate(tool.path);
+            else navigate(`/tools/${toolId}`);
+          }}
+        />
+      );
+    }
+    if (path === '/profile' || path === '/user-profile') {
+      return <ProfilePage onNavigate={navigate} />;
+    }
+    if (path === '/settings' || path === '/account-settings') {
+      return <SettingsPage onNavigate={navigate} />;
+    }
+    if (path === '/billing' || path === '/invoices') {
+      return <BillingPage onNavigate={navigate} onOpenPricing={() => navigate('/premium')} />;
     }
 
     // 3. Blog Routes
@@ -290,37 +362,39 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <SubscriptionProvider>
-          <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
-            <Header
-              onNavigate={navigate}
-              onOpenSearch={() => setIsSearchOpen(true)}
-              currentPath={currentPath}
-            />
+        <AuthProvider>
+          <SubscriptionProvider>
+            <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
+              <Header
+                onNavigate={navigate}
+                onOpenSearch={() => setIsSearchOpen(true)}
+                currentPath={currentPath}
+              />
 
-            <main className="flex-1">
-              <Suspense fallback={<PageLoadingFallback />}>
-                {renderContent()}
-              </Suspense>
-            </main>
+              <main className="flex-1">
+                <Suspense fallback={<PageLoadingFallback />}>
+                  {renderContent()}
+                </Suspense>
+              </main>
 
-            <Footer onNavigate={navigate} />
+              <Footer onNavigate={navigate} />
 
-            <Suspense fallback={null}>
-              <ChatBot onNavigate={navigate} />
-            </Suspense>
-
-            {isSearchOpen && (
               <Suspense fallback={null}>
-                <SearchModal
-                  isOpen={isSearchOpen}
-                  onClose={() => setIsSearchOpen(false)}
-                  onNavigate={(path) => navigate(path)}
-                />
+                <ChatBot onNavigate={navigate} />
               </Suspense>
-            )}
-          </div>
-        </SubscriptionProvider>
+
+              {isSearchOpen && (
+                <Suspense fallback={null}>
+                  <SearchModal
+                    isOpen={isSearchOpen}
+                    onClose={() => setIsSearchOpen(false)}
+                    onNavigate={(path) => navigate(path)}
+                  />
+                </Suspense>
+              )}
+            </div>
+          </SubscriptionProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

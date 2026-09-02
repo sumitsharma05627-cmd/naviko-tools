@@ -272,9 +272,24 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Column 6: Company & Legal */}
           <div>
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-white mb-3.5">
-              Trust &amp; Guides
+              Account &amp; Trust
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
+              <li>
+                <button onClick={() => handleNav('/dashboard')} className="hover:text-white transition-colors cursor-pointer text-indigo-300 font-semibold">
+                  ★ User Dashboard
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNav('/login')} className="hover:text-white transition-colors cursor-pointer">
+                  Sign In / Register
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNav('/premium')} className="hover:text-white transition-colors cursor-pointer text-amber-300 font-medium">
+                  NAVIKO Premium Plans
+                </button>
+              </li>
               <li>
                 <button onClick={() => handleNav('/about')} className="hover:text-white transition-colors cursor-pointer">
                   About NAVIKO
