@@ -21,9 +21,11 @@ import {
   Database,
   ExternalLink,
   ChevronDown,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { USDebtPanel } from './USDebtPanel';
 
 export interface CountryDebtData {
   id: string;
@@ -157,42 +159,50 @@ export const COUNTRIES_DEBT_DB: CountryDebtData[] = [
     currencyCode: 'USD',
     usdExchangeRate: 1,
     eurExchangeRate: 1.09,
-    baselineTimestamp: new Date('2026-01-01T00:00:00Z').getTime(),
-    baseDebtLocal: 35400000000000, // $35.40 Trillion USD
+    baselineTimestamp: new Date('2026-08-28T00:00:00Z').getTime(),
+    baseDebtLocal: 40104821395412.87, // $40.10 Trillion USD (Official Treasury Debt to the Penny)
     debtDefinition: 'Total Public Debt Outstanding (Debt Held by the Public + Intragovernmental Holdings)',
     debtScope: 'Federal Public Debt',
-    referencePeriod: 'FY 2024 / FY 2025',
-    primarySource: 'US Department of the Treasury — Bureau of the Fiscal Service (Debt to the Penny)',
-    lastUpdated: 'Q1 2025 baseline',
-    annualGrowthRateLocal: 1900000000000, // $1.90 Trillion USD annual federal deficit
-    annualGrowthBasis: 'Congressional Budget Office (CBO) & US Treasury Baseline Federal Deficit ($1.90T/yr)',
-    annualInterestExpLocal: 1050000000000, // $1.05 Trillion USD Net Interest
-    interestExpSource: 'US Treasury Monthly Treasury Statement — Net Interest on the Public Debt',
-    annualGdpLocal: 28650000000000, // $28.65 Trillion USD
-    gdpReferencePeriod: '2024–2025 Annualized',
-    gdpSource: 'US Bureau of Economic Analysis (BEA) — Current-Dollar GDP',
-    population: 337000000,
-    populationPeriod: '2025–2026 Projection',
-    populationSource: 'US Census Bureau — National Population Estimates',
-    taxpayers: 162000000,
+    referencePeriod: 'August 28, 2026 (Debt to the Penny) / FY 2026',
+    primarySource: 'U.S. Department of the Treasury — Bureau of the Fiscal Service (Debt to the Penny)',
+    sourceUrl: 'https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/',
+    lastUpdated: 'August 28, 2026',
+    annualGrowthRateLocal: 1980000000000, // $1.98 Trillion USD annual federal deficit
+    annualGrowthBasis: 'Congressional Budget Office (CBO) FY 2026 Deficit Baseline ($1.98T/yr)',
+    annualInterestExpLocal: 1160000000000, // $1.16 Trillion USD Net Interest
+    interestExpSource: 'Congressional Budget Office (CBO) FY 2026 Baseline & U.S. Treasury MTS (Net Interest on the Public Debt)',
+    annualGdpLocal: 30200000000000, // $30.20 Trillion USD
+    gdpReferencePeriod: '2026 Annualized Current-Dollar GDP',
+    gdpSource: 'U.S. Bureau of Economic Analysis (BEA) — Current-Dollar GDP',
+    population: 338500000,
+    populationPeriod: '2026 U.S. Census Bureau Estimate',
+    populationSource: 'U.S. Census Bureau — National Demographic Estimates',
+    taxpayers: 165000000,
     taxpayerDefinition: 'Individual Income Tax Return Filers',
     taxpayerSource: 'Internal Revenue Service (IRS) Data Book',
     debtCategory: 'Critical (>120%)',
-    notes: 'Total federal debt outstanding exceeds 123% of GDP, driven by federal budget deficits and mandatory entitlement spending.',
+    notes: 'Gross federal debt surpassed the $40 trillion milestone in August 2026. Primary source: U.S. Department of the Treasury — Fiscal Data (Debt to the Penny).',
     equivalents: [
       {
-        label: 'Ford-Class Supercarriers ($13B each)',
-        costLocal: 13000000000,
-        unit: 'nuclear supercarriers',
-        source: 'US Congressional Research Service (CRS)',
-        year: '2023'
+        label: 'Ford-Class Nuclear Aircraft Carriers ($13.3B each)',
+        costLocal: 13300000000,
+        unit: 'nuclear aircraft carriers',
+        source: 'U.S. Congressional Research Service (CRS)',
+        year: '2024'
       },
       {
-        label: 'Apollo / Artemis Lunar Exploration Programs ($150B)',
+        label: 'NASA Artemis Lunar & Mars Space Exploration Programs ($150B)',
         costLocal: 150000000000,
-        unit: 'deep space programs',
-        source: 'NASA Inspector General Audit',
-        year: '2024'
+        unit: 'deep-space exploration programs',
+        source: 'NASA Inspector General Audited Lifecycle Cost',
+        year: '2025'
+      },
+      {
+        label: 'Complete U.S. Interstate Highway System Replacement ($600B)',
+        costLocal: 600000000000,
+        unit: 'national highway network systems',
+        source: 'Federal Highway Administration (FHWA)',
+        year: '2025'
       }
     ]
   },
@@ -972,244 +982,246 @@ export const DebtClock: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. THE MAIN MASTER ESTIMATED DEBT TICKER DISPLAY */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 shadow-2xl text-center">
-        {/* Glow Accent */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 2. MAIN COUNTRY VIEW: SPECIALIZED U.S. TREASURY PANEL OR GENERAL TICKER */}
+      {activeCountry.id === 'usa' ? (
+        <USDebtPanel />
+      ) : (
+        <>
+          {/* THE MAIN MASTER ESTIMATED DEBT TICKER DISPLAY */}
+          <div className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 shadow-2xl text-center">
+            {/* Glow Accent */}
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4 sm:space-y-6">
-          {/* Transparent Status Tag */}
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] sm:text-xs font-bold tracking-wide">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-400 animate-ping shrink-0" />
-            <span>ESTIMATED SOVEREIGN DEBT COUNTER</span>
-          </div>
-
-          {/* Big Odometer Display - Optimized for Mobile Viewports */}
-          <div className="px-1">
-            <div className="text-slate-400 text-[11px] sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest mb-1.5 line-clamp-2 max-w-2xl mx-auto">
-              {activeCountry.debtDefinition}
-            </div>
-            <div className="font-mono text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white select-all break-all sm:break-normal max-w-full overflow-hidden">
-              <span className="text-rose-400 mr-1 sm:mr-2">{liveStats.currSymbol}</span>
-              <span className="tabular-nums">{formatTicker(liveStats.totalDebtDisplay)}</span>
-            </div>
-
-            {/* Indian system breakdown if India is selected */}
-            {activeCountry.id === 'india' && currencyView === 'LOCAL' && (
-              <div className="mt-2.5 sm:mt-3 inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-sm font-bold max-w-full truncate">
-                ≈ ₹{(liveStats.totalDebtLocal / 1e12).toFixed(3)} Lakh Crore (Trillion INR)
+            <div className="relative z-10 space-y-4 sm:space-y-6">
+              {/* Transparent Status Tag */}
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] sm:text-xs font-bold tracking-wide">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-400 animate-ping shrink-0" />
+                <span>ESTIMATED SOVEREIGN DEBT COUNTER</span>
               </div>
-            )}
-            {activeCountry.id === 'usa' && currencyView === 'LOCAL' && (
-              <div className="mt-2.5 sm:mt-3 inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-sm font-bold max-w-full truncate">
-                ≈ ${(liveStats.totalDebtLocal / 1e12).toFixed(3)} Trillion USD
-              </div>
-            )}
-          </div>
 
-          {/* Transparent Model Disclaimer */}
-          <div className="max-w-3xl mx-auto p-3 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] sm:text-xs text-slate-400 text-left flex items-start gap-2 sm:gap-2.5">
-            <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              <span className="font-bold text-slate-300">Methodology &amp; Transparency: </span>
-              This counter is a deterministic estimate calculated from the latest available official baseline figure (
-              <span className="text-slate-200 font-semibold">{activeCountry.primarySource}</span>, {activeCountry.referencePeriod}) and the annual budgetary net borrowing change. It is an illustrative educational model, not an official real-time government telemetry measurement.
-            </div>
-          </div>
-
-          {/* Growth Speed Highlight */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 pt-4 border-t border-slate-800/80 text-xs sm:text-sm text-left sm:text-center">
-            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
-              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Est. Borrowing:</span>
-              <span className="font-mono font-bold text-amber-300 ml-auto sm:ml-0 text-xs sm:text-sm">
-                +{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s
-              </span>
-            </div>
-            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
-              <Clock className="w-4 h-4 text-rose-400 shrink-0" />
-              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Daily Addition:</span>
-              <span className="font-mono font-bold text-rose-300 ml-auto sm:ml-0 text-xs sm:text-sm">
-                +{formatCurrency(liveStats.growthPerDayDisplay, 0, true)}/d
-              </span>
-            </div>
-            <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
-              <Activity className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Interest Rate:</span>
-              <span className="font-mono font-bold text-indigo-300 ml-auto sm:ml-0 text-xs sm:text-sm">
-                {liveStats.effectiveBorrowingRate.toFixed(2)}%/yr
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. CORE METRIC CARDS GRID (Per Citizen, Per Tax Filer, Debt-to-GDP, Interest Expenditure) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
-        {/* Card 1: Debt Equivalent Per Citizen */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt Per Citizen</span>
-              <Users className="w-4 h-4 text-blue-400 shrink-0" />
-            </div>
-            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-white break-words">
-              {formatCurrency(liveStats.debtPerCitizen, 0)}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
-              <span className="truncate">Population ({activeCountry.populationPeriod}):</span>
-              <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.population / 1e6).toFixed(1)}M</span>
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
-            Statistical division by population. Does not represent personal or legal liability.
-          </div>
-        </div>
-
-        {/* Card 2: Debt Equivalent Per Tax Filer */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Per Tax Filer</span>
-              <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
-            </div>
-            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-emerald-400 break-words">
-              {formatCurrency(liveStats.debtPerTaxpayer, 0)}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
-              <span className="truncate">{activeCountry.taxpayerDefinition}:</span>
-              <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.taxpayers / 1e6).toFixed(1)}M filers</span>
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate" title={activeCountry.taxpayerSource}>
-            Source: {activeCountry.taxpayerSource}.
-          </div>
-        </div>
-
-        {/* Card 3: Debt to GDP Ratio */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt-to-GDP Ratio</span>
-              <Scale className="w-4 h-4 text-amber-400 shrink-0" />
-            </div>
-            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-400 flex items-center gap-1">
-              <span>{liveStats.debtToGdpRatio.toFixed(1)}%</span>
-              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase">of GDP</span>
-            </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
-              <span>Nominal GDP:</span>
-              <span className="font-semibold text-slate-300 shrink-0">
-                {formatCurrency(activeCountry.annualGdpLocal * liveStats.convFactor, 0, true)}
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate">
-            {activeCountry.gdpSource} ({activeCountry.gdpReferencePeriod}).
-          </div>
-        </div>
-
-        {/* Card 4: Annual Interest Expenditure */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Budget Interest</span>
-              <TrendingUp className="w-4 h-4 text-rose-400 shrink-0" />
-            </div>
-            <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-rose-400 break-words">
-              {formatCurrency(liveStats.annualInterestCost, 0, true)}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
-              <span>Rate / Sec:</span>
-              <span className="font-semibold text-rose-300 font-mono shrink-0">
-                +{formatCurrency(liveStats.interestPerSecond, 1)}/s
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
-            Annual budgetary allocation rate (Major Head 2049 / official accounts).
-          </div>
-        </div>
-      </div>
-
-      {/* 4. LIVE SESSION IMPACT: "Estimated Growth While Visiting This Page" */}
-      <div className="bg-indigo-950/40 border border-indigo-800/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
-        <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0">
-            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm sm:text-base font-bold text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span>Estimated Debt Added During Visit</span>
-              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
-                {Math.floor(liveStats.sessionElapsedSeconds)}s elapsed
-              </span>
-            </h3>
-            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
-              Calculated from {activeCountry.name}&apos;s annualized borrowing rate (+{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s):
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full md:w-auto text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-indigo-900/60 shrink-0">
-          <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-rose-400">
-            +{formatCurrency(liveStats.sessionDebtAccumulated, 2)}
-          </div>
-          <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
-            Includes ~{formatCurrency(liveStats.sessionInterest, 2)} in interest service cost
-          </div>
-        </div>
-      </div>
-
-      {/* 5. INTERACTIVE: DOCUMENTED REAL-WORLD SCALE PERSPECTIVE */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3 sm:pb-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 shrink-0" />
-              <span>{activeCountry.name} Debt in Project Scale</span>
-            </h3>
-            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-              Illustrative comparison visualizing total sovereign debt against official project budgets.
-            </p>
-          </div>
-          <div className="text-[10px] sm:text-[11px] text-slate-400 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800 shrink-0">
-            Illustrative scale only
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
-          {activeCountry.equivalents.map((item, idx) => {
-            const count = Math.floor(liveStats.totalDebtLocal / item.costLocal);
-            return (
-              <div
-                key={idx}
-                className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="text-xs font-bold text-slate-300 mb-1 leading-snug">{item.label}</div>
-                  <div className="font-mono text-xl sm:text-2xl font-black text-indigo-400 mt-1.5 sm:mt-2">
-                    {count.toLocaleString()}
-                  </div>
-                  <div className="text-[11px] sm:text-xs text-slate-300 mt-1 font-medium">
-                    {item.unit}
-                  </div>
+              {/* Big Odometer Display - Optimized for Mobile Viewports */}
+              <div className="px-1">
+                <div className="text-slate-400 text-[11px] sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest mb-1.5 line-clamp-2 max-w-2xl mx-auto">
+                  {activeCountry.debtDefinition}
                 </div>
-                <div className="text-[10px] sm:text-[11px] text-slate-400 mt-3 sm:mt-4 pt-2.5 border-t border-slate-800/80 space-y-0.5">
-                  <div className="flex justify-between gap-1">
-                    <span className="shrink-0">Source:</span>
-                    <span className="text-slate-300 font-semibold truncate">{item.source}</span>
+                <div className="font-mono text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white select-all break-all sm:break-normal max-w-full overflow-hidden">
+                  <span className="text-rose-400 mr-1 sm:mr-2">{liveStats.currSymbol}</span>
+                  <span className="tabular-nums">{formatTicker(liveStats.totalDebtDisplay)}</span>
+                </div>
+
+                {/* Indian system breakdown if India is selected */}
+                {activeCountry.id === 'india' && currencyView === 'LOCAL' && (
+                  <div className="mt-2.5 sm:mt-3 inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-sm font-bold max-w-full truncate">
+                    ≈ ₹{(liveStats.totalDebtLocal / 1e12).toFixed(3)} Lakh Crore (Trillion INR)
                   </div>
-                  <div className="flex justify-between gap-1">
-                    <span>Benchmark Year:</span>
-                    <span className="text-slate-300">{item.year}</span>
-                  </div>
+                )}
+              </div>
+
+              {/* Transparent Model Disclaimer */}
+              <div className="max-w-3xl mx-auto p-3 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800 text-[11px] sm:text-xs text-slate-400 text-left flex items-start gap-2 sm:gap-2.5">
+                <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <span className="font-bold text-slate-300">Methodology &amp; Transparency: </span>
+                  This counter is a deterministic estimate calculated from the latest available official baseline figure (
+                  <span className="text-slate-200 font-semibold">{activeCountry.primarySource}</span>, {activeCountry.referencePeriod}) and the annual budgetary net borrowing change. It is an illustrative educational model, not an official real-time government telemetry measurement.
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+
+              {/* Growth Speed Highlight */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 pt-4 border-t border-slate-800/80 text-xs sm:text-sm text-left sm:text-center">
+                <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+                  <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Est. Borrowing:</span>
+                  <span className="font-mono font-bold text-amber-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                    +{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s
+                  </span>
+                </div>
+                <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+                  <Clock className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Daily Addition:</span>
+                  <span className="font-mono font-bold text-rose-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                    +{formatCurrency(liveStats.growthPerDayDisplay, 0, true)}/d
+                  </span>
+                </div>
+                <div className="flex items-center sm:justify-center gap-2 text-slate-300 p-2 sm:p-0 rounded-lg bg-slate-950/40 sm:bg-transparent border sm:border-0 border-slate-800/60">
+                  <Activity className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <span className="text-slate-400 sm:text-slate-300 text-[11px] sm:text-xs">Interest Rate:</span>
+                  <span className="font-mono font-bold text-indigo-300 ml-auto sm:ml-0 text-xs sm:text-sm">
+                    {liveStats.effectiveBorrowingRate.toFixed(2)}%/yr
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. CORE METRIC CARDS GRID (Per Citizen, Per Tax Filer, Debt-to-GDP, Interest Expenditure) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
+            {/* Card 1: Debt Equivalent Per Citizen */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt Per Citizen</span>
+                  <Users className="w-4 h-4 text-blue-400 shrink-0" />
+                </div>
+                <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-white break-words">
+                  {formatCurrency(liveStats.debtPerCitizen, 0)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+                  <span className="truncate">Population ({activeCountry.populationPeriod}):</span>
+                  <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.population / 1e6).toFixed(1)}M</span>
+                </div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
+                Statistical division by population. Does not represent personal or legal liability.
+              </div>
+            </div>
+
+            {/* Card 2: Debt Equivalent Per Tax Filer */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Per Tax Filer</span>
+                  <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
+                </div>
+                <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-emerald-400 break-words">
+                  {formatCurrency(liveStats.debtPerTaxpayer, 0)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+                  <span className="truncate">{activeCountry.taxpayerDefinition}:</span>
+                  <span className="font-semibold text-slate-300 shrink-0">{(activeCountry.taxpayers / 1e6).toFixed(1)}M filers</span>
+                </div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate" title={activeCountry.taxpayerSource}>
+                Source: {activeCountry.taxpayerSource}.
+              </div>
+            </div>
+
+            {/* Card 3: Debt to GDP Ratio */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Debt-to-GDP Ratio</span>
+                  <Scale className="w-4 h-4 text-amber-400 shrink-0" />
+                </div>
+                <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-400 flex items-center gap-1">
+                  <span>{liveStats.debtToGdpRatio.toFixed(1)}%</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase">of GDP</span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+                  <span>Nominal GDP:</span>
+                  <span className="font-semibold text-slate-300 shrink-0">
+                    {formatCurrency(activeCountry.annualGdpLocal * liveStats.convFactor, 0, true)}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight truncate">
+                {activeCountry.gdpSource} ({activeCountry.gdpReferencePeriod}).
+              </div>
+            </div>
+
+            {/* Card 4: Annual Interest Expenditure */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden group hover:border-slate-700 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">Budget Interest</span>
+                  <TrendingUp className="w-4 h-4 text-rose-400 shrink-0" />
+                </div>
+                <div className="font-mono text-xl sm:text-2xl md:text-3xl font-extrabold text-rose-400 break-words">
+                  {formatCurrency(liveStats.annualInterestCost, 0, true)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-2 flex items-center justify-between gap-1">
+                  <span>Rate / Sec:</span>
+                  <span className="font-semibold text-rose-300 font-mono shrink-0">
+                    +{formatCurrency(liveStats.interestPerSecond, 1)}/s
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[10px] text-slate-400 leading-tight">
+                Annual budgetary allocation rate (Major Head 2049 / official accounts).
+              </div>
+            </div>
+          </div>
+
+          {/* 4. LIVE SESSION IMPACT: "Estimated Growth While Visiting This Page" */}
+          <div className="bg-indigo-950/40 border border-indigo-800/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm sm:text-base font-bold text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span>Estimated Debt Added During Visit</span>
+                  <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">
+                    {Math.floor(liveStats.sessionElapsedSeconds)}s elapsed
+                  </span>
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5">
+                  Calculated from {activeCountry.name}&apos;s annualized borrowing rate (+{formatCurrency(liveStats.growthPerSecDisplay, 2)}/s):
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full md:w-auto text-left md:text-right pt-2 md:pt-0 border-t md:border-t-0 border-indigo-900/60 shrink-0">
+              <div className="font-mono text-xl sm:text-2xl md:text-3xl font-black text-rose-400">
+                +{formatCurrency(liveStats.sessionDebtAccumulated, 2)}
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+                Includes ~{formatCurrency(liveStats.sessionInterest, 2)} in interest service cost
+              </div>
+            </div>
+          </div>
+
+          {/* 5. INTERACTIVE: DOCUMENTED REAL-WORLD SCALE PERSPECTIVE */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3 sm:pb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 shrink-0" />
+                  <span>{activeCountry.name} Debt in Project Scale</span>
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                  Illustrative comparison visualizing total sovereign debt against official project budgets.
+                </p>
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-slate-400 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800 shrink-0">
+                Illustrative scale only
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+              {activeCountry.equivalents.map((item, idx) => {
+                const count = Math.floor(liveStats.totalDebtLocal / item.costLocal);
+                return (
+                  <div
+                    key={idx}
+                    className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-bold text-slate-300 mb-1 leading-snug">{item.label}</div>
+                      <div className="font-mono text-xl sm:text-2xl font-black text-indigo-400 mt-1.5 sm:mt-2">
+                        {count.toLocaleString()}
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-300 mt-1 font-medium">
+                        {item.unit}
+                      </div>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-400 mt-3 sm:mt-4 pt-2.5 border-t border-slate-800/80 space-y-0.5">
+                      <div className="flex justify-between gap-1">
+                        <span className="shrink-0">Source:</span>
+                        <span className="text-slate-300 font-semibold truncate">{item.source}</span>
+                      </div>
+                      <div className="flex justify-between gap-1">
+                        <span>Benchmark Year:</span>
+                        <span className="text-slate-300">{item.year}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 6. CITIZEN AMORTIZATION SIMULATION CALCULATOR */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white space-y-4 sm:space-y-6">
