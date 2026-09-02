@@ -209,7 +209,7 @@ class PaymentService {
     const orderId = orderData.order?.id || orderData.orderId;
     const amount = orderData.order?.amount ?? orderData.amount;
     const currency = orderData.order?.currency || orderData.currency || 'INR';
-    const keyId = orderData.keyId;
+    const keyId = orderData.keyId || (import.meta as any)?.env?.VITE_RAZORPAY_KEY_ID;
 
     if (!orderId || !amount || !keyId) {
       return {
@@ -375,7 +375,7 @@ class PaymentService {
     const orderId = orderData.order?.id || orderData.orderId;
     const amount = orderData.order?.amount ?? orderData.amount ?? 100;
     const currency = orderData.order?.currency || orderData.currency || 'INR';
-    const keyId = orderData.keyId;
+    const keyId = orderData.keyId || (import.meta as any)?.env?.VITE_RAZORPAY_KEY_ID;
 
     if (!orderId || !keyId) {
       return {

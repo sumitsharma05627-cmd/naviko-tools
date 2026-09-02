@@ -1,6 +1,0 @@
-# Cloudflare Pages Redirects & Rewrites
-# To proxy API calls to an external backend from Cloudflare Pages, uncomment and configure:
-# /api/*  https://api.naviko.in/api/:splat  200
-
-# Single Page Application (SPA) routing: fallback non-asset routes to index.html
-/*    /index.html   200

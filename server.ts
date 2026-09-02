@@ -1491,7 +1491,8 @@ app.post('/api/subscription/authorize-feature', (req, res) => {
 });
 
 // 8. Razorpay Webhook Endpoint (Idempotent with signature verification)
-app.post('/api/subscription/webhook', (req, res) => {
+// Supports both /api/subscription/webhook and /api/razorpay/webhook routes
+app.post(['/api/subscription/webhook', '/api/razorpay/webhook'], (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
   const webhookSignature = req.headers['x-razorpay-signature'] as string;
 

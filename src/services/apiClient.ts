@@ -85,7 +85,16 @@ export async function parseSafeApiResponse<T = any>(
   try {
     const data = JSON.parse(trimmed) as T;
     const isSuccess = res.ok && !(data as any)?.error && (data as any)?.success !== false;
-    const parsedError = (data as any)?.error || (!res.ok ? ((data as any)?.message || `Request failed (HTTP ${status})`) : undefined);
+    let parsedError: string | undefined;
+    if (typeof (data as any)?.error === 'string') {
+      parsedError = (data as any).error;
+    } else if (typeof (data as any)?.error?.message === 'string') {
+      parsedError = (data as any).error.message;
+    } else if (typeof (data as any)?.message === 'string' && !res.ok) {
+      parsedError = (data as any).message;
+    } else if (!res.ok) {
+      parsedError = `Request failed (HTTP ${status})`;
+    }
 
     logSafeApiDebug(url, status, contentType, false, parsedError);
 
