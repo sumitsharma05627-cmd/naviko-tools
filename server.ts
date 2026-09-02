@@ -21,6 +21,19 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true }));
+ 
+// Global CORS, content-type and preflight handling for /api routes
+app.use('/api', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-id');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).json({ ok: true });
+  }
+  next();
+});
 
 // --- Subscription Data Types & Storage ---
 export type SubscriptionStatusState =
@@ -1491,7 +1504,7 @@ app.post('/api/subscription/webhook', (req, res) => {
 
     if (expectedSignature !== webhookSignature) {
       console.warn('[SECURITY] Invalid Razorpay webhook signature');
-      return res.status(400).send('Invalid signature');
+      return res.status(400).json({ success: false, error: 'Invalid signature' });
     }
   }
 
@@ -1594,6 +1607,23 @@ app.post('/api/subscription/webhook', (req, res) => {
     console.error('Error processing Razorpay webhook:', webhookErr);
     return res.status(500).json({ error: 'Webhook processing failed' });
   }
+});
+
+// Explicit 404 handler for API routes (prevent HTML fallback on missing endpoints)
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `API route ${req.method} ${req.originalUrl} not found`,
+  });
+});
+
+// Global API error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[API ERROR]', err);
+  res.status(err?.status || 500).json({
+    success: false,
+    error: err?.message || 'Internal server error',
+  });
 });
 
 // ==========================================

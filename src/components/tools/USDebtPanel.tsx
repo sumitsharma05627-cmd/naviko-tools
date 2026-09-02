@@ -202,7 +202,17 @@ export const USDebtPanel: React.FC = () => {
         throw new Error(`Treasury API returned HTTP status ${response.status}`);
       }
 
-      const json = await response.json();
+      const rawText = await response.text();
+      if (!rawText || !rawText.trim()) {
+        throw new Error('Treasury API returned an empty response');
+      }
+
+      let json: any;
+      try {
+        json = JSON.parse(rawText.trim());
+      } catch {
+        throw new Error('Treasury API returned a non-JSON response');
+      }
 
       if (json && Array.isArray(json.data) && json.data.length > 0) {
         let matchedRecord: ValidatedTreasuryData | null = null;

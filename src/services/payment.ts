@@ -1,5 +1,6 @@
 import { CurrencyCode, BillingInterval, PlanType } from '../config/pricing';
 import { getApiUrl } from '../config/api';
+import { safeApiFetch } from './apiClient';
 
 export type SubscriptionState =
   | 'FREE'
@@ -82,11 +83,13 @@ class PaymentService {
    */
   public async getGatewayConfig(): Promise<{ keyId: string; isConfigured: boolean; isTestKey: boolean }> {
     try {
-      const res = await fetch(getApiUrl('/api/subscription/config'));
-      if (!res.ok) {
+      const res = await safeApiFetch<{ keyId: string; isConfigured: boolean; isTestKey: boolean }>(
+        '/api/subscription/config'
+      );
+      if (!res.ok || !res.data) {
         return { keyId: '', isConfigured: false, isTestKey: false };
       }
-      return await res.json();
+      return res.data;
     } catch {
       return { keyId: '', isConfigured: false, isTestKey: false };
     }
@@ -116,11 +119,12 @@ class PaymentService {
       const headers = this.getAuthHeaders();
       headers['x-user-id'] = userId;
 
-      const res = await fetch(getApiUrl(`/api/subscription/status?userId=${encodeURIComponent(userId)}`), {
-        headers,
-      });
+      const res = await safeApiFetch<SubscriptionStatusResponse>(
+        `/api/subscription/status?userId=${encodeURIComponent(userId)}`,
+        { headers }
+      );
 
-      if (!res.ok) {
+      if (!res.ok || !res.data) {
         return {
           status: 'FREE',
           plan: 'free',
@@ -131,7 +135,7 @@ class PaymentService {
         };
       }
 
-      return await res.json();
+      return res.data;
     } catch (err) {
       console.warn('Failed to query subscription status from backend:', err);
       return {
@@ -177,38 +181,42 @@ class PaymentService {
     }
 
     // 3. Request server to create a verified Razorpay Order
-    let orderData: any;
-    try {
-      const res = await fetch(getApiUrl('/api/subscription/create-order'), {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          tier: request.tier,
-          interval: request.interval,
-          currency: request.currency,
-          customerEmail: request.customerEmail,
-          customerName: request.customerName,
-          userId: request.userId,
-        }),
-      });
+    const res = await safeApiFetch<any>('/api/subscription/create-order', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({
+        tier: request.tier,
+        interval: request.interval,
+        currency: request.currency,
+        customerEmail: request.customerEmail,
+        customerName: request.customerName,
+        userId: request.userId,
+      }),
+    });
 
-      orderData = await res.json();
-      if (!res.ok || !orderData.success) {
-        return {
-          success: false,
-          error:
-            orderData.error ||
-            'Failed to create payment order. Please ensure Razorpay gateway credentials are configured.',
-        };
-      }
-    } catch (err: any) {
+    if (!res.ok || !res.data?.success) {
+      const errorMsg =
+        res.error ||
+        res.data?.error ||
+        'Failed to create payment order. Please ensure Razorpay gateway credentials are configured.';
       return {
         success: false,
-        error: err?.message || 'Network error connecting to payment server.',
+        error: errorMsg,
       };
     }
 
-    const { orderId, amount, currency, keyId } = orderData;
+    const orderData = res.data;
+    const orderId = orderData.order?.id || orderData.orderId;
+    const amount = orderData.order?.amount ?? orderData.amount;
+    const currency = orderData.order?.currency || orderData.currency || 'INR';
+    const keyId = orderData.keyId;
+
+    if (!orderId || !amount || !keyId) {
+      return {
+        success: false,
+        error: 'Payment order response was missing required order details from server.',
+      };
+    }
 
     // 4. Open Razorpay Checkout modal
     return new Promise<PaymentResult>((resolve) => {
@@ -236,7 +244,7 @@ class PaymentService {
         }) => {
           // 5. Send Razorpay payment credentials to the backend for cryptographic signature verification
           try {
-            const verifyRes = await fetch(getApiUrl('/api/subscription/verify-payment'), {
+            const verifyRes = await safeApiFetch<any>('/api/subscription/verify-payment', {
               method: 'POST',
               headers: this.getAuthHeaders(),
               body: JSON.stringify({
@@ -249,18 +257,19 @@ class PaymentService {
               }),
             });
 
-            const verifyResult = await verifyRes.json();
-
-            if (!verifyRes.ok || !verifyResult.success) {
+            if (!verifyRes.ok || !verifyRes.data?.success) {
               isSettled = true;
               resolve({
                 success: false,
                 error:
-                  verifyResult.error ||
+                  verifyRes.error ||
+                  verifyRes.data?.error ||
                   'Payment signature verification failed. Premium access was not granted.',
               });
               return;
             }
+
+            const verifyResult = verifyRes.data;
 
             // ONLY HERE — after server verified signature — is payment considered successful!
             isSettled = true;
@@ -341,35 +350,39 @@ class PaymentService {
       };
     }
 
-    let orderData: any;
-    try {
-      const res = await fetch(getApiUrl('/api/subscription/create-trial-order'), {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          userId: request.userId,
-          customerEmail: request.customerEmail,
-          customerName: request.customerName,
-        }),
-      });
+    const res = await safeApiFetch<any>('/api/subscription/create-trial-order', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({
+        userId: request.userId,
+        customerEmail: request.customerEmail,
+        customerName: request.customerName,
+      }),
+    });
 
-      orderData = await res.json();
-      if (!res.ok || !orderData.success) {
-        return {
-          success: false,
-          error:
-            orderData.error ||
-            'Failed to create ₹1 trial order. Please ensure Razorpay gateway credentials are configured.',
-        };
-      }
-    } catch (err: any) {
+    if (!res.ok || !res.data?.success) {
+      const errorMsg =
+        res.error ||
+        res.data?.error ||
+        'Failed to create ₹1 trial order. Please ensure Razorpay gateway credentials are configured.';
       return {
         success: false,
-        error: err?.message || 'Network error connecting to trial payment server.',
+        error: errorMsg,
       };
     }
 
-    const { orderId, amount, currency, keyId } = orderData;
+    const orderData = res.data;
+    const orderId = orderData.order?.id || orderData.orderId;
+    const amount = orderData.order?.amount ?? orderData.amount ?? 100;
+    const currency = orderData.order?.currency || orderData.currency || 'INR';
+    const keyId = orderData.keyId;
+
+    if (!orderId || !keyId) {
+      return {
+        success: false,
+        error: 'Trial order response was missing required order details from server.',
+      };
+    }
 
     return new Promise<PaymentResult>((resolve) => {
       let isSettled = false;
@@ -395,7 +408,7 @@ class PaymentService {
           razorpay_signature: string;
         }) => {
           try {
-            const verifyRes = await fetch(getApiUrl('/api/subscription/verify-trial-payment'), {
+            const verifyRes = await safeApiFetch<any>('/api/subscription/verify-trial-payment', {
               method: 'POST',
               headers: this.getAuthHeaders(),
               body: JSON.stringify({
@@ -406,18 +419,19 @@ class PaymentService {
               }),
             });
 
-            const verifyResult = await verifyRes.json();
-
-            if (!verifyRes.ok || !verifyResult.success) {
+            if (!verifyRes.ok || !verifyRes.data?.success) {
               isSettled = true;
               resolve({
                 success: false,
                 error:
-                  verifyResult.error ||
+                  verifyRes.error ||
+                  verifyRes.data?.error ||
                   'Payment signature verification failed. Trial access was not activated.',
               });
               return;
             }
+
+            const verifyResult = verifyRes.data;
 
             isSettled = true;
             resolve({
@@ -483,13 +497,12 @@ class PaymentService {
    */
   public async cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch(getApiUrl('/api/subscription/cancel'), {
+      const res = await safeApiFetch<{ success: boolean; error?: string }>('/api/subscription/cancel', {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ userId }),
       });
-      const data = await res.json();
-      return { success: data.success, error: data.error };
+      return { success: !!res.data?.success, error: res.error || res.data?.error };
     } catch (err: any) {
       return { success: false, error: err?.message || 'Failed to cancel subscription' };
     }
@@ -503,18 +516,17 @@ class PaymentService {
     requiredTier: 'plus' | 'pro' = 'plus'
   ): Promise<{ authorized: boolean; plan: string; isTrial?: boolean; trialEndsAt?: string; message?: string }> {
     try {
-      const res = await fetch(getApiUrl('/api/subscription/authorize-feature'), {
+      const res = await safeApiFetch<any>('/api/subscription/authorize-feature', {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ userId, requiredTier }),
       });
-      const data = await res.json();
       return {
-        authorized: !!data.authorized,
-        plan: data.plan || 'free',
-        isTrial: !!data.isTrial,
-        trialEndsAt: data.trialEndsAt,
-        message: data.message,
+        authorized: !!res.data?.authorized,
+        plan: res.data?.plan || 'free',
+        isTrial: !!res.data?.isTrial,
+        trialEndsAt: res.data?.trialEndsAt,
+        message: res.error || res.data?.message,
       };
     } catch (err: any) {
       return {
