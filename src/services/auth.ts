@@ -1,3 +1,5 @@
+import { getApiUrl } from '../config/api';
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -48,7 +50,7 @@ class AuthService {
     anonymousUserId?: string
   ): Promise<AuthResponse> {
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(getApiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, anonymousUserId }),
@@ -71,7 +73,7 @@ class AuthService {
     anonymousUserId?: string
   ): Promise<AuthResponse> {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, rememberMe, anonymousUserId }),
@@ -94,7 +96,7 @@ class AuthService {
         return { success: false, error: 'No active session token' };
       }
 
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(getApiUrl('/api/auth/me'), {
         headers,
       });
 
@@ -111,7 +113,7 @@ class AuthService {
   public async logout(token?: string | null): Promise<void> {
     try {
       const headers = this.getAuthHeaders(token);
-      await fetch('/api/auth/logout', {
+      await fetch(getApiUrl('/api/auth/logout'), {
         method: 'POST',
         headers,
       });
@@ -123,7 +125,7 @@ class AuthService {
   public async logoutAll(token?: string | null): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const headers = this.getAuthHeaders(token);
-      const res = await fetch('/api/auth/logout-all', {
+      const res = await fetch(getApiUrl('/api/auth/logout-all'), {
         method: 'POST',
         headers,
       });
@@ -139,7 +141,7 @@ class AuthService {
 
   public async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch(getApiUrl('/api/auth/forgot-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -157,7 +159,7 @@ class AuthService {
 
   public async resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await fetch(getApiUrl('/api/auth/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword }),
@@ -179,7 +181,7 @@ class AuthService {
   ): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
     try {
       const headers = this.getAuthHeaders(token);
-      const res = await fetch('/api/auth/profile', {
+      const res = await fetch(getApiUrl('/api/auth/profile'), {
         method: 'PUT',
         headers,
         body: JSON.stringify(data),
@@ -202,7 +204,7 @@ class AuthService {
   ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const headers = this.getAuthHeaders(token);
-      const res = await fetch('/api/auth/change-password', {
+      const res = await fetch(getApiUrl('/api/auth/change-password'), {
         method: 'PUT',
         headers,
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -221,7 +223,7 @@ class AuthService {
   public async recordRecentTool(toolId: string, token?: string | null): Promise<string[]> {
     try {
       const headers = this.getAuthHeaders(token);
-      const res = await fetch('/api/user/recent-tools', {
+      const res = await fetch(getApiUrl('/api/user/recent-tools'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ toolId }),
@@ -236,7 +238,7 @@ class AuthService {
   public async getRecentTools(token?: string | null): Promise<string[]> {
     try {
       const headers = this.getAuthHeaders(token);
-      const res = await fetch('/api/user/recent-tools', { headers });
+      const res = await fetch(getApiUrl('/api/user/recent-tools'), { headers });
       const data = await res.json();
       return data.recentTools || [];
     } catch {

@@ -1,4 +1,5 @@
 import { CurrencyCode, BillingInterval, PlanType } from '../config/pricing';
+import { getApiUrl } from '../config/api';
 
 export type SubscriptionState =
   | 'FREE'
@@ -81,7 +82,7 @@ class PaymentService {
    */
   public async getGatewayConfig(): Promise<{ keyId: string; isConfigured: boolean; isTestKey: boolean }> {
     try {
-      const res = await fetch('/api/subscription/config');
+      const res = await fetch(getApiUrl('/api/subscription/config'));
       if (!res.ok) {
         return { keyId: '', isConfigured: false, isTestKey: false };
       }
@@ -115,7 +116,7 @@ class PaymentService {
       const headers = this.getAuthHeaders();
       headers['x-user-id'] = userId;
 
-      const res = await fetch(`/api/subscription/status?userId=${encodeURIComponent(userId)}`, {
+      const res = await fetch(getApiUrl(`/api/subscription/status?userId=${encodeURIComponent(userId)}`), {
         headers,
       });
 
@@ -178,7 +179,7 @@ class PaymentService {
     // 3. Request server to create a verified Razorpay Order
     let orderData: any;
     try {
-      const res = await fetch('/api/subscription/create-order', {
+      const res = await fetch(getApiUrl('/api/subscription/create-order'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({
@@ -235,7 +236,7 @@ class PaymentService {
         }) => {
           // 5. Send Razorpay payment credentials to the backend for cryptographic signature verification
           try {
-            const verifyRes = await fetch('/api/subscription/verify-payment', {
+            const verifyRes = await fetch(getApiUrl('/api/subscription/verify-payment'), {
               method: 'POST',
               headers: this.getAuthHeaders(),
               body: JSON.stringify({
@@ -342,7 +343,7 @@ class PaymentService {
 
     let orderData: any;
     try {
-      const res = await fetch('/api/subscription/create-trial-order', {
+      const res = await fetch(getApiUrl('/api/subscription/create-trial-order'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({
@@ -394,7 +395,7 @@ class PaymentService {
           razorpay_signature: string;
         }) => {
           try {
-            const verifyRes = await fetch('/api/subscription/verify-trial-payment', {
+            const verifyRes = await fetch(getApiUrl('/api/subscription/verify-trial-payment'), {
               method: 'POST',
               headers: this.getAuthHeaders(),
               body: JSON.stringify({
@@ -482,7 +483,7 @@ class PaymentService {
    */
   public async cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await fetch('/api/subscription/cancel', {
+      const res = await fetch(getApiUrl('/api/subscription/cancel'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ userId }),
@@ -502,7 +503,7 @@ class PaymentService {
     requiredTier: 'plus' | 'pro' = 'plus'
   ): Promise<{ authorized: boolean; plan: string; isTrial?: boolean; trialEndsAt?: string; message?: string }> {
     try {
-      const res = await fetch('/api/subscription/authorize-feature', {
+      const res = await fetch(getApiUrl('/api/subscription/authorize-feature'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ userId, requiredTier }),
