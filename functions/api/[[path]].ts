@@ -201,7 +201,7 @@ async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env
 }
 
 // Helper: Retrieve subscription with cross-linking by user email
-function getEdgeUserSubscription(userId: string): any {
+function getEdgeUserSubscription(userId: string, env?: Env): any {
   if (!userId) return null;
   const direct = edgeSubscriptions[userId];
   if (direct && (direct.status === 'ACTIVE' || direct.status === 'TRIAL_ACTIVE')) {
@@ -223,7 +223,7 @@ function getEdgeUserSubscription(userId: string): any {
         userId: user.id,
         updatedAt: new Date().toISOString(),
       };
-      persistEdgeData('subscriptions');
+      persistEdgeData('subscriptions', env);
       return edgeSubscriptions[userId];
     }
   }
@@ -351,7 +351,7 @@ export async function onRequest(context: {
     }
 
     const userId = authUser.id;
-    const sub = getEdgeUserSubscription(userId);
+    const sub = getEdgeUserSubscription(userId, env);
     const now = new Date();
 
     if (sub?.status === 'TRIAL_ACTIVE' && sub.trialEndsAt) {
@@ -378,7 +378,7 @@ export async function onRequest(context: {
       } else {
         sub.status = 'FREE';
         sub.plan = 'free';
-        persistEdgeData('subscriptions');
+        persistEdgeData('subscriptions', env);
         return jsonResponse({
           status: 'FREE',
           plan: 'free',
@@ -563,7 +563,7 @@ export async function onRequest(context: {
         customerEmail: authUser.email,
         updatedAt: trialStartAt,
       };
-      persistEdgeData('subscriptions');
+      persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -706,7 +706,7 @@ export async function onRequest(context: {
         customerEmail: authUser.email,
         updatedAt: now.toISOString(),
       };
-      persistEdgeData('subscriptions');
+      persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -931,7 +931,7 @@ export async function onRequest(context: {
         success: true,
         token,
         user: { id: newUser.id, name: newUser.name, email: newUser.email, createdAt: newUser.createdAt },
-        subscription: getEdgeUserSubscription(userId) || { status: 'FREE', plan: 'free' },
+        subscription: getEdgeUserSubscription(userId, env) || { status: 'FREE', plan: 'free' },
       }, 201);
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Registration failed.' }, 500);
@@ -986,7 +986,7 @@ export async function onRequest(context: {
         success: true,
         token,
         user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-        subscription: getEdgeUserSubscription(user.id) || { status: 'FREE', plan: 'free' },
+        subscription: getEdgeUserSubscription(user.id, env) || { status: 'FREE', plan: 'free' },
       });
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Login failed.' }, 500);
@@ -1002,7 +1002,7 @@ export async function onRequest(context: {
     return jsonResponse({
       success: true,
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-      subscription: getEdgeUserSubscription(user.id) || { status: 'FREE', plan: 'free' },
+      subscription: getEdgeUserSubscription(user.id, env) || { status: 'FREE', plan: 'free' },
     });
   }
 
