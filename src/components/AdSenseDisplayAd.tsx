@@ -21,16 +21,42 @@ export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({ className = 
     // Prevent duplicate push calls during React 18 Strict Mode or re-renders
     if (isPushed.current) return;
 
-    try {
-      if (adRef.current && !adRef.current.getAttribute('data-adsbygoogle-status')) {
-        if (typeof window !== 'undefined') {
-          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-          isPushed.current = true;
+    const tryPush = () => {
+      if (isPushed.current) return;
+      const el = adRef.current;
+      if (!el || el.getAttribute('data-adsbygoogle-status')) return;
+
+      // AdSense throws 'No slot size for availableWidth=0' if container width is 0
+      if (el.offsetWidth > 0) {
+        try {
+          if (typeof window !== 'undefined') {
+            ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+            isPushed.current = true;
+          }
+        } catch (e) {
+          // Gracefully handle ad blocker or initialization errors
+          console.warn('AdSense Display Ad initialization note:', e);
         }
       }
-    } catch (e) {
-      // Gracefully handle ad blocker or initialization errors
-      console.warn('AdSense Display Ad initialization note:', e);
+    };
+
+    // Attempt immediate push if already sized
+    tryPush();
+
+    // If still not pushed because width was 0, observe container until layout finishes
+    if (!isPushed.current && adRef.current && typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.contentRect.width > 0) {
+            tryPush();
+            if (isPushed.current) {
+              observer.disconnect();
+            }
+          }
+        }
+      });
+      observer.observe(adRef.current);
+      return () => observer.disconnect();
     }
   }, [isAdFree]);
 
