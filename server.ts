@@ -115,7 +115,43 @@ let processedEventsCache: Set<string> = new Set();
 let usersCache: Record<string, UserAccount> = {};
 let sessionsCache: Record<string, UserSession> = {};
 
+function syncUsersFromDisk(): Record<string, UserAccount> {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const data = fs.readFileSync(USERS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        usersCache = { ...usersCache, ...parsed };
+      }
+    }
+  } catch (err) {
+    console.warn('Could not read users file from disk:', err);
+  }
+  return usersCache;
+}
+
+function syncSessionsFromDisk(): Record<string, UserSession> {
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      const data = fs.readFileSync(SESSIONS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        sessionsCache = { ...sessionsCache, ...parsed };
+      }
+    }
+  } catch (err) {
+    console.warn('Could not read sessions file from disk:', err);
+  }
+  return sessionsCache;
+}
+
 function loadPersistedData() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {}
+
   try {
     if (fs.existsSync(SUBSCRIPTIONS_FILE)) {
       const data = fs.readFileSync(SUBSCRIPTIONS_FILE, 'utf8');
@@ -139,29 +175,13 @@ function loadPersistedData() {
     processedEventsCache = new Set();
   }
 
-  try {
-    if (fs.existsSync(USERS_FILE)) {
-      const data = fs.readFileSync(USERS_FILE, 'utf8');
-      usersCache = JSON.parse(data);
-    }
-  } catch (err) {
-    console.warn('Could not load users file, starting with fresh cache:', err);
-    usersCache = {};
-  }
-
-  try {
-    if (fs.existsSync(SESSIONS_FILE)) {
-      const data = fs.readFileSync(SESSIONS_FILE, 'utf8');
-      sessionsCache = JSON.parse(data);
-    }
-  } catch (err) {
-    console.warn('Could not load sessions file, starting with fresh cache:', err);
-    sessionsCache = {};
-  }
+  syncUsersFromDisk();
+  syncSessionsFromDisk();
 }
 
 function saveSubscriptions() {
   try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(SUBSCRIPTIONS_FILE, JSON.stringify(subscriptionsCache, null, 2), 'utf8');
   } catch (err) {
     console.error('Failed to save subscriptions:', err);
@@ -170,6 +190,7 @@ function saveSubscriptions() {
 
 function saveProcessedEvents() {
   try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(
       PROCESSED_EVENTS_FILE,
       JSON.stringify(Array.from(processedEventsCache), null, 2),
@@ -182,6 +203,7 @@ function saveProcessedEvents() {
 
 function saveUsers() {
   try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(USERS_FILE, JSON.stringify(usersCache, null, 2), 'utf8');
   } catch (err) {
     console.error('Failed to save users:', err);
@@ -190,6 +212,7 @@ function saveUsers() {
 
 function saveSessions() {
   try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessionsCache, null, 2), 'utf8');
   } catch (err) {
     console.error('Failed to save sessions:', err);
@@ -267,6 +290,7 @@ function getAuthenticatedUser(req: express.Request): UserAccount | null {
   const token = authHeader.substring(7).trim();
   if (!token) return null;
 
+  syncSessionsFromDisk();
   const session = sessionsCache[token];
   if (!session) return null;
 
@@ -276,6 +300,7 @@ function getAuthenticatedUser(req: express.Request): UserAccount | null {
     return null;
   }
 
+  syncUsersFromDisk();
   const user = usersCache[session.userId];
   return user || null;
 }
@@ -416,8 +441,8 @@ app.get('/api/subscription/config', (_req, res) => {
 // AUTHENTICATION & USER ENDPOINTS
 // ==========================================
 
-// Auth: Sign Up
-app.post('/api/auth/signup', (req, res) => {
+// Auth: Handler for Registration (both /api/auth/signup and /api/auth/register)
+const handleSignup = (req: express.Request, res: express.Response) => {
   try {
     const { name, email, password, anonymousUserId } = req.body;
 
@@ -438,6 +463,9 @@ app.post('/api/auth/signup', (req, res) => {
     if (!password || typeof password !== 'string' || password.length < 8) {
       return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
     }
+
+    // Ensure latest users from persistent disk storage
+    syncUsersFromDisk();
 
     // Check if user already exists
     const existing = Object.values(usersCache).find(
@@ -509,10 +537,13 @@ app.post('/api/auth/signup', (req, res) => {
       subscription: getUserSubscription(userId),
     });
   } catch (err: any) {
-    console.error('Error during user signup:', err);
+    console.error('Error during user registration:', err);
     return res.status(500).json({ success: false, error: 'Internal server error during registration.' });
   }
-});
+};
+
+app.post('/api/auth/signup', handleSignup);
+app.post('/api/auth/register', handleSignup);
 
 // Auth: Login
 app.post('/api/auth/login', (req, res) => {
@@ -524,17 +555,21 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+
+    // Ensure latest users from persistent disk storage
+    syncUsersFromDisk();
+
     const user = Object.values(usersCache).find(
       (u) => u.email.toLowerCase() === normalizedEmail
     );
 
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+      return res.status(401).json({ success: false, error: 'Incorrect email or password.' });
     }
 
     const isMatch = verifyPassword(password, user.salt, user.passwordHash);
     if (!isMatch) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+      return res.status(401).json({ success: false, error: 'Incorrect email or password.' });
     }
 
     // Generate session token (30 days if rememberMe, otherwise 7 days)
@@ -586,7 +621,7 @@ app.get('/api/auth/me', (req, res) => {
   try {
     const user = getAuthenticatedUser(req);
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Not authenticated or session expired.' });
+      return res.status(401).json({ success: false, error: 'Not authenticated or session expired.', sessionExpired: true });
     }
 
     const sub = getUserSubscription(user.id);

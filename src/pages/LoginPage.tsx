@@ -55,7 +55,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         await refreshSubscriptionStatus();
         onNavigate(getRedirectPath());
       } else {
-        setErrorMessage(res.error || 'Invalid email or password.');
+        setErrorMessage(res.error || 'Incorrect email or password.');
       }
     } catch {
       setErrorMessage('An unexpected connection error occurred. Please try again.');

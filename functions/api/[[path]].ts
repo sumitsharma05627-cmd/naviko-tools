@@ -122,8 +122,26 @@ async function verifyEdgePassword(password: string, salt: string, expectedHash: 
   return false;
 }
 
-// Helper: Synchronize edge stores with local .data/ files if fs is available
-async function loadEdgeDataFiles() {
+// Helper: Synchronize edge stores with KV (production) and local .data/ files (Node/development)
+async function loadEdgeDataFiles(env?: Env) {
+  // 1. Cloudflare KV persistence (when NAVIKO_KV / KV / USERS_KV binding is configured)
+  const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+  if (kv && typeof kv.get === 'function') {
+    try {
+      const [uStr, sStr, sessStr] = await Promise.all([
+        kv.get('naviko_users'),
+        kv.get('naviko_subscriptions'),
+        kv.get('naviko_sessions'),
+      ]);
+      if (uStr) Object.assign(edgeUsers, JSON.parse(uStr));
+      if (sStr) Object.assign(edgeSubscriptions, JSON.parse(sStr));
+      if (sessStr) Object.assign(edgeSessions, JSON.parse(sessStr));
+    } catch (kvErr) {
+      console.warn('Error reading edge data from KV:', kvErr);
+    }
+  }
+
+  // 2. Node filesystem persistence (in local development or container environments)
   try {
     // @ts-ignore
     const fs = await import('node:fs');
@@ -145,7 +163,24 @@ async function loadEdgeDataFiles() {
   } catch {}
 }
 
-async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions') {
+async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env?: Env) {
+  // 1. Cloudflare KV persistence
+  const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+  if (kv && typeof kv.put === 'function') {
+    try {
+      if (type === 'users') {
+        await kv.put('naviko_users', JSON.stringify(edgeUsers));
+      } else if (type === 'subscriptions') {
+        await kv.put('naviko_subscriptions', JSON.stringify(edgeSubscriptions));
+      } else if (type === 'sessions') {
+        await kv.put('naviko_sessions', JSON.stringify(edgeSessions));
+      }
+    } catch (kvErr) {
+      console.warn('Error writing edge data to KV:', kvErr);
+    }
+  }
+
+  // 2. Node filesystem persistence
   try {
     // @ts-ignore
     const fs = await import('node:fs');
@@ -257,7 +292,7 @@ export async function onRequest(context: {
 
   // 2. Native Cloudflare Edge API Implementation
   await initSeedUsers();
-  await loadEdgeDataFiles();
+  await loadEdgeDataFiles(env);
 
   const keyId = env.RAZORPAY_KEY_ID || (typeof process !== 'undefined' && (process as any)?.env?.RAZORPAY_KEY_ID) || '';
   const keySecret = env.RAZORPAY_KEY_SECRET || (typeof process !== 'undefined' && (process as any)?.env?.RAZORPAY_KEY_SECRET) || '';
@@ -842,8 +877,8 @@ export async function onRequest(context: {
     }
   }
 
-  // --- POST /api/auth/signup ---
-  if (isPath('/api/auth/signup') && method === 'POST') {
+  // --- POST /api/auth/signup & /api/auth/register ---
+  if ((isPath('/api/auth/signup') || isPath('/api/auth/register')) && method === 'POST') {
     try {
       const body = await request.json().catch(() => ({}));
       const { name, email, password, anonymousUserId } = body;
@@ -853,7 +888,7 @@ export async function onRequest(context: {
       const normalizedEmail = email.trim().toLowerCase();
       const existing = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
       if (existing) {
-        return jsonResponse({ success: false, error: 'An account with this email already exists.' }, 400);
+        return jsonResponse({ success: false, error: 'An account with this email already exists. Please log in instead.' }, 400);
       }
 
       const { salt, hash } = await hashEdgePassword(password);
@@ -888,9 +923,9 @@ export async function onRequest(context: {
         };
       }
 
-      await persistEdgeData('users');
-      await persistEdgeData('sessions');
-      await persistEdgeData('subscriptions');
+      await persistEdgeData('users', env);
+      await persistEdgeData('sessions', env);
+      await persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -915,12 +950,12 @@ export async function onRequest(context: {
       const user = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
 
       if (!user) {
-        return jsonResponse({ success: false, error: 'Invalid email or password.' }, 401);
+        return jsonResponse({ success: false, error: 'Incorrect email or password.' }, 401);
       }
 
       const isMatch = await verifyEdgePassword(password, user.salt, user.passwordHash);
       if (!isMatch) {
-        return jsonResponse({ success: false, error: 'Invalid email or password.' }, 401);
+        return jsonResponse({ success: false, error: 'Incorrect email or password.' }, 401);
       }
 
       const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
@@ -944,8 +979,8 @@ export async function onRequest(context: {
         }
       }
 
-      await persistEdgeData('sessions');
-      await persistEdgeData('subscriptions');
+      await persistEdgeData('sessions', env);
+      await persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -962,7 +997,7 @@ export async function onRequest(context: {
   if (isPath('/api/auth/me') && method === 'GET') {
     const user = getEdgeUser(request);
     if (!user) {
-      return jsonResponse({ success: false, error: 'Authentication required' }, 401);
+      return jsonResponse({ success: false, error: 'Not authenticated or session expired.', sessionExpired: true }, 401);
     }
     return jsonResponse({
       success: true,
@@ -976,6 +1011,7 @@ export async function onRequest(context: {
     const authHeader = request.headers.get('Authorization');
     if (authHeader?.startsWith('Bearer ')) {
       delete edgeSessions[authHeader.substring(7).trim()];
+      await persistEdgeData('sessions', env);
     }
     return jsonResponse({ success: true, message: 'Logged out successfully.' });
   }

@@ -51,14 +51,15 @@ class AuthService {
     anonymousUserId?: string
   ): Promise<AuthResponse> {
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       const res = await safeApiFetch<AuthResponse>('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, anonymousUserId }),
+        body: JSON.stringify({ name: name.trim(), email: normalizedEmail, password, anonymousUserId }),
       });
 
       if (!res.ok || !res.data) {
-        return { success: false, error: res.error || res.data?.error || 'Signup failed.' };
+        return { success: false, error: res.data?.error || res.error || 'Registration failed.' };
       }
       return res.data;
     } catch (err: any) {
@@ -73,14 +74,15 @@ class AuthService {
     anonymousUserId?: string
   ): Promise<AuthResponse> {
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       const res = await safeApiFetch<AuthResponse>('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe, anonymousUserId }),
+        body: JSON.stringify({ email: normalizedEmail, password, rememberMe, anonymousUserId }),
       });
 
       if (!res.ok || !res.data) {
-        return { success: false, error: res.error || res.data?.error || 'Invalid email or password.' };
+        return { success: false, error: res.data?.error || res.error || 'Incorrect email or password.' };
       }
       return res.data;
     } catch (err: any) {
