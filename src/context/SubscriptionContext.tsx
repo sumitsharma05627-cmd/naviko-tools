@@ -7,6 +7,7 @@ import {
 } from '../config/pricing';
 import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
 import { paymentService, SubscriptionState } from '../services/payment';
+import { useAuth } from './AuthContext';
 
 export type SubscriptionStatus = SubscriptionState;
 
@@ -100,7 +101,18 @@ function getOrCreateUserId(): string {
 }
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [userId] = useState<string>(() => getOrCreateUserId());
+  const { user, isAuthenticated } = useAuth();
+  const [userId, setUserId] = useState<string>(() => user?.id || getOrCreateUserId());
+
+  // Keep userId and email synced with authenticated user state
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      setUserId(user.id);
+      setCustomerEmail(user.email);
+    } else {
+      setUserId(getOrCreateUserId());
+    }
+  }, [isAuthenticated, user?.id, user?.email]);
 
   // 1. Currency state
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
@@ -175,11 +187,38 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   /**
    * Authoritative backend status synchronizer.
-   * Runs on mount, on focus, and after payments.
+   * Strictly verifies status via user ID.
+   * If logged out, immediately resets UI state to FREE.
    */
   const refreshSubscriptionStatus = useCallback(async () => {
     try {
-      const uid = getOrCreateUserId();
+      // If user is not authenticated, state MUST strictly be FREE
+      if (!isAuthenticated || !user?.id) {
+        setPlan('free');
+        setSubscriptionStatus('FREE');
+        setIsTrial(false);
+        setStartDate(null);
+        setRenewalDate(null);
+        setTrialUsed(false);
+        setTrialStartAt(null);
+        setTrialEndsAt(null);
+        setRemainingTrialDays(0);
+        setRemainingTrialHours(0);
+
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('naviko_subscription_plan');
+          localStorage.removeItem('naviko_sub_status');
+          localStorage.removeItem('naviko_sub_start_date');
+          localStorage.removeItem('naviko_sub_renewal_date');
+          localStorage.removeItem('naviko_payment_test_mode');
+        }
+
+        const config = await paymentService.getGatewayConfig();
+        setIsTestMode(config.isTestKey);
+        return;
+      }
+
+      const uid = user.id;
       const statusRes = await paymentService.getSubscriptionStatus(uid);
 
       // Synchronize server trial flags
@@ -233,7 +272,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setSubscriptionStatus('FREE');
       setIsTrial(false);
     }
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   // Initial synchronization and URL tampering protection
   useEffect(() => {
@@ -397,8 +436,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   /**
    * Upgrade Flow — Initiates real Razorpay Checkout.
-   * The button click NEVER unlocks Premium.
-   * Subscription is only activated if the backend cryptographically verifies the payment.
+   * The user MUST be authenticated before purchasing any paid plan.
+   * Clicking the button NEVER unlocks Premium without backend cryptographic verification.
    */
   const upgradeToTier = useCallback(
     async (
@@ -407,20 +446,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       email?: string
     ): Promise<{ success: boolean; message?: string; error?: string }> => {
       try {
-        const uid = getOrCreateUserId();
-        if (email) {
-          setCustomerEmail(email);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('naviko_user_email', email);
-          }
+        if (!isAuthenticated || !user) {
+          return {
+            success: false,
+            error: 'Please log in or create an account to purchase NAVIKO Premium.',
+          };
         }
+
+        const uid = user.id;
+        const customerEmailAddress = user.email || email;
 
         // 1. Process payment via Razorpay + Backend verification
         const result = await paymentService.processPlanPayment({
           tier,
           interval,
           currency,
-          customerEmail: email || customerEmail || undefined,
+          customerEmail: customerEmailAddress,
+          customerName: user.name,
           userId: uid,
         });
 
@@ -449,7 +491,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       }
     },
-    [currency, customerEmail, refreshSubscriptionStatus]
+    [isAuthenticated, user, currency, refreshSubscriptionStatus]
   );
 
   // Legacy alias for upgradeToPremium (maps to 'plus')
@@ -465,19 +507,21 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   /**
    * Start ₹1 7-day Trial Flow via Razorpay Checkout.
-   * Clicking the button NEVER unlocks trial access directly.
+   * The user MUST be authenticated before starting the trial.
    * Trial is ONLY granted after server verifies cryptographic HMAC SHA256 signature and captures payment.
    */
   const startTrial = useCallback(
     async (email?: string): Promise<{ success: boolean; message?: string; error?: string }> => {
       try {
-        const uid = getOrCreateUserId();
-        if (email) {
-          setCustomerEmail(email);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('naviko_user_email', email);
-          }
+        if (!isAuthenticated || !user) {
+          return {
+            success: false,
+            error: 'Please log in or create an account before starting the ₹1 trial.',
+          };
         }
+
+        const uid = user.id;
+        const customerEmailAddress = user.email || email;
 
         // Check if trial was already used according to authoritative server state
         if (trialUsed) {
@@ -489,7 +533,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const result = await paymentService.processTrialPayment({
           userId: uid,
-          customerEmail: email || customerEmail || undefined,
+          customerEmail: customerEmailAddress,
+          customerName: user.name,
         });
 
         // Always sync with authoritative backend
@@ -516,27 +561,27 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
       }
     },
-    [customerEmail, trialUsed, refreshSubscriptionStatus]
+    [isAuthenticated, user, trialUsed, refreshSubscriptionStatus]
   );
 
   // Cancel Subscription
   const cancelSubscription = useCallback(async () => {
     try {
-      const uid = getOrCreateUserId();
-      await paymentService.cancelSubscription(uid);
+      if (!isAuthenticated || !user?.id) return;
+      await paymentService.cancelSubscription(user.id);
       await refreshSubscriptionStatus();
     } catch (err) {
       console.error('Failed to cancel subscription:', err);
     }
-  }, [refreshSubscriptionStatus]);
+  }, [isAuthenticated, user?.id, refreshSubscriptionStatus]);
 
   // Authorize Feature via trusted backend
   const authorizeFeature = useCallback(
     async (requiredTier: 'plus' | 'pro' = 'plus') => {
-      const uid = getOrCreateUserId();
+      const uid = user?.id || '';
       return paymentService.authorizeFeature(uid, requiredTier);
     },
-    []
+    [user?.id]
   );
 
   // Save User Item

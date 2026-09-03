@@ -208,8 +208,36 @@ function hashPassword(password: string): { salt: string; hash: string } {
 
 function verifyPassword(password: string, salt: string, expectedHash: string): boolean {
   try {
-    const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(expectedHash, 'hex'));
+    if (!password || !salt || !expectedHash) return false;
+
+    // Check scrypt (128 hex chars = 64 bytes)
+    if (expectedHash.length === 128) {
+      const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+      const hashBuf = Buffer.from(hash, 'hex');
+      const expectedBuf = Buffer.from(expectedHash, 'hex');
+      if (hashBuf.length === expectedBuf.length && crypto.timingSafeEqual(hashBuf, expectedBuf)) {
+        return true;
+      }
+      if (hash.toLowerCase() === expectedHash.trim().toLowerCase()) {
+        return true;
+      }
+    }
+
+    // Check SHA-256 fallbacks
+    const shaFormats = [
+      `${salt}:${password}`,
+      salt + password,
+      password + salt,
+      password,
+    ];
+    for (const fmt of shaFormats) {
+      const shaHash = crypto.createHash('sha256').update(fmt).digest('hex');
+      if (shaHash.toLowerCase() === expectedHash.trim().toLowerCase()) {
+        return true;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }
@@ -255,21 +283,24 @@ function getAuthenticatedUser(req: express.Request): UserAccount | null {
 // Helper: Get user subscription with email cross-linking
 function getUserSubscription(userId: string): ServerSubscriptionRecord | null {
   if (!userId) return null;
-  if (subscriptionsCache[userId]) return subscriptionsCache[userId];
+  const direct = subscriptionsCache[userId];
+  if (direct && (direct.status === 'ACTIVE' || direct.status === 'TRIAL_ACTIVE')) {
+    return direct;
+  }
 
-  // If user is authenticated, check if email has an existing subscription record
+  // If direct record is not active, check if user's registered email has an active subscription record
   const user = usersCache[userId];
   if (user && user.email) {
     const userEmail = user.email.toLowerCase();
     const activeMatch = Object.values(subscriptionsCache).find(
-      (sub) => sub.customerEmail && sub.customerEmail.toLowerCase() === userEmail && (sub.status === 'ACTIVE' || sub.status === 'TRIAL_ACTIVE')
+      (sub) =>
+        sub.customerEmail &&
+        sub.customerEmail.toLowerCase() === userEmail &&
+        (sub.status === 'ACTIVE' || sub.status === 'TRIAL_ACTIVE')
     );
-    const matching = activeMatch || Object.values(subscriptionsCache).find(
-      (sub) => sub.customerEmail && sub.customerEmail.toLowerCase() === userEmail
-    );
-    if (matching) {
+    if (activeMatch) {
       subscriptionsCache[userId] = {
-        ...matching,
+        ...activeMatch,
         userId: user.id,
         updatedAt: new Date().toISOString(),
       };
@@ -278,7 +309,7 @@ function getUserSubscription(userId: string): ServerSubscriptionRecord | null {
     }
   }
 
-  return null;
+  return direct || null;
 }
 
 // Helper: Authoritative active check
@@ -834,13 +865,12 @@ app.get('/api/user/recent-tools', (req, res) => {
 });
 
 // 3. Subscription status check (Authoritative backend verification)
-app.get('/api/subscription/status', (req, res) => {
+app.all('/api/subscription/status', (req, res) => {
   const authUser = getAuthenticatedUser(req);
-  const requestedUserId = (req.query.userId as string) || (req.headers['x-user-id'] as string);
-  // Authoritative identity: If authenticated, ALWAYS use the verified session user's ID
-  const userId = authUser ? authUser.id : requestedUserId;
 
-  if (!userId) {
+  // Unauthenticated visitors strictly have FREE status.
+  // Authoritative identity: only verified session users have persistent accounts/subscriptions.
+  if (!authUser) {
     return res.json({
       status: 'FREE',
       plan: 'free',
@@ -857,26 +887,7 @@ app.get('/api/subscription/status', (req, res) => {
     });
   }
 
-  // SECURITY ENFORCEMENT: If the requested userId belongs to a registered user account,
-  // the request MUST be authenticated as that account owner!
-  // Unauthenticated callers cannot query or inherit a registered account's subscription.
-  if (!authUser && usersCache[userId]) {
-    return res.json({
-      status: 'FREE',
-      plan: 'free',
-      hasActiveSubscription: false,
-      isTrial: false,
-      trialUsed: false,
-      trialStartAt: null,
-      trialEndsAt: null,
-      remainingTrialDays: 0,
-      remainingTrialHours: 0,
-      startDate: null,
-      renewalDate: null,
-      billingInterval: 'yearly',
-    });
-  }
-
+  const userId = authUser.id;
   const sub = getUserSubscription(userId);
   const isActive = hasActiveSubscription(userId);
 
@@ -929,13 +940,16 @@ app.get('/api/subscription/status', (req, res) => {
 app.post('/api/subscription/create-trial-order', async (req, res) => {
   try {
     const authUser = getAuthenticatedUser(req);
-    const { customerEmail: clientEmail, customerName, userId: clientUserId } = req.body;
-    const userId = authUser ? authUser.id : clientUserId;
-    const customerEmail = authUser ? authUser.email : clientEmail;
-
-    if (!userId || typeof userId !== 'string') {
-      return res.status(400).json({ success: false, error: 'User identifier (userId) is required.' });
+    if (!authUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required. Please log in or create an account before starting a trial.',
+      });
     }
+
+    const { customerName } = req.body;
+    const userId = authUser.id;
+    const customerEmail = authUser.email;
 
     // Backend enforcement 1: Check if this user ID already claimed trial
     const existing = getUserSubscription(userId);
@@ -1033,18 +1047,21 @@ app.post('/api/subscription/create-trial-order', async (req, res) => {
 app.post('/api/subscription/verify-trial-payment', async (req, res) => {
   try {
     const authUser = getAuthenticatedUser(req);
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId: clientUserId } = req.body;
-    const userId = authUser ? authUser.id : clientUserId;
+    if (!authUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required to verify trial payment.',
+      });
+    }
+
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const userId = authUser.id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
         error: 'Missing required payment verification parameters (order_id, payment_id, or signature).',
       });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ success: false, error: 'User identifier (userId) is required.' });
     }
 
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -1168,13 +1185,16 @@ app.post('/api/subscription/verify-trial-payment', async (req, res) => {
 app.post('/api/subscription/create-order', async (req, res) => {
   try {
     const authUser = getAuthenticatedUser(req);
-    const { tier, interval, currency, customerEmail: clientEmail, userId: clientUserId } = req.body;
-    const userId = authUser ? authUser.id : clientUserId;
-    const customerEmail = authUser ? authUser.email : clientEmail;
-
-    if (!userId || typeof userId !== 'string') {
-      return res.status(400).json({ success: false, error: 'User identifier (userId) is required.' });
+    if (!authUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required. Please log in or create an account before purchasing a plan.',
+      });
     }
+
+    const { tier, interval, currency } = req.body;
+    const userId = authUser.id;
+    const customerEmail = authUser.email;
 
     if (tier !== 'plus' && tier !== 'pro') {
       return res.status(400).json({ success: false, error: 'Invalid plan tier requested. Must be "plus" or "pro".' });
@@ -1261,25 +1281,27 @@ app.post('/api/subscription/create-order', async (req, res) => {
 app.post('/api/subscription/verify-payment', async (req, res) => {
   try {
     const authUser = getAuthenticatedUser(req);
+    if (!authUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required to verify payment.',
+      });
+    }
+
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      userId: clientUserId,
       tier,
       interval,
     } = req.body;
-    const userId = authUser ? authUser.id : clientUserId;
+    const userId = authUser.id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
         error: 'Missing required payment verification parameters (order_id, payment_id, or signature).',
       });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ success: false, error: 'User identifier (userId) is required.' });
     }
 
     const keySecret = process.env.RAZORPAY_KEY_SECRET;

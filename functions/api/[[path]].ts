@@ -54,8 +54,18 @@ async function verifyHmacSha256(secret: string, data: string, expectedHex: strin
   }
 }
 
-// Helper: Simple password hash with SHA-256 + salt (Web Crypto)
+// Helper: Robust password hashing with Scrypt (if node:crypto available) or SHA-256 + salt fallback
 async function hashEdgePassword(password: string, saltHex?: string): Promise<{ salt: string; hash: string }> {
+  try {
+    // @ts-ignore
+    const nc = await import('node:crypto');
+    if (nc && nc.scryptSync && nc.randomBytes) {
+      const salt = saltHex || nc.randomBytes(16).toString('hex');
+      const hash = nc.scryptSync(password, salt, 64).toString('hex');
+      return { salt, hash };
+    }
+  } catch {}
+
   const enc = new TextEncoder();
   const salt = saltHex || Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -68,6 +78,122 @@ async function hashEdgePassword(password: string, saltHex?: string): Promise<{ s
     .join('');
   
   return { salt, hash };
+}
+
+// Helper: Verify password supporting both scrypt (128 hex chars) and SHA-256 (64 hex chars)
+async function verifyEdgePassword(password: string, salt: string, expectedHash: string): Promise<boolean> {
+  if (!password || !salt || !expectedHash) return false;
+
+  // 1. Check SHA-256 fallbacks
+  const enc = new TextEncoder();
+  const shaFormats = [
+    `${salt}:${password}`,
+    salt + password,
+    password + salt,
+    password,
+  ];
+
+  for (const fmt of shaFormats) {
+    try {
+      const hashBuffer = await crypto.subtle.digest('SHA-256', enc.encode(fmt));
+      const shaHex = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      if (shaHex.toLowerCase() === expectedHash.trim().toLowerCase()) {
+        return true;
+      }
+    } catch {}
+  }
+
+  // 2. Check scrypt (128 hex chars) via node:crypto if available
+  if (expectedHash.length === 128) {
+    try {
+      // @ts-ignore
+      const nc = await import('node:crypto');
+      if (nc && nc.scryptSync) {
+        const scryptHash = nc.scryptSync(password, salt, 64).toString('hex');
+        if (scryptHash.toLowerCase() === expectedHash.trim().toLowerCase()) {
+          return true;
+        }
+      }
+    } catch {}
+  }
+
+  return false;
+}
+
+// Helper: Synchronize edge stores with local .data/ files if fs is available
+async function loadEdgeDataFiles() {
+  try {
+    // @ts-ignore
+    const fs = await import('node:fs');
+    // @ts-ignore
+    const path = await import('node:path');
+    const dataDir = path.join(process.cwd(), '.data');
+    if (fs.existsSync(path.join(dataDir, 'users.json'))) {
+      const u = JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'));
+      Object.assign(edgeUsers, u);
+    }
+    if (fs.existsSync(path.join(dataDir, 'subscriptions.json'))) {
+      const s = JSON.parse(fs.readFileSync(path.join(dataDir, 'subscriptions.json'), 'utf8'));
+      Object.assign(edgeSubscriptions, s);
+    }
+    if (fs.existsSync(path.join(dataDir, 'sessions.json'))) {
+      const sess = JSON.parse(fs.readFileSync(path.join(dataDir, 'sessions.json'), 'utf8'));
+      Object.assign(edgeSessions, sess);
+    }
+  } catch {}
+}
+
+async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions') {
+  try {
+    // @ts-ignore
+    const fs = await import('node:fs');
+    // @ts-ignore
+    const path = await import('node:path');
+    const dataDir = path.join(process.cwd(), '.data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    if (type === 'users') {
+      fs.writeFileSync(path.join(dataDir, 'users.json'), JSON.stringify(edgeUsers, null, 2), 'utf8');
+    } else if (type === 'subscriptions') {
+      fs.writeFileSync(path.join(dataDir, 'subscriptions.json'), JSON.stringify(edgeSubscriptions, null, 2), 'utf8');
+    } else if (type === 'sessions') {
+      fs.writeFileSync(path.join(dataDir, 'sessions.json'), JSON.stringify(edgeSessions, null, 2), 'utf8');
+    }
+  } catch {}
+}
+
+// Helper: Retrieve subscription with cross-linking by user email
+function getEdgeUserSubscription(userId: string): any {
+  if (!userId) return null;
+  const direct = edgeSubscriptions[userId];
+  if (direct && (direct.status === 'ACTIVE' || direct.status === 'TRIAL_ACTIVE')) {
+    return direct;
+  }
+
+  const user = edgeUsers[userId];
+  if (user && user.email) {
+    const userEmail = user.email.toLowerCase();
+    const activeMatch = Object.values(edgeSubscriptions).find(
+      (sub: any) =>
+        sub.customerEmail &&
+        sub.customerEmail.toLowerCase() === userEmail &&
+        (sub.status === 'ACTIVE' || sub.status === 'TRIAL_ACTIVE')
+    );
+    if (activeMatch) {
+      edgeSubscriptions[userId] = {
+        ...activeMatch,
+        userId: user.id,
+        updatedAt: new Date().toISOString(),
+      };
+      persistEdgeData('subscriptions');
+      return edgeSubscriptions[userId];
+    }
+  }
+
+  return direct || null;
 }
 
 // Helper: Extract session user from Request
@@ -131,6 +257,7 @@ export async function onRequest(context: {
 
   // 2. Native Cloudflare Edge API Implementation
   await initSeedUsers();
+  await loadEdgeDataFiles();
 
   const keyId = env.RAZORPAY_KEY_ID || (typeof process !== 'undefined' && (process as any)?.env?.RAZORPAY_KEY_ID) || '';
   const keySecret = env.RAZORPAY_KEY_SECRET || (typeof process !== 'undefined' && (process as any)?.env?.RAZORPAY_KEY_SECRET) || '';
@@ -168,13 +295,10 @@ export async function onRequest(context: {
     });
   }
 
-  // --- GET /api/subscription/status ---
-  if (isPath('/api/subscription/status') && method === 'GET') {
+  // --- GET /api/subscription/status (also accepts POST) ---
+  if (isPath('/api/subscription/status') && (method === 'GET' || method === 'POST')) {
     const authUser = getEdgeUser(request);
-    const queryUserId = url.searchParams.get('userId') || request.headers.get('x-user-id');
-    const userId = authUser ? authUser.id : queryUserId;
-
-    if (!userId) {
+    if (!authUser) {
       return jsonResponse({
         status: 'FREE',
         plan: 'free',
@@ -191,7 +315,8 @@ export async function onRequest(context: {
       });
     }
 
-    const sub = edgeSubscriptions[userId];
+    const userId = authUser.id;
+    const sub = getEdgeUserSubscription(userId);
     const now = new Date();
 
     if (sub?.status === 'TRIAL_ACTIVE' && sub.trialEndsAt) {
@@ -218,6 +343,7 @@ export async function onRequest(context: {
       } else {
         sub.status = 'FREE';
         sub.plan = 'free';
+        persistEdgeData('subscriptions');
         return jsonResponse({
           status: 'FREE',
           plan: 'free',
@@ -272,14 +398,17 @@ export async function onRequest(context: {
   if (isPath('/api/subscription/create-trial-order') && method === 'POST') {
     try {
       const authUser = getEdgeUser(request);
-      const body = await request.json().catch(() => ({}));
-      const { customerEmail: clientEmail, customerName, userId: clientUserId } = body;
-      const userId = authUser ? authUser.id : clientUserId;
-      const customerEmail = authUser ? authUser.email : clientEmail;
-
-      if (!userId || typeof userId !== 'string') {
-        return jsonResponse({ success: false, error: 'User identifier (userId) is required.' }, 400);
+      if (!authUser) {
+        return jsonResponse({
+          success: false,
+          error: 'Authentication required. Please log in or create an account before starting a trial.',
+        }, 401);
       }
+
+      const body = await request.json().catch(() => ({}));
+      const { customerName } = body;
+      const userId = authUser.id;
+      const customerEmail = authUser.email;
 
       const existing = edgeSubscriptions[userId];
       if (existing?.trialUsed || existing?.status === 'TRIAL_ACTIVE') {
@@ -348,17 +477,22 @@ export async function onRequest(context: {
   if (isPath('/api/subscription/verify-trial-payment') && method === 'POST') {
     try {
       const authUser = getEdgeUser(request);
+      if (!authUser) {
+        return jsonResponse({
+          success: false,
+          error: 'Authentication required to verify trial payment.',
+        }, 401);
+      }
+
       const body = await request.json().catch(() => ({}));
       const {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        userId: clientUserId,
       } = body;
+      const userId = authUser.id;
 
-      const userId = authUser ? authUser.id : clientUserId;
-
-      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
         return jsonResponse({ success: false, error: 'Missing required payment verification parameters.' }, 400);
       }
 
@@ -391,8 +525,10 @@ export async function onRequest(context: {
         trialUsed: true,
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
+        customerEmail: authUser.email,
         updatedAt: trialStartAt,
       };
+      persistEdgeData('subscriptions');
 
       return jsonResponse({
         success: true,
@@ -412,14 +548,17 @@ export async function onRequest(context: {
   if (isPath('/api/subscription/create-order') && method === 'POST') {
     try {
       const authUser = getEdgeUser(request);
-      const body = await request.json().catch(() => ({}));
-      const { tier, interval, customerEmail: clientEmail, customerName, userId: clientUserId } = body;
-      const userId = authUser ? authUser.id : clientUserId;
-      const customerEmail = authUser ? authUser.email : clientEmail;
-
-      if (!userId) {
-        return jsonResponse({ success: false, error: 'User identifier is required.' }, 400);
+      if (!authUser) {
+        return jsonResponse({
+          success: false,
+          error: 'Authentication required. Please log in or create an account before purchasing a plan.',
+        }, 401);
       }
+
+      const body = await request.json().catch(() => ({}));
+      const { tier, interval, customerName } = body;
+      const userId = authUser.id;
+      const customerEmail = authUser.email;
 
       if (!keyId || !keySecret) {
         return jsonResponse({
@@ -481,6 +620,13 @@ export async function onRequest(context: {
   if (isPath('/api/subscription/verify-payment') && method === 'POST') {
     try {
       const authUser = getEdgeUser(request);
+      if (!authUser) {
+        return jsonResponse({
+          success: false,
+          error: 'Authentication required to verify payment.',
+        }, 401);
+      }
+
       const body = await request.json().catch(() => ({}));
       const {
         razorpay_order_id,
@@ -488,12 +634,10 @@ export async function onRequest(context: {
         razorpay_signature,
         tier = 'pro',
         interval = 'yearly',
-        userId: clientUserId,
       } = body;
+      const userId = authUser.id;
 
-      const userId = authUser ? authUser.id : clientUserId;
-
-      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
         return jsonResponse({ success: false, error: 'Missing required parameters.' }, 400);
       }
 
@@ -524,8 +668,10 @@ export async function onRequest(context: {
         renewalDate,
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
+        customerEmail: authUser.email,
         updatedAt: now.toISOString(),
       };
+      persistEdgeData('subscriptions');
 
       return jsonResponse({
         success: true,
@@ -700,12 +846,12 @@ export async function onRequest(context: {
   if (isPath('/api/auth/signup') && method === 'POST') {
     try {
       const body = await request.json().catch(() => ({}));
-      const { name, email, password } = body;
+      const { name, email, password, anonymousUserId } = body;
       if (!name || !email || !password || password.length < 8) {
         return jsonResponse({ success: false, error: 'Name, email, and password (minimum 8 characters) required.' }, 400);
       }
       const normalizedEmail = email.trim().toLowerCase();
-      const existing = Object.values(edgeUsers).find((u: any) => u.email === normalizedEmail);
+      const existing = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
       if (existing) {
         return jsonResponse({ success: false, error: 'An account with this email already exists.' }, 400);
       }
@@ -733,11 +879,24 @@ export async function onRequest(context: {
 
       edgeSessions[token] = { token, userId, expiresAt };
 
+      if (anonymousUserId && edgeSubscriptions[anonymousUserId]) {
+        edgeSubscriptions[userId] = {
+          ...edgeSubscriptions[anonymousUserId],
+          userId,
+          customerEmail: normalizedEmail,
+          updatedAt: now,
+        };
+      }
+
+      await persistEdgeData('users');
+      await persistEdgeData('sessions');
+      await persistEdgeData('subscriptions');
+
       return jsonResponse({
         success: true,
         token,
         user: { id: newUser.id, name: newUser.name, email: newUser.email, createdAt: newUser.createdAt },
-        subscription: edgeSubscriptions[userId] || { status: 'FREE', plan: 'free' },
+        subscription: getEdgeUserSubscription(userId) || { status: 'FREE', plan: 'free' },
       }, 201);
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Registration failed.' }, 500);
@@ -748,34 +907,51 @@ export async function onRequest(context: {
   if (isPath('/api/auth/login') && method === 'POST') {
     try {
       const body = await request.json().catch(() => ({}));
-      const { email, password } = body;
+      const { email, password, rememberMe, anonymousUserId } = body;
       if (!email || !password) {
         return jsonResponse({ success: false, error: 'Email and password are required.' }, 400);
       }
       const normalizedEmail = email.trim().toLowerCase();
-      const user = Object.values(edgeUsers).find((u: any) => u.email === normalizedEmail);
+      const user = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
 
       if (!user) {
         return jsonResponse({ success: false, error: 'Invalid email or password.' }, 401);
       }
 
-      const { hash } = await hashEdgePassword(password, user.salt);
-      if (hash !== user.passwordHash) {
+      const isMatch = await verifyEdgePassword(password, user.salt, user.passwordHash);
+      if (!isMatch) {
         return jsonResponse({ success: false, error: 'Invalid email or password.' }, 401);
       }
 
       const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const daysValid = rememberMe ? 30 : 7;
+      const expiresAt = new Date(Date.now() + daysValid * 24 * 60 * 60 * 1000).toISOString();
+      const now = new Date().toISOString();
 
       edgeSessions[token] = { token, userId: user.id, expiresAt };
+
+      if (anonymousUserId && edgeSubscriptions[anonymousUserId]) {
+        const anonSub = edgeSubscriptions[anonymousUserId];
+        if (!edgeSubscriptions[user.id] || edgeSubscriptions[user.id].status === 'FREE') {
+          edgeSubscriptions[user.id] = {
+            ...anonSub,
+            userId: user.id,
+            customerEmail: user.email,
+            updatedAt: now,
+          };
+        }
+      }
+
+      await persistEdgeData('sessions');
+      await persistEdgeData('subscriptions');
 
       return jsonResponse({
         success: true,
         token,
         user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-        subscription: edgeSubscriptions[user.id] || { status: 'FREE', plan: 'free' },
+        subscription: getEdgeUserSubscription(user.id) || { status: 'FREE', plan: 'free' },
       });
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Login failed.' }, 500);
@@ -791,7 +967,7 @@ export async function onRequest(context: {
     return jsonResponse({
       success: true,
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-      subscription: edgeSubscriptions[user.id] || { status: 'FREE', plan: 'free' },
+      subscription: getEdgeUserSubscription(user.id) || { status: 'FREE', plan: 'free' },
     });
   }
 

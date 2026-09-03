@@ -21,6 +21,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useAuth } from '../context/AuthContext';
 import {
   PRICING_CONFIG,
   PlanType,
@@ -54,6 +55,8 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
     trialEndsAt,
     cancelSubscription,
   } = useSubscription();
+
+  const { isAuthenticated, user } = useAuth();
 
   const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState('');
@@ -103,20 +106,58 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
       'Choose the perfect NAVIKO plan: Free for casual tools, Plus for everyday students & nutrition, or Pro for advanced productivity & batch processing.'
     );
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
+
+    // Restore intended plan selection from query or session
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlInterval = params.get('interval') as BillingInterval | null;
+      if (urlInterval === 'monthly' || urlInterval === 'yearly') {
+        setBillingInterval(urlInterval);
+      } else {
+        const savedIntended = sessionStorage.getItem('naviko_intended_plan');
+        if (savedIntended) {
+          try {
+            const parsed = JSON.parse(savedIntended);
+            if (parsed.interval === 'monthly' || parsed.interval === 'yearly') {
+              setBillingInterval(parsed.interval);
+            }
+          } catch {}
+        }
+      }
+    }
+  }, [setBillingInterval]);
 
   const handleUpgrade = async (tier: 'plus' | 'pro', overrideInterval?: BillingInterval) => {
     const targetInterval = overrideInterval || billingInterval;
+
+    // Strict requirement: User MUST be authenticated before purchasing any paid plan
+    if (!isAuthenticated) {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('naviko_intended_plan', JSON.stringify({ tier, interval: targetInterval }));
+      }
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Please log in or create an account to purchase NAVIKO Premium.',
+      });
+      setTimeout(() => {
+        onNavigate(`/login?redirect=/premium&plan=${tier}&interval=${targetInterval}`);
+      }, 1000);
+      return;
+    }
+
     const actionKey = `${tier}_${targetInterval}`;
     setProcessingAction(actionKey);
     setFeedbackMessage(null);
     try {
-      const res = await upgradeToTier(tier, targetInterval, emailInput || undefined);
+      const res = await upgradeToTier(tier, targetInterval, user?.email || emailInput || undefined);
       if (res.success) {
         setFeedbackMessage({
           type: 'success',
           text: res.message || `NAVIKO ${tier.toUpperCase()} (${targetInterval}) successfully activated!`,
         });
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('naviko_intended_plan');
+        }
       } else {
         setFeedbackMessage({
           type: 'error',
@@ -129,15 +170,33 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
   };
 
   const handleStartTrial = async () => {
+    // Strict requirement: User MUST be authenticated before activating the ₹1 trial
+    if (!isAuthenticated) {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('naviko_intended_plan', JSON.stringify({ tier: 'trial', interval: 'trial' }));
+      }
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Please log in or create an account before starting the ₹1 trial.',
+      });
+      setTimeout(() => {
+        onNavigate('/login?redirect=/premium&plan=trial');
+      }, 1000);
+      return;
+    }
+
     setProcessingAction('trial');
     setFeedbackMessage(null);
     try {
-      const res = await startTrial(emailInput || undefined);
+      const res = await startTrial(user?.email || emailInput || undefined);
       if (res.success) {
         setFeedbackMessage({
           type: 'success',
           text: res.message || '₹1 trial successfully activated! You now have 7 days of full NAVIKO Premium access.',
         });
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('naviko_intended_plan');
+        }
       } else {
         setFeedbackMessage({
           type: 'error',
@@ -393,6 +452,32 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
           >
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{feedbackMessage.text}</span>
+          </div>
+        )}
+
+        {/* Unauthenticated Alert Banner */}
+        {!isAuthenticated && (
+          <div className="max-w-4xl mx-auto mb-8 p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="flex items-center gap-2.5 text-slate-800 dark:text-slate-200 text-center sm:text-left">
+              <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>Account Required:</strong> Please log in or create an account to purchase NAVIKO Premium or start your ₹1 trial.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => onNavigate('/login?redirect=/premium')}
+                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-xs transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => onNavigate('/signup?redirect=/premium')}
+                className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 font-bold text-xs text-slate-800 dark:text-slate-200 cursor-pointer shadow-xs transition-colors"
+              >
+                Sign Up
+              </button>
+            </div>
           </div>
         )}
 

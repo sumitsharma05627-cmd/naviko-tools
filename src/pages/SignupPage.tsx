@@ -20,10 +20,22 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // If already authenticated, redirect to dashboard
+  // Get redirect target from query parameters if any
+  const getRedirectPath = (): string => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect && redirect.startsWith('/')) {
+        return redirect;
+      }
+    }
+    return '/dashboard';
+  };
+
+  // If already authenticated, redirect to target
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      onNavigate('/dashboard');
+      onNavigate(getRedirectPath());
     }
   }, [isAuthenticated, isLoading, onNavigate]);
 
@@ -64,7 +76,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
       const res = await signup(trimmedName, trimmedEmail, password);
       if (res.success) {
         await refreshSubscriptionStatus();
-        onNavigate('/dashboard');
+        onNavigate(getRedirectPath());
       } else {
         setErrorMessage(res.error || 'Registration failed. Please try again.');
       }
