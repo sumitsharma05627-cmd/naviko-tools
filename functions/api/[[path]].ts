@@ -130,6 +130,10 @@ async function verifyEdgePassword(password: string, salt: string, expectedHash: 
 async function loadEdgeDataFiles(env?: Env) {
   // Cloudflare KV persistence (when NAVIKO_KV / KV / USERS_KV binding is configured)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+  if (!kv || typeof kv.get !== 'function') {
+    console.error('[CRITICAL] NAVIKO_KV binding not found on environment. Ensure NAVIKO_KV is configured in Cloudflare Pages -> Settings -> Functions -> KV namespace bindings.');
+    return;
+  }
   if (kv && typeof kv.get === 'function') {
     try {
       const [uStr, sStr, sessStr, plansStr] = await Promise.all([
@@ -163,6 +167,10 @@ async function loadEdgeDataFiles(env?: Env) {
 async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions' | 'plans', env?: Env, targetUserId?: string) {
   // Cloudflare KV persistence (via env.NAVIKO_KV)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+  if (!kv || typeof kv.put !== 'function') {
+    console.error(`[CRITICAL] NAVIKO_KV missing. Cannot persist ${type} to KV! Check Cloudflare Pages -> Settings -> Functions -> KV namespace bindings.`);
+    return;
+  }
   if (kv && typeof kv.put === 'function') {
     try {
       if (type === 'users') {
