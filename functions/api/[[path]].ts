@@ -358,23 +358,6 @@ async function getEdgeUser(request: Request, env?: Env): Promise<any | null> {
   return user || null;
 }
 
-// Pre-seed test user if empty
-async function initSeedUsers() {
-  if (!edgeUsers['usr_demo_test']) {
-    const { salt, hash } = await hashEdgePassword('Password123!', 'demo_salt_naviko_123');
-    edgeUsers['usr_demo_test'] = {
-      id: 'usr_demo_test',
-      name: 'Test Account',
-      email: 'test@example.com',
-      salt,
-      passwordHash: hash,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      recentTools: [],
-    };
-  }
-}
-
 // Main Request Handler for Cloudflare Pages Functions & Workers
 export async function onRequest(context: {
   request: Request;
@@ -404,7 +387,6 @@ export async function onRequest(context: {
   }
 
   // 2. Native Cloudflare Edge API Implementation
-  await initSeedUsers();
   await loadEdgeDataFiles(env);
 
   const keyId = env.RAZORPAY_KEY_ID || (typeof process !== 'undefined' && (process as any)?.env?.RAZORPAY_KEY_ID) || '';
@@ -1135,8 +1117,8 @@ export async function onRequest(context: {
     }
   }
 
-  // --- GET /api/auth/me ---
-  if (isPath('/api/auth/me') && method === 'GET') {
+  // --- GET /api/auth/me or GET /api/auth/profile ---
+  if ((isPath('/api/auth/me') || isPath('/api/auth/profile')) && method === 'GET') {
     const user = await getEdgeUser(request, env);
     if (!user) {
       return jsonResponse({ success: false, error: 'Not authenticated or session expired.', sessionExpired: true }, 401);

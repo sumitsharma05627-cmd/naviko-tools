@@ -643,8 +643,8 @@ app.post('/api/auth/login', (req, res) => {
   }
 });
 
-// Auth: Current User Profile (Me)
-app.get('/api/auth/me', (req, res) => {
+// Auth: Current User Profile (Me & Profile alias)
+app.get(['/api/auth/me', '/api/auth/profile'], (req, res) => {
   try {
     const user = getAuthenticatedUser(req);
     if (!user) {

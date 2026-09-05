@@ -242,6 +242,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li>
+                <button onClick={() => handleNav('/tools/diet-plan-manager')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Diet Plan Manager
+                </button>
+              </li>
+              <li>
                 <button onClick={() => handleNav('/tools/nutrition')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
                   ★ Nutrition Science
                 </button>
