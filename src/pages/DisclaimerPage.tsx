@@ -1,10 +1,18 @@
 import React, { useEffect } from 'react';
 import { AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 export const DisclaimerPage: React.FC = () => {
+  useSEO({
+    title: 'Disclaimer — NAVIKO Online Utility Platform',
+    description: 'Read the official disclaimer for NAVIKO calculators, health screening metrics, financial estimators, and educational tools.',
+    canonical: '/disclaimer',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Disclaimer — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

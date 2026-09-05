@@ -1,10 +1,18 @@
 import React, { useEffect } from 'react';
 import { ShieldCheck, Lock, EyeOff, ServerOff, FileCheck } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 export const PrivacyPolicyPage: React.FC = () => {
+  useSEO({
+    title: 'Privacy Policy — NAVIKO Zero-Storage Architecture',
+    description: 'Review the NAVIKO Privacy Policy. Learn about our privacy-first design, client-side processing, cookie usage, and zero personal data retention commitments.',
+    canonical: '/privacy-policy',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Privacy Policy — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

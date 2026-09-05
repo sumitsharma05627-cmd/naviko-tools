@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, MessageSquare, Send, CheckCircle2, Sparkles } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 export const ContactPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -9,8 +10,15 @@ export const ContactPage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  useSEO({
+    title: 'Contact Us & Send Feedback — NAVIKO',
+    description: 'Have a question, feedback, or tool suggestion? Contact the NAVIKO team directly. We value your input to build better online utilities.',
+    canonical: '/contact',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Contact & Feedback — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

@@ -3,14 +3,22 @@ import { GraduationCap, ArrowRight, BookOpen, Clock, Calendar, CheckCircle2, Spa
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface StudentToolsPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }) => {
+  useSEO({
+    title: 'Student Productivity Tools & Academic Hub — NAVIKO',
+    description: 'Free student tools: 75% attendance calculator, CBSE CGPA to percentage converter, study timetable generator, backlog recovery planner, and mock test analyzer.',
+    canonical: '/student-tools',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Student Tools Hub — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

@@ -314,7 +314,12 @@
     <priority>0.85</priority>
   </url>
 
-  <!-- Company & Legal Pages -->
+  <!-- Company, Legal & Pricing Pages -->
+  <url>
+    <loc>https://naviko.in/premium</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://naviko.in/about</loc>
     <changefreq>monthly</changefreq>

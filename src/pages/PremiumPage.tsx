@@ -33,6 +33,7 @@ import {
 import { CurrencySelector } from '../components/monetization/CurrencySelector';
 import { ComparisonTable } from '../components/monetization/ComparisonTable';
 import { PremiumBadge } from '../components/monetization/PremiumBadge';
+import { useSEO, CANONICAL_DOMAIN } from '../utils/seo';
 
 interface PremiumPageProps {
   onNavigate: (path: string) => void;
@@ -93,18 +94,55 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
 
   const maxSavingsPct = Math.max(plusSavingsPct, proSavingsPct);
 
-  useEffect(() => {
-    document.title = 'NAVIKO Plans & Pricing — Free, Plus & Pro';
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
+  useSEO({
+    title: 'NAVIKO Plans & Pricing — Free Forever & Optional Plus & Pro',
+    description: 'NAVIKO provides 46+ free online tools with zero forced sign-up and total privacy. Upgrade to Plus or Pro for ad-free browsing, higher daily quotas, and faster exports.',
+    canonical: '/premium',
+    robots: 'index, follow',
+    ogType: 'website',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Product',
+          'name': 'NAVIKO Membership',
+          'description': 'Free online utility suite with optional premium membership for power users.',
+          'brand': {
+            '@type': 'Brand',
+            'name': 'NAVIKO'
+          },
+          'offers': [
+            {
+              '@type': 'Offer',
+              'name': 'Free Plan',
+              'price': '0',
+              'priceCurrency': 'INR',
+              'availability': 'https://schema.org/InStock',
+              'description': 'All 46+ tools accessible free with no account required.'
+            },
+            {
+              '@type': 'Offer',
+              'name': 'Plus Plan',
+              'price': String(activePricing.plus.monthly),
+              'priceCurrency': currency,
+              'availability': 'https://schema.org/InStock',
+              'description': 'Ad-free experience with enhanced limits and fast processing.'
+            },
+            {
+              '@type': 'Offer',
+              'name': 'Pro Plan',
+              'price': String(activePricing.pro.monthly),
+              'priceCurrency': currency,
+              'availability': 'https://schema.org/InStock',
+              'description': 'Unlimited premium features, priority support, and advanced exports.'
+            }
+          ]
+        }
+      ]
     }
-    metaDesc.setAttribute(
-      'content',
-      'Choose the perfect NAVIKO plan: Free for casual tools, Plus for everyday students & nutrition, or Pro for advanced productivity & batch processing.'
-    );
+  });
+
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     // Restore intended plan selection from query or session

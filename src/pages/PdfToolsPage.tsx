@@ -11,14 +11,22 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface PdfToolsPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
+  useSEO({
+    title: 'Free Online PDF Tools (100% Private & Browser-Based) — NAVIKO',
+    description: 'Merge, compress, split, and convert PDF files directly in your web browser. 100% client-side privacy with zero server uploads or watermarks.',
+    canonical: '/pdf-tools',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Free Online PDF Tools (100% Private & Browser-Based) — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

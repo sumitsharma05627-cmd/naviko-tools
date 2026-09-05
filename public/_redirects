@@ -1,6 +1,4 @@
 # Cloudflare Pages SPA Routing Rules
-# 1. API routes are handled by Cloudflare Functions / Workers
-/api/*  /api/:splat  200
-
-# 2. All client-side SPA routes fallback to index.html with HTTP 200
+# Client-side SPA routes fallback to index.html with HTTP 200 (API routes /api/* are handled directly by Functions via _routes.json)
 /*      /index.html  200
+

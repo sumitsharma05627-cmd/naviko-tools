@@ -6,15 +6,20 @@ import {
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface FinanceToolsPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }) => {
-  useEffect(() => {
-    document.title = 'Finance Tools & Calculators — NAVIKO';
-  }, []);
+  useSEO({
+    title: 'Finance Tools & Wealth Calculators — NAVIKO',
+    description: 'Calculate SIP compounding, loan EMI schedules, in-hand salary after tax, FIRE retirement timelines, and 50/30/20 budgets with NAVIKO financial calculators.',
+    canonical: '/finance-tools',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
 
   const financeTools = TOOLS_DATA.filter((t) => t.category === 'finance');
 

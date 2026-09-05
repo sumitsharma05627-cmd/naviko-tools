@@ -2,14 +2,22 @@ import React, { useEffect } from 'react';
 import { BookOpen, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import { BLOG_POSTS } from '../data/blogData';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface BlogPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
+  useSEO({
+    title: 'Guides, Formulas & Educational Articles — NAVIKO Blog',
+    description: 'Explore step-by-step calculation formulas, university CGPA grading rules, ATS resume preparation tips, and typing speed benchmarks on NAVIKO.',
+    canonical: '/blog',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Guides & Calculations Blog — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

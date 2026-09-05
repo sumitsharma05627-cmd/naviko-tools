@@ -1,11 +1,45 @@
 User-agent: *
 Allow: /
+Allow: /assets/
+Allow: /tools/
+Allow: /student-tools/
+Allow: /finance-tools/
+Allow: /pdf-tools/
+Allow: /calculators/
+Allow: /image-tools/
+Allow: /career-tools/
+Allow: /health-tools/
+Allow: /blog/
+Disallow: /api/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /billing/
+Disallow: /settings/
+Disallow: /profile/
+Disallow: /reset-password/
 
+# Google Ads & Media Crawlers
 User-agent: Mediapartners-Google
 Allow: /
 
 User-agent: Google-Display-Ads-Bot
 Allow: /
 
-Sitemap: https://naviko.in/sitemap.xml
+# Search Engine & AI Assistant Bots
+User-agent: Googlebot
+Allow: /
 
+User-agent: Bingbot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Canonical Sitemap
+Sitemap: https://naviko.in/sitemap.xml

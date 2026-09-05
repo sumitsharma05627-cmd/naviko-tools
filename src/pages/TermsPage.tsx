@@ -1,10 +1,18 @@
 import React, { useEffect } from 'react';
 import { FileText, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 export const TermsPage: React.FC = () => {
+  useSEO({
+    title: 'Terms of Service — NAVIKO',
+    description: 'Read the Terms of Service governing the use of NAVIKO free online tools, subscription memberships, intellectual property, and acceptable use.',
+    canonical: '/terms',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Terms of Service — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

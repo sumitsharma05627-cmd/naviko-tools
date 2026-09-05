@@ -53,6 +53,41 @@
     </script>
     <!-- Razorpay Checkout Integration -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Global Structured Data: Organization & WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://naviko.in/#organization",
+          "name": "NAVIKO",
+          "url": "https://naviko.in/",
+          "logo": "https://naviko.in/android-chrome-512x512.png",
+          "description": "Free and privacy-focused online productivity, calculator, student, finance, PDF, and image utilities."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://naviko.in/#website",
+          "url": "https://naviko.in/",
+          "name": "NAVIKO",
+          "description": "Free Online Tools for Students, Professionals, and Everyday Users",
+          "publisher": {
+            "@id": "https://naviko.in/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://naviko.in/tools?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-500 selection:text-white min-h-screen flex flex-col">
     <div id="root" class="flex flex-col min-h-screen"></div>

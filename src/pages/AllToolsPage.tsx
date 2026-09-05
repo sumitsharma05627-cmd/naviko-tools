@@ -4,6 +4,7 @@ import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { ToolCategory } from '../types';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface AllToolsPageProps {
   onNavigate: (path: string) => void;
@@ -19,8 +20,15 @@ export const AllToolsPage: React.FC<AllToolsPageProps> = ({
   const [search, setSearch] = useState<string>(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
 
+  useSEO({
+    title: 'All Online Tools Directory (46+ Free Utilities) — NAVIKO',
+    description: 'Browse the complete collection of 46+ free online tools on NAVIKO: financial calculators, student planners, PDF editors, image compressors, and wellness metrics.',
+    canonical: '/tools',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'All Free Tools Directory — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

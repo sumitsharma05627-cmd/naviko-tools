@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { HelpCircle, BookOpen, Lightbulb, ArrowRight, Sparkles, Lock, Zap } from 'lucide-react';
 import { ToolMeta } from '../types';
 import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from './DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from './AdSlot';
 import { BreadcrumbNavigation, getCategoryHierarchy } from './BreadcrumbNavigation';
+import { ToolKnowledgeBase } from './ToolKnowledgeBase';
 import { useLanguage } from '../context/LanguageContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { TOOL_ENTITLEMENTS } from '../config/entitlements';
 import { PremiumBadge } from './monetization/PremiumBadge';
-import { LockedFeatureModal } from './monetization/LockedFeatureModal';
+import { useSEO, CANONICAL_DOMAIN } from '../utils/seo';
 
 interface ToolLayoutProps {
   tool: ToolMeta;
@@ -26,7 +27,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
 }) => {
   const { t } = useLanguage();
   const { plan, subscriptionStatus, canAccess, checkQuota } = useSubscription();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [, setShowUpgradeModal] = useState(false);
 
   const isPremium =
     (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
@@ -38,106 +39,83 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   const toolDesc = t(`${tool.id}.subtitle`, tool.description);
   const categoryLabel = t(`cat.${tool.category}`, tool.categoryName);
 
-  useEffect(() => {
-    // 1. Title
-    const title = tool.seoTitle || `${toolName} — Free Online Tool | NAVIKO`;
-    document.title = title;
+  const title = tool.seoTitle || `${toolName} — Free Online Tool | NAVIKO`;
+  const desc = tool.metaDescription || toolDesc;
+  const canonicalUrl = `${CANONICAL_DOMAIN}${tool.path}`;
 
-    // 2. Meta description
-    const desc = tool.metaDescription || toolDesc;
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', desc);
-
-    // 3. Canonical
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', `https://naviko.in${tool.path}`);
-
-    // 4. OpenGraph tags
-    const setMeta = (property: string, content: string) => {
-      let el = document.querySelector(`meta[property="${property}"]`);
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute('property', property);
-        document.head.appendChild(el);
+  // Structured Data / Schema (SoftwareApplication, BreadcrumbList, FAQPage)
+  const graphElements: Record<string, any>[] = [
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${canonicalUrl}#software`,
+      'name': toolName,
+      'url': canonicalUrl,
+      'description': desc,
+      'applicationCategory': 'UtilitiesApplication',
+      'operatingSystem': 'All',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'USD'
+      },
+      'author': {
+        '@type': 'Organization',
+        'name': 'NAVIKO',
+        'url': `${CANONICAL_DOMAIN}/`
       }
-      el.setAttribute('content', content);
-    };
-    setMeta('og:title', title);
-    setMeta('og:description', desc);
-    setMeta('og:url', `https://naviko.in${tool.path}`);
-
-    // 5. JSON-LD Schema
-    const scriptId = 'tool-jsonld-schema';
-    let scriptEl = document.getElementById(scriptId) as HTMLScriptElement | null;
-    if (!scriptEl) {
-      scriptEl = document.createElement('script');
-      scriptEl.id = scriptId;
-      scriptEl.type = 'application/ld+json';
-      document.head.appendChild(scriptEl);
-    }
-
-    const schemaData = {
-      '@context': 'https://schema.org',
-      '@graph': [
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${canonicalUrl}#breadcrumbs`,
+      'itemListElement': [
         {
-          '@type': 'WebApplication',
-          'name': toolName,
-          'url': `https://naviko.in${tool.path}`,
-          'description': desc,
-          'applicationCategory': 'UtilitiesApplication',
-          'operatingSystem': 'All',
-          'offers': {
-            '@type': 'Offer',
-            'price': '0',
-            'priceCurrency': 'USD'
-          }
+          '@type': 'ListItem',
+          'position': 1,
+          'name': 'Home',
+          'item': `${CANONICAL_DOMAIN}/`
         },
         {
-          '@type': 'BreadcrumbList',
-          'itemListElement': [
-            {
-              '@type': 'ListItem',
-              'position': 1,
-              'name': 'Home',
-              'item': 'https://naviko.in/'
-            },
-            {
-              '@type': 'ListItem',
-              'position': 2,
-              'name': categoryLabel || tool.categoryName,
-              'item': `https://naviko.in${getCategoryHierarchy(tool.category).path}`
-            },
-            {
-              '@type': 'ListItem',
-              'position': 3,
-              'name': toolName,
-              'item': `https://naviko.in${tool.path}`
-            }
-          ]
+          '@type': 'ListItem',
+          'position': 2,
+          'name': categoryLabel || tool.categoryName,
+          'item': `${CANONICAL_DOMAIN}${getCategoryHierarchy(tool.category).path}`
+        },
+        {
+          '@type': 'ListItem',
+          'position': 3,
+          'name': toolName,
+          'item': canonicalUrl
         }
       ]
-    };
+    }
+  ];
 
-    scriptEl.textContent = JSON.stringify(schemaData);
+  if (tool.faqs && tool.faqs.length > 0) {
+    graphElements.push({
+      '@type': 'FAQPage',
+      '@id': `${canonicalUrl}#faq`,
+      'mainEntity': tool.faqs.map((faq) => ({
+        '@type': 'Question',
+        'name': faq.question,
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': faq.answer
+        }
+      }))
+    });
+  }
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
-
-    return () => {
-      if (scriptEl && scriptEl.parentNode) {
-        scriptEl.parentNode.removeChild(scriptEl);
-      }
-    };
-  }, [tool, toolName, toolDesc, categoryLabel]);
+  useSEO({
+    title,
+    description: desc,
+    canonical: tool.path,
+    robots: 'index, follow',
+    ogType: 'website',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': graphElements
+    }
+  });
 
   // Find related tools prioritized by tool.relatedToolPaths
   let relatedTools: ToolMeta[] = [];
@@ -267,10 +245,13 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
           </>
         )}
 
-        {/* Informational Sections: How to use, Examples, FAQs, Related */}
+        {/* Informational Sections: Comprehensive Guide, How to use, Examples, FAQs, Related */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
-          {/* Left Column: How to Use & Examples */}
+          {/* Left Column: Comprehensive Guide, How to Use & Examples */}
           <div className="lg:col-span-2 space-y-8">
+            {/* AI SEO / GEO / AEO Comprehensive Guide */}
+            <ToolKnowledgeBase tool={tool} />
+
             {/* 6. How to Use */}
             {tool.howToUse && tool.howToUse.length > 0 && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs transition-colors">

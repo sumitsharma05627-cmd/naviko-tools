@@ -28,6 +28,14 @@ export interface ToolMeta {
   seoTitle?: string;
   metaDescription?: string;
   relatedToolPaths?: string[];
+  // AI SEO / GEO / AEO structured knowledge fields
+  whatItIs?: string;
+  whatItDoes?: string;
+  whoItIsFor?: string[];
+  howItWorks?: string;
+  resultsMeaning?: string;
+  limitations?: string[];
+  formula?: string;
 }
 
 export interface BlogPost {

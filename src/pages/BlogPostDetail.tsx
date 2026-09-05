@@ -4,6 +4,7 @@ import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/blogData';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { BreadcrumbNavigation } from '../components/BreadcrumbNavigation';
+import { useSEO, CANONICAL_DOMAIN } from '../utils/seo';
 
 interface BlogPostDetailProps {
   slug: string;
@@ -13,8 +14,64 @@ interface BlogPostDetailProps {
 export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onNavigate }) => {
   const post = BLOG_POSTS.find((p) => p.slug === slug) || BLOG_POSTS[0];
 
+  const canonicalUrl = `${CANONICAL_DOMAIN}/blog/${post.slug}`;
+
+  useSEO({
+    title: `${post.title} — NAVIKO Blog`,
+    description: post.description,
+    canonical: `/blog/${post.slug}`,
+    robots: 'index, follow',
+    ogType: 'article',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Article',
+          '@id': `${canonicalUrl}#article`,
+          'headline': post.title,
+          'description': post.description,
+          'datePublished': post.publishedDate,
+          'author': {
+            '@type': 'Organization',
+            'name': 'NAVIKO',
+            'url': `${CANONICAL_DOMAIN}/`
+          },
+          'publisher': {
+            '@type': 'Organization',
+            'name': 'NAVIKO',
+            'url': `${CANONICAL_DOMAIN}/`
+          },
+          'mainEntityOfPage': canonicalUrl
+        },
+        {
+          '@type': 'BreadcrumbList',
+          '@id': `${canonicalUrl}#breadcrumbs`,
+          'itemListElement': [
+            {
+              '@type': 'ListItem',
+              'position': 1,
+              'name': 'Home',
+              'item': `${CANONICAL_DOMAIN}/`
+            },
+            {
+              '@type': 'ListItem',
+              'position': 2,
+              'name': 'Blog',
+              'item': `${CANONICAL_DOMAIN}/blog`
+            },
+            {
+              '@type': 'ListItem',
+              'position': 3,
+              'name': post.title,
+              'item': canonicalUrl
+            }
+          ]
+        }
+      ]
+    }
+  });
+
   useEffect(() => {
-    document.title = `${post.title} — NAVIKO Blog`;
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [post]);
 

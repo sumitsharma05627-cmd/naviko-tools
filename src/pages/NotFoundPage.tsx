@@ -16,6 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
+import { useSEO } from '../utils/seo';
 
 interface NotFoundPageProps {
   onNavigate: (path: string) => void;
@@ -30,8 +31,15 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
 }) => {
   const [query, setQuery] = useState('');
 
+  useSEO({
+    title: 'Page Not Found (404) — NAVIKO',
+    description: 'The page or tool you are looking for could not be found on NAVIKO. Explore our free collection of calculators, converters, student tools, and utilities.',
+    canonical: '/404',
+    robots: 'noindex, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'Page Not Found (404) — NAVIKO';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 

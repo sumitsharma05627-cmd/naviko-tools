@@ -8,6 +8,7 @@ import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { AdSenseDisplayAd } from '../components/AdSenseDisplayAd';
 import { useLanguage } from '../context/LanguageContext';
+import { useSEO } from '../utils/seo';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -18,9 +19,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
   const [searchQuery, setSearchQuery] = useState('');
   const { t } = useLanguage();
 
-  useEffect(() => {
-    document.title = 'NAVIKO — Free Online Tools | Smart Tools. Simple Solutions.';
-  }, []);
+  useSEO({
+    title: 'NAVIKO — Free Online Tools | Calculators, Student, Finance & Productivity',
+    description: 'NAVIKO offers 46+ free, fast, and privacy-first online tools: financial calculators, student planners, ATS resume builder, PDF converters, image tools, and health metrics.',
+    canonical: '/',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
   
   // Interactive mini-calculator state on hero for instant Gen Z engagement!
   const [quickSip, setQuickSip] = useState(5000);

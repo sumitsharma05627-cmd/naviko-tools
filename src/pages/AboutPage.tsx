@@ -1,14 +1,22 @@
 import React, { useEffect } from 'react';
 import { Sparkles, ShieldCheck, Zap, Lock, Heart, Globe, ArrowRight } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
+import { useSEO } from '../utils/seo';
 
 interface AboutPageProps {
   onNavigate: (path: string) => void;
 }
 
 export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
+  useSEO({
+    title: 'About NAVIKO — Smart Online Tools & Privacy-First Mission',
+    description: 'Learn about NAVIKO: our mission to provide fast, free, and privacy-first online tools for students, professionals, and everyday web users worldwide.',
+    canonical: '/about',
+    robots: 'index, follow',
+    ogType: 'website'
+  });
+
   useEffect(() => {
-    document.title = 'About NAVIKO — Smart Tools. Simple Solutions.';
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
