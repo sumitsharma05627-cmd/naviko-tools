@@ -427,6 +427,28 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Cloudflare KV worker test & demonstration route
+app.all(['/api/kv', '/kv'], async (_req, res) => {
+  const simulatedStore = new Map<string, string>();
+  // write a key-value pair
+  simulatedStore.set('KEY', 'VALUE');
+  // read a key-value pair
+  const value = simulatedStore.get('KEY');
+  // list all key-value pairs
+  const allKeys = {
+    keys: Array.from(simulatedStore.keys()).map((k) => ({ name: k })),
+    list_complete: true,
+  };
+  // delete a key-value pair
+  simulatedStore.delete('KEY');
+
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.json({
+    value: value,
+    allKeys: allKeys,
+  });
+});
+
 // 2. Public configuration (Only public Key ID is exposed, NEVER secrets)
 app.get('/api/subscription/config', (_req, res) => {
   const keyId = process.env.RAZORPAY_KEY_ID || '';

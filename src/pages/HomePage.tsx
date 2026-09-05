@@ -239,11 +239,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
             </button>
           </div>
 
-          {/* Health & Wellness Dual Showcase Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Card 1: BMI & Body Metrics */}
+          {/* Health & Wellness 3-Card Showcase */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: BMI Calculator */}
             <div
-              onClick={() => onNavigate('/tools/bmi')}
+              onClick={() => onNavigate('/tools/bmi-calculator')}
               className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
             >
               <div>
@@ -256,33 +256,72 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
                   </span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  BMI &amp; Body Metrics
+                  BMI Calculator
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
-                  Calculate Body Mass Index across metric and imperial units, view healthy reference weight ranges, explore under-18 pediatric growth percentiles, and learn key body composition limits.
+                  Calculate Body Mass Index across metric and imperial units, view healthy reference weight ranges, explore under-18 pediatric growth guidelines, and save calculation records.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
                   <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
                     Metric &amp; Imperial
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Healthy Range Gauge
+                    Visual Gauge
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Pediatric Percentiles
+                    Pediatric Safety
                   </span>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                <span>Calculate Body Mass Index</span>
+                <span>Calculate BMI</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
-            {/* Card 2: Nutrition Science */}
+            {/* Card 2: Diet Plan Manager */}
             <div
-              onClick={() => onNavigate('/tools/nutrition')}
+              onClick={() => onNavigate('/tools/diet-plan-manager')}
+              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Utensils className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+                    New Nutrition Tool
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  Diet Plan Manager
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                  Personalized meal structuring for Vegetarian, Vegan, Egg, Non-Veg, and Jain preferences with strict allergen exclusions, one-click meal swaps, and automated grocery lists.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Allergen Filtering
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Replace Meal
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                    Grocery Checklist
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                <span>Manage Diet Plan</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            {/* Card 3: Nutrition Science */}
+            <div
+              onClick={() => onNavigate('/tools/nutrition-science')}
               className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-teal-400/60 dark:hover:border-teal-500/50 transition-all group cursor-pointer flex flex-col justify-between"
             >
               <div>

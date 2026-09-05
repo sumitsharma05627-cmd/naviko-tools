@@ -7,6 +7,9 @@ export interface Env {
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
   ASSETS?: { fetch: (request: Request) => Promise<Response> };
+  KV?: any;
+  NAVIKO_KV?: any;
+  USERS_KV?: any;
   [key: string]: any;
 }
 
@@ -1035,6 +1038,39 @@ export async function onRequest(context: {
     }
   }
 
+  // --- KV Test / Worker KV demonstration endpoint (/api/kv) ---
+  if (isPath('/api/kv') || isPath('/kv')) {
+    if (env?.KV) {
+      // write a key-value pair
+      await env.KV.put('KEY', 'VALUE');
+
+      // read a key-value pair
+      const value = await env.KV.get('KEY');
+
+      // list all key-value pairs
+      const allKeys = await env.KV.list();
+
+      // delete a key-value pair
+      await env.KV.delete('KEY');
+
+      // return a Workers response
+      return new Response(
+        JSON.stringify({
+          value: value,
+          allKeys: allKeys,
+        }),
+        {
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        }
+      );
+    }
+    return jsonResponse({
+      value: 'VALUE',
+      allKeys: { keys: [{ name: 'KEY' }], list_complete: true },
+      notice: 'Simulated KV response. Configure "kv_namespaces" with binding "KV" in wrangler.json for live Cloudflare Edge KV.'
+    });
+  }
+
   // Fallback for any other /api/* route: Return JSON 404, NEVER HTML index.html
   return jsonResponse({
     success: false,
@@ -1048,6 +1084,30 @@ export async function onRequest(context: {
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
     const url = new URL(request.url);
+
+    // If accessing KV directly or if only KV route is requested
+    if ((url.pathname === '/api/kv' || url.pathname === '/kv') && env?.KV) {
+      // write a key-value pair
+      await env.KV.put('KEY', 'VALUE');
+
+      // read a key-value pair
+      const value = await env.KV.get('KEY');
+
+      // list all key-value pairs
+      const allKeys = await env.KV.list();
+
+      // delete a key-value pair
+      await env.KV.delete('KEY');
+
+      // return a Workers response
+      return new Response(
+        JSON.stringify({
+          value: value,
+          allKeys: allKeys,
+        }),
+      );
+    }
+
     if (url.pathname.startsWith('/api/') || url.pathname === '/api') {
       return onRequest({
         request,

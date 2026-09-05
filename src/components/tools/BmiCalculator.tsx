@@ -15,15 +15,24 @@ import {
   BookOpen,
   ArrowRight,
   TrendingUp,
-  HelpCircle
+  HelpCircle,
+  Bookmark,
+  User,
+  Calculator
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useSubscription } from '../../context/SubscriptionContext';
 
 type UnitSystem = 'metric' | 'imperial';
+type SexOption = 'male' | 'female' | 'unspecified';
 
 export const BmiCalculator: React.FC = () => {
+  const { user, isAuthenticated, token } = useAuth();
+  const { saveUserItem } = useSubscription();
+
   const [unit, setUnit] = useState<UnitSystem>('metric');
-  const [age, setAge] = useState<string>('26');
-  const [sex, setSex] = useState<'male' | 'female' | 'unspecified'>('unspecified');
+  const [age, setAge] = useState<string>('25');
+  const [sex, setSex] = useState<SexOption>('unspecified');
 
   // Metric inputs
   const [heightCm, setHeightCm] = useState<string>('172');
@@ -34,7 +43,11 @@ export const BmiCalculator: React.FC = () => {
   const [heightIn, setHeightIn] = useState<string>('8');
   const [weightLbs, setWeightLbs] = useState<string>('150');
 
+  const [hasCalculated, setHasCalculated] = useState<boolean>(true);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [showSavePrompt, setShowSavePrompt] = useState<boolean>(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   // Conversion calculations
@@ -59,7 +72,7 @@ export const BmiCalculator: React.FC = () => {
 
   // BMI Calculation
   let bmiValue: number | null = null;
-  if (totalHeightMeters > 0.5 && totalWeightKg > 10) {
+  if (totalHeightMeters > 0.4 && totalWeightKg > 10) {
     bmiValue = totalWeightKg / (totalHeightMeters * totalHeightMeters);
   }
 
@@ -72,7 +85,7 @@ export const BmiCalculator: React.FC = () => {
         bg: 'bg-sky-500/10 border-sky-500/30',
         badgeBg: 'bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800',
         description: 'Below standard reference weight range for height.',
-        guidance: 'Consider consulting a healthcare professional or nutritionist for nutrient-dense meal strategies.'
+        guidance: 'Consider consulting a healthcare professional or nutritionist for nutrient-dense, balanced meal strategies.'
       };
     } else if (val < 25.0) {
       return {
@@ -81,7 +94,7 @@ export const BmiCalculator: React.FC = () => {
         bg: 'bg-emerald-500/10 border-emerald-500/30',
         badgeBg: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
         description: 'Within standard healthy reference range for height.',
-        guidance: 'Maintain balanced nutrition, regular physical activity, and restorative sleep.'
+        guidance: 'Maintain balanced nutrition, consistent physical activity, adequate hydration, and restorative sleep.'
       };
     } else if (val < 30.0) {
       return {
@@ -90,7 +103,7 @@ export const BmiCalculator: React.FC = () => {
         bg: 'bg-amber-500/10 border-amber-500/30',
         badgeBg: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
         description: 'Above standard reference range for height.',
-        guidance: 'Focus on whole foods, dietary fiber, hydration, and enjoyable daily movement.'
+        guidance: 'Focus on wholesome home-cooked meals, dietary fiber, hydration, and regular enjoyable daily movement.'
       };
     } else {
       return {
@@ -99,7 +112,7 @@ export const BmiCalculator: React.FC = () => {
         bg: 'bg-rose-500/10 border-rose-500/30',
         badgeBg: 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800',
         description: 'Significantly elevated mass relative to stature.',
-        guidance: 'A doctor or registered dietitian can provide holistic, personalized metabolic guidance.'
+        guidance: 'A licensed doctor or registered dietitian can provide holistic, personalized metabolic and lifestyle guidance.'
       };
     }
   };
@@ -112,25 +125,118 @@ export const BmiCalculator: React.FC = () => {
   const minHealthyLbs = minHealthyKg * 2.20462;
   const maxHealthyLbs = maxHealthyKg * 2.20462;
 
+  const validateInputs = (): boolean => {
+    if (!age || numAge < 2 || numAge > 120) {
+      setValidationError('Please enter a valid age between 2 and 120 years.');
+      return false;
+    }
+    if (unit === 'metric') {
+      const cm = parseFloat(heightCm);
+      const kg = parseFloat(weightKg);
+      if (!cm || cm < 50 || cm > 260) {
+        setValidationError('Please enter a valid height between 50 cm and 260 cm.');
+        return false;
+      }
+      if (!kg || kg < 10 || kg > 400) {
+        setValidationError('Please enter a valid weight between 10 kg and 400 kg.');
+        return false;
+      }
+    } else {
+      const ft = parseFloat(heightFt);
+      const inch = parseFloat(heightIn);
+      const lbs = parseFloat(weightLbs);
+      if (!ft || ft < 2 || ft > 8 || inch < 0 || inch > 11.9) {
+        setValidationError('Please enter a valid height in feet and inches (2 ft – 8 ft).');
+        return false;
+      }
+      if (!lbs || lbs < 20 || lbs > 800) {
+        setValidationError('Please enter a valid weight in pounds (20 lbs – 800 lbs).');
+        return false;
+      }
+    }
+    setValidationError(null);
+    return true;
+  };
+
+  const handleCalculate = () => {
+    if (validateInputs()) {
+      setHasCalculated(true);
+      // Smooth scroll to results
+      const resultsEl = document.getElementById('bmi-results-section');
+      if (resultsEl) {
+        resultsEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   const handleReset = () => {
     setUnit('metric');
-    setAge('26');
+    setAge('25');
     setSex('unspecified');
     setHeightCm('172');
     setWeightKg('68');
     setHeightFt('5');
     setHeightIn('8');
     setWeightLbs('150');
+    setValidationError(null);
+    setHasCalculated(true);
+    setSavedSuccess(false);
+    setShowSavePrompt(false);
   };
 
   const handleCopy = () => {
     if (!bmiValue) return;
     const text = isUnder18
-      ? `BMI Calculation: ${bmiValue.toFixed(1)} (Age: ${age}). Note: For users under 18, BMI is interpreted with pediatric growth percentiles.`
-      : `My BMI is ${bmiValue.toFixed(1)} (${category?.label}) based on height ${(totalHeightMeters * 100).toFixed(0)}cm and weight ${totalWeightKg.toFixed(1)}kg. Healthy range: ${minHealthyKg.toFixed(1)}–${maxHealthyKg.toFixed(1)} kg. Calculated on NAVIKO.`;
+      ? `BMI Calculation: ${bmiValue.toFixed(1)} kg/m² (Age: ${age}, Sex: ${sex}). Note: For users under 18, BMI is interpreted using pediatric growth percentiles.`
+      : `My BMI is ${bmiValue.toFixed(1)} kg/m² (${category?.label}) based on height ${(totalHeightMeters * 100).toFixed(0)}cm and weight ${totalWeightKg.toFixed(1)}kg. Healthy range for height: ${minHealthyKg.toFixed(1)}–${maxHealthyKg.toFixed(1)} kg. Calculated on NAVIKO.`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSaveResult = async () => {
+    if (!bmiValue) return;
+
+    if (!isAuthenticated) {
+      setShowSavePrompt(true);
+      return;
+    }
+
+    const payload = {
+      type: 'bmi_result',
+      title: `BMI ${bmiValue.toFixed(1)} (${category?.label || 'Screening'})`,
+      bmi: parseFloat(bmiValue.toFixed(1)),
+      category: category?.label,
+      age: numAge,
+      sex,
+      heightMeters: parseFloat(totalHeightMeters.toFixed(2)),
+      weightKg: parseFloat(totalWeightKg.toFixed(1)),
+      isMinor: isUnder18,
+      healthyRangeKg: `${minHealthyKg.toFixed(1)} – ${maxHealthyKg.toFixed(1)} kg`,
+      calculatedAt: new Date().toISOString()
+    };
+
+    // Save locally via Subscription context
+    saveUserItem('bmi_history', payload.title, payload);
+
+    // Also persist to backend if authenticated
+    try {
+      if (token) {
+        await fetch('/api/user/saved-plans', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+    } catch {
+      // Graceful local persistence fallback
+    }
+
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 3000);
   };
 
   // Switch units and convert values
@@ -198,12 +304,15 @@ export const BmiCalculator: React.FC = () => {
         {/* Header & Unit Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 mb-1">
-              <Scale className="w-3.5 h-3.5" /> Interactive Body Metric Calculator
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-1">
+              <Scale className="w-3.5 h-3.5" /> Evidence-Based Biometrics
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Calculate Your Body Mass Index
+              Body Mass Index (BMI) Calculator
             </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Standard body mass screening with pediatric guidance and healthy reference weight ranges.
+            </p>
           </div>
 
           {/* Unit Toggle */}
@@ -212,7 +321,7 @@ export const BmiCalculator: React.FC = () => {
               onClick={() => switchUnit('metric')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 unit === 'metric'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-300 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -222,7 +331,7 @@ export const BmiCalculator: React.FC = () => {
               onClick={() => switchUnit('imperial')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 unit === 'imperial'
-                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-300 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -232,44 +341,95 @@ export const BmiCalculator: React.FC = () => {
         </div>
 
         {/* Input Form Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-6">
           {/* Age Input */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-              Age (Years)
+              Age (Years) <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
               min="2"
               max="120"
               value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="e.g. 26"
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base"
+              onChange={(e) => {
+                setAge(e.target.value);
+                setValidationError(null);
+              }}
+              placeholder="e.g. 25"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base"
             />
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
-              {numAge < 18 && numAge > 0
-                ? 'Under 18: Pediatric reference active'
-                : 'Adult reference standards (18+)'}
+              {numAge > 0 && numAge < 18
+                ? '👶 Under 18: Pediatric percentile guidelines'
+                : 'Adult reference guidelines (18+)'}
+            </span>
+          </div>
+
+          {/* Sex Selection */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+              Sex
+            </label>
+            <div className="grid grid-cols-3 gap-1.5 bg-slate-50 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setSex('male')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  sex === 'male'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Male
+              </button>
+              <button
+                type="button"
+                onClick={() => setSex('female')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  sex === 'female'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Female
+              </button>
+              <button
+                type="button"
+                onClick={() => setSex('unspecified')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  sex === 'unspecified'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Other
+              </button>
+            </div>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+              Used for growth charts in minors
             </span>
           </div>
 
           {/* Height Input */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-              Height {unit === 'metric' ? '(cm)' : '(Feet & Inches)'}
+              Height {unit === 'metric' ? '(cm)' : '(ft & in)'} <span className="text-rose-500">*</span>
             </label>
             {unit === 'metric' ? (
               <div className="relative">
                 <input
                   type="number"
                   min="50"
-                  max="250"
+                  max="260"
                   step="0.5"
                   value={heightCm}
-                  onChange={(e) => setHeightCm(e.target.value)}
+                  onChange={(e) => {
+                    setHeightCm(e.target.value);
+                    setValidationError(null);
+                  }}
                   placeholder="172"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base pr-12"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base pr-12"
                 />
                 <span className="absolute right-4 top-3.5 text-xs font-bold text-slate-400">
                   cm
@@ -283,9 +443,12 @@ export const BmiCalculator: React.FC = () => {
                     min="2"
                     max="8"
                     value={heightFt}
-                    onChange={(e) => setHeightFt(e.target.value)}
+                    onChange={(e) => {
+                      setHeightFt(e.target.value);
+                      setValidationError(null);
+                    }}
                     placeholder="5"
-                    className="w-full px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base pr-8"
+                    className="w-full px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base pr-8"
                   />
                   <span className="absolute right-3 top-3.5 text-xs font-bold text-slate-400">
                     ft
@@ -297,9 +460,12 @@ export const BmiCalculator: React.FC = () => {
                     min="0"
                     max="11"
                     value={heightIn}
-                    onChange={(e) => setHeightIn(e.target.value)}
+                    onChange={(e) => {
+                      setHeightIn(e.target.value);
+                      setValidationError(null);
+                    }}
                     placeholder="8"
-                    className="w-full px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base pr-8"
+                    className="w-full px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base pr-8"
                   />
                   <span className="absolute right-3 top-3.5 text-xs font-bold text-slate-400">
                     in
@@ -309,7 +475,7 @@ export const BmiCalculator: React.FC = () => {
             )}
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
               {totalHeightMeters > 0 && (
-                <>Equivalent to {totalHeightMeters.toFixed(2)} meters ({((totalHeightMeters * 39.3701) / 12).toFixed(1)} ft)</>
+                <>≈ {totalHeightMeters.toFixed(2)} m ({((totalHeightMeters * 39.3701) / 12).toFixed(1)} ft)</>
               )}
             </span>
           </div>
@@ -317,19 +483,22 @@ export const BmiCalculator: React.FC = () => {
           {/* Weight Input */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
-              Weight {unit === 'metric' ? '(kg)' : '(lbs)'}
+              Weight {unit === 'metric' ? '(kg)' : '(lbs)'} <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               {unit === 'metric' ? (
                 <input
                   type="number"
                   min="10"
-                  max="350"
+                  max="400"
                   step="0.1"
                   value={weightKg}
-                  onChange={(e) => setWeightKg(e.target.value)}
+                  onChange={(e) => {
+                    setWeightKg(e.target.value);
+                    setValidationError(null);
+                  }}
                   placeholder="68"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base pr-12"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base pr-12"
                 />
               ) : (
                 <input
@@ -338,9 +507,12 @@ export const BmiCalculator: React.FC = () => {
                   max="800"
                   step="0.5"
                   value={weightLbs}
-                  onChange={(e) => setWeightLbs(e.target.value)}
+                  onChange={(e) => {
+                    setWeightLbs(e.target.value);
+                    setValidationError(null);
+                  }}
                   placeholder="150"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-all text-base pr-12"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all text-base pr-12"
                 />
               )}
               <span className="absolute right-4 top-3.5 text-xs font-bold text-slate-400">
@@ -349,35 +521,78 @@ export const BmiCalculator: React.FC = () => {
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
               {totalWeightKg > 0 && (
-                <>Equivalent to {totalWeightKg.toFixed(1)} kg ({(totalWeightKg * 2.20462).toFixed(1)} lbs)</>
+                <>≈ {totalWeightKg.toFixed(1)} kg ({(totalWeightKg * 2.20462).toFixed(1)} lbs)</>
               )}
             </span>
           </div>
         </div>
 
-        {/* Action Toolbar */}
-        <div className="flex items-center justify-between pt-4 mt-6 border-t border-slate-100 dark:border-slate-800/80">
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset to defaults
-          </button>
-          {bmiValue && (
+        {/* Validation error notice if invalid */}
+        {validationError && (
+          <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-700 dark:text-rose-300 font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
+
+        {/* Primary Action Buttons */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
             <button
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+              onClick={handleCalculate}
+              className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Summary Copied!' : 'Copy Summary'}
+              <Calculator className="w-4 h-4" />
+              <span>Calculate BMI</span>
             </button>
+            <button
+              onClick={handleReset}
+              className="px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset</span>
+            </button>
+          </div>
+
+          {bmiValue && hasCalculated && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveResult}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 cursor-pointer transition-colors"
+              >
+                {savedSuccess ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Bookmark className="w-3.5 h-3.5" />}
+                <span>{savedSuccess ? 'Result Saved!' : 'Save Result'}</span>
+              </button>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied!' : 'Copy'}</span>
+              </button>
+            </div>
           )}
         </div>
 
+        {/* Not logged in save prompt */}
+        {showSavePrompt && (
+          <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+            <div>
+              <strong>Save your calculation history:</strong> Create a free account or log in to store your BMI tracking records permanently across devices.
+            </div>
+            <a
+              href="/login"
+              className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 text-center shrink-0 cursor-pointer"
+            >
+              Log In / Sign Up
+            </a>
+          </div>
+        )}
+
         {/* 2. RESULTS DISPLAY */}
-        {bmiValue !== null && (
-          <div className="mt-8 pt-8 border-t border-slate-200/80 dark:border-slate-800 space-y-6">
-            {/* UNDER 18 SAFETY BANNER (MANDATORY REQUIREMENT) */}
+        {bmiValue !== null && hasCalculated && (
+          <div id="bmi-results-section" className="mt-8 pt-8 border-t border-slate-200/80 dark:border-slate-800 space-y-6">
+            {/* UNDER 18 SAFETY BANNER (STRICT USER SPECIFICATION) */}
             {isUnder18 ? (
               <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 space-y-3">
                 <div className="flex items-start gap-3">
@@ -386,31 +601,33 @@ export const BmiCalculator: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-base font-extrabold text-amber-900 dark:text-amber-200">
-                      Pediatric Notice (Age {age}): Age-Specific Growth Percentiles Apply
+                      Pediatric Guidance Notice (Age {age}): Age-Specific Growth Percentiles Apply
                     </h3>
                     <p className="text-sm text-amber-800/90 dark:text-amber-300 mt-1 leading-relaxed">
-                      For children and teenagers, BMI is interpreted using <strong>age- and sex-specific growth references</strong> (such as WHO or CDC growth percentiles). <strong>Adult BMI categories should not be used for this age group.</strong>
+                      For children and adolescents under 18, standard adult BMI categories <strong>do not apply</strong>. Growth and development occur rapidly during youth, and healthcare professionals evaluate body metrics using <strong>age- and sex-specific growth percentiles</strong> over time.
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-xl border border-amber-500/20 space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                <div className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl border border-amber-500/20 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 dark:text-white">Calculated Ratio:</span>
-                    <span className="text-base font-black text-indigo-600 dark:text-indigo-400">{bmiValue.toFixed(1)} kg/m²</span>
+                    <span className="font-bold text-slate-900 dark:text-white">Calculated Mass-to-Height Ratio:</span>
+                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{bmiValue.toFixed(1)} kg/m²</span>
                   </div>
                   <p className="leading-relaxed">
-                    A qualified healthcare provider or pediatrician evaluates this number in relation to growth curves over time rather than static adult thresholds. Adolescents require supportive nutrition for bone development, cognitive stamina, and hormonal health.
+                    This number is an educational screening reference. It is <strong>NOT a medical diagnosis</strong>. Growing individuals should never engage in restrictive dieting, fasting, extreme exercise, or rapid weight loss. Wholesome nutrition is essential for bone mineralization, hormonal balance, brain development, and athletic vitality.
+                  </p>
+                  <p className="font-semibold text-amber-900 dark:text-amber-300 pt-1">
+                    👉 Please discuss your growth, sports development, and nutrition with a parent/guardian and a qualified pediatrician.
                   </p>
                 </div>
               </div>
             ) : (
-              /* ADULT RESULTS */
+              /* ADULT RESULTS CARD */
               <div className="space-y-6">
-                {/* Result Card Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                   {/* Big Number Tile */}
-                  <div className="md:col-span-5 bg-gradient-to-br from-indigo-500/5 via-slate-50 to-emerald-500/5 dark:from-slate-800/60 dark:to-slate-800/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 text-center flex flex-col items-center justify-center">
+                  <div className="md:col-span-5 bg-gradient-to-br from-emerald-500/5 via-slate-50 to-indigo-500/5 dark:from-slate-800/60 dark:to-slate-800/30 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 text-center flex flex-col items-center justify-center">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Your Body Mass Index (BMI)
                     </span>
@@ -466,7 +683,7 @@ export const BmiCalculator: React.FC = () => {
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-500 dark:text-slate-400 block font-medium">Health Guidance:</span>
+                        <span className="text-slate-500 dark:text-slate-400 block font-medium">Screening Guidance:</span>
                         <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed font-normal">
                           {category?.guidance}
                         </p>
@@ -476,10 +693,10 @@ export const BmiCalculator: React.FC = () => {
                 </div>
 
                 {/* Calculation breakdown step-by-step */}
-                <div className="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
-                  <div className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
-                    <Info className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                    How this was calculated:
+                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
+                  <div className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    Mathematical Formula Breakdown:
                   </div>
                   <p className="font-mono text-slate-600 dark:text-slate-400">
                     BMI = Weight (kg) ÷ [Height (m)]² = {totalWeightKg.toFixed(1)} kg ÷ ({totalHeightMeters.toFixed(2)}m × {totalHeightMeters.toFixed(2)}m) = <span className="font-bold text-slate-900 dark:text-white">{bmiValue.toFixed(1)} kg/m²</span>
@@ -487,6 +704,19 @@ export const BmiCalculator: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Recalculate CTA */}
+            <div className="flex items-center justify-end pt-2">
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Edit measurements &amp; recalculate</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -494,8 +724,8 @@ export const BmiCalculator: React.FC = () => {
       {/* 3. REFERENCE RANGES TABLE */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm transition-colors space-y-5">
         <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Standard Adult BMI Classifications (WHO)
+          <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          Standard Adult BMI Classifications (WHO Reference)
         </h3>
 
         <div className="overflow-x-auto">
@@ -504,7 +734,7 @@ export const BmiCalculator: React.FC = () => {
               <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                 <th className="py-3 px-4">Classification</th>
                 <th className="py-3 px-4">Standard BMI Range (kg/m²)</th>
-                <th className="py-3 px-4">Asian Population Reference (WHO)</th>
+                <th className="py-3 px-4">Asian Population Reference (WHO/ICMR)</th>
                 <th className="py-3 px-4">Health Context</th>
               </tr>
             </thead>
@@ -513,25 +743,25 @@ export const BmiCalculator: React.FC = () => {
                 <td className="py-3.5 px-4 font-bold text-sky-600 dark:text-sky-400">Underweight</td>
                 <td className="py-3.5 px-4 font-semibold">&lt; 18.5</td>
                 <td className="py-3.5 px-4 font-semibold">&lt; 18.5</td>
-                <td className="py-3.5 px-4 text-slate-500">May indicate reduced nutrient reserves or lean mass deficiency</td>
+                <td className="py-3.5 px-4 text-slate-500">May indicate reduced nutrient reserves or lower lean muscle mass</td>
               </tr>
               <tr className="bg-emerald-50/40 dark:bg-emerald-950/20">
                 <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">Healthy Weight</td>
                 <td className="py-3.5 px-4 font-semibold">18.5 – 24.9</td>
                 <td className="py-3.5 px-4 font-semibold">18.5 – 22.9</td>
-                <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">Associated with optimal statistical longevity and lowest chronic risk</td>
+                <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">Statistically associated with optimal metabolic longevity and lower chronic risk</td>
               </tr>
               <tr>
                 <td className="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400">Overweight</td>
                 <td className="py-3.5 px-4 font-semibold">25.0 – 29.9</td>
                 <td className="py-3.5 px-4 font-semibold">23.0 – 24.9</td>
-                <td className="py-3.5 px-4 text-slate-500">Moderate statistical association with elevated blood pressure and glucose</td>
+                <td className="py-3.5 px-4 text-slate-500">Moderate association with elevated blood pressure and glucose markers</td>
               </tr>
               <tr>
                 <td className="py-3.5 px-4 font-bold text-rose-600 dark:text-rose-400">Obesity (Class I–III)</td>
                 <td className="py-3.5 px-4 font-semibold">≥ 30.0</td>
                 <td className="py-3.5 px-4 font-semibold">≥ 25.0</td>
-                <td className="py-3.5 px-4 text-slate-500">Higher risk profile; comprehensive lifestyle and medical review recommended</td>
+                <td className="py-3.5 px-4 text-slate-500">Elevated risk profile; comprehensive lifestyle and medical review recommended</td>
               </tr>
             </tbody>
           </table>
@@ -542,17 +772,17 @@ export const BmiCalculator: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Card 1: What is BMI & How it works */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 space-y-4 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
             <BookOpen className="w-5 h-5" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
             What is Body Mass Index (BMI)?
           </h3>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Body Mass Index (BMI) was created in the 1830s by Belgian statistician Adolphe Quetelet. It is a straightforward mathematical ratio designed to assess whether an individual’s mass is proportionate to their skeletal height.
+            Body Mass Index (BMI) was created by Belgian mathematician Adolphe Quetelet. It is a straightforward mathematical ratio evaluating whether an individual’s mass is proportionate to their stature.
           </p>
           <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            It is universally used by public health organizations because it is instant, non-invasive, and mathematically consistent across large epidemiological populations.
+            It is universally used as a population-level screening metric because it is instant, non-invasive, and mathematically consistent across large groups of people.
           </p>
         </div>
 
@@ -562,20 +792,20 @@ export const BmiCalculator: React.FC = () => {
             <AlertTriangle className="w-5 h-5" />
           </div>
           <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-            The Important Limitations of BMI
+            Important Limitations of BMI
           </h3>
           <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
-              <span><strong>Muscle vs. Fat:</strong> Muscle tissue is ~18% denser than fat. Athletic individuals may register a high BMI despite minimal body fat.</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
+              <span><strong>Muscle vs. Fat:</strong> Skeletal muscle tissue is denser than fat. Athletic individuals may register a higher BMI despite having low body fat and strong cardiovascular health.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
-              <span><strong>Fat Distribution:</strong> It cannot distinguish harmful visceral (abdominal organ) fat from harmless subcutaneous fat.</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
+              <span><strong>Fat Distribution:</strong> It cannot distinguish deep visceral (abdominal organ) fat from harmless subcutaneous fat.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
-              <span><strong>Age Variations:</strong> Older adults naturally experience muscle atrophy (sarcopenia) that BMI numbers do not reflect.</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
+              <span><strong>Age &amp; Bone Density:</strong> Older adults naturally experience gradual muscle loss (sarcopenia) that standard BMI ratios do not capture.</span>
             </li>
           </ul>
         </div>
@@ -588,7 +818,7 @@ export const BmiCalculator: React.FC = () => {
           Holistic Health: Beyond BMI
         </h3>
         <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-          Modern preventive health science pairs BMI with several practical, at-home measurements:
+          Modern preventive health science pairs BMI screening with several practical, everyday metrics:
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -597,7 +827,7 @@ export const BmiCalculator: React.FC = () => {
               1. Waist-to-Height Ratio (WHtR)
             </span>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Keep your waist circumference to less than half your height (WHtR &lt; 0.5) to maintain healthy visceral fat levels.
+              Aim for your waist circumference to be less than half your height (WHtR &lt; 0.5) to keep visceral abdominal fat in a healthy zone.
             </p>
           </div>
 
@@ -606,16 +836,16 @@ export const BmiCalculator: React.FC = () => {
               2. Resting Heart Rate &amp; BP
             </span>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Resting heart rate (60–100 bpm) and blood pressure (&lt; 120/80 mmHg) offer direct insights into cardiovascular health.
+              Resting heart rate (60–100 bpm) and regular blood pressure checks (&lt; 120/80 mmHg) provide direct insights into arterial elasticity.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 space-y-1.5">
             <span className="text-xs font-bold text-slate-900 dark:text-white block">
-              3. Functional Mobility
+              3. Functional Stamina &amp; Sleep
             </span>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Daily stamina, aerobic endurance, grip strength, and restful sleep are vital indicators of everyday vitality.
+              Daily aerobic stamina, musculoskeletal mobility, grip strength, and 7–8 hours of restful sleep are essential indicators of longevity.
             </p>
           </div>
         </div>
@@ -624,7 +854,7 @@ export const BmiCalculator: React.FC = () => {
       {/* 6. FAQ SECTION (ACCORDION) */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm space-y-4">
         <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-          <HelpCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <HelpCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           Frequently Asked Questions
         </h3>
 
@@ -635,11 +865,11 @@ export const BmiCalculator: React.FC = () => {
               <div key={idx} className="py-3.5">
                 <button
                   onClick={() => setExpandedFaq(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between text-left gap-4 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between text-left gap-4 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <ChevronUp className="w-4 h-4 text-emerald-600 shrink-0" />
                   ) : (
                     <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
                   )}
@@ -662,7 +892,7 @@ export const BmiCalculator: React.FC = () => {
           <strong className="text-slate-700 dark:text-slate-300 block mb-0.5">
             General Educational Screening Notice
           </strong>
-          This BMI calculator is provided strictly for educational and informational purposes. It is not a substitute for clinical medical evaluation, diagnosis, or personalized medical advice. If you have questions about your weight, pediatric growth, or nutrition, consult a licensed healthcare practitioner or registered dietitian.
+          This BMI calculator is provided strictly for educational and informational purposes. It is only a screening measure and does not directly measure body fat or overall health. It is not a substitute for clinical medical evaluation, diagnosis, or personalized medical advice. If you have questions regarding your weight, pediatric development, or nutrition, consult a licensed physician or registered dietitian.
         </div>
       </div>
     </div>

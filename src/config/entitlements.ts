@@ -97,6 +97,13 @@ export const TOOL_ENTITLEMENTS: Record<string, ToolEntitlement> = {
     accessLevel: 'FREE',
     description: 'Calculate BMI with pediatric growth education and healthy weight ranges.',
   },
+  'diet-plan-manager': {
+    toolId: 'diet-plan-manager',
+    name: 'Diet Plan Manager',
+    category: 'health',
+    accessLevel: 'FREE',
+    description: 'Structured nutrition planning with allergen protection, meal ideas, and balanced diet guidance.',
+  },
   'nutrition-science': {
     toolId: 'nutrition-science',
     name: 'Nutrition Science',

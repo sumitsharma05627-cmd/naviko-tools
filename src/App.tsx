@@ -86,6 +86,7 @@ const BudgetCalculator = lazy(() => import('./components/tools/BudgetCalculator'
 
 // Health & Wellness Tools
 const BmiCalculator = lazy(() => import('./components/tools/BmiCalculator').then(m => ({ default: m.BmiCalculator })));
+const DietPlanManager = lazy(() => import('./components/tools/DietPlanManager').then(m => ({ default: m.DietPlanManager })));
 const NutritionScience = lazy(() => import('./components/tools/NutritionScience').then(m => ({ default: m.NutritionScience })));
 
 // Lazy Loaded Secondary Pages
@@ -152,6 +153,8 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'budget-planner': BudgetCalculator,
   'bmi-calculator': BmiCalculator,
   'bmi': BmiCalculator,
+  'diet-plan-manager': DietPlanManager,
+  'diet-plan': DietPlanManager,
   'nutrition-science': NutritionScience,
   'nutrition': NutritionScience,
 };

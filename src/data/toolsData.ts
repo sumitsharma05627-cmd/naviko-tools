@@ -1688,8 +1688,8 @@ export const TOOLS_DATA: ToolMeta[] = [
   {
     id: 'bmi-calculator',
     name: 'BMI & Body Metrics',
-    slug: 'bmi',
-    path: '/tools/bmi',
+    slug: 'bmi-calculator',
+    path: '/tools/bmi-calculator',
     category: 'health',
     categoryName: 'Health & Wellness',
     description: 'Calculate Body Mass Index (BMI) and understand what the measurement means. Features Metric and Imperial units, healthy weight reference ranges, under-18 pediatric growth guidelines, and educational body metric science.',
@@ -1726,10 +1726,10 @@ export const TOOLS_DATA: ToolMeta[] = [
     ],
     howToUse: [
       'Select your preferred measurement units: Metric (cm, kg) or Imperial (ft, in, lbs).',
-      'Enter your Age, Height, and Weight.',
-      'View your calculated BMI value, color-coded classification, and healthy reference weight range.',
-      'If age is under 18, review the pediatric growth chart guidelines.',
-      'Explore the educational guides below to understand BMI limitations and complementary metrics.'
+      'Enter your Age, Sex, Height, and Weight.',
+      'Click Calculate BMI to view your classification, needle gauge, and healthy reference range.',
+      'If age is under 18, review the specialized pediatric growth chart guidelines.',
+      'Save your calculation to your account or copy the results summary.'
     ],
     faqs: [
       {
@@ -1743,6 +1743,66 @@ export const TOOLS_DATA: ToolMeta[] = [
       {
         question: 'Why are pediatric BMI percentiles used for teenagers under 18?',
         answer: 'Because children and teenagers are developing rapidly, static adult BMI cut-offs do not apply. Healthcare professionals plot BMI-for-age on growth percentiles based on age and sex.'
+      }
+    ]
+  },
+  {
+    id: 'diet-plan-manager',
+    name: 'Diet Plan Manager',
+    slug: 'diet-plan-manager',
+    path: '/tools/diet-plan-manager',
+    category: 'health',
+    categoryName: 'Health & Wellness',
+    description: 'Structured nutrition-planning and meal management tool. Generates balanced meal-idea plans based on dietary preferences (Vegetarian, Vegan, Egg, Non-Veg, Jain), strict allergen exclusions, disliked foods, and health goals with instant meal swaps and automated grocery lists.',
+    shortDescription: 'Personalized meal ideas, strict allergen protection, weekly planning, and grocery checklists.',
+    iconName: 'Utensils',
+    popular: true,
+    studentHub: false,
+    status: 'active',
+    tags: [
+      'diet',
+      'diet plan',
+      'diet plan manager',
+      'meal planner',
+      'nutrition',
+      'healthy eating',
+      'vegetarian diet',
+      'vegan meal plan',
+      'high protein',
+      'allergy safe',
+      'grocery list',
+      'balanced plate',
+      'health',
+      'wellness'
+    ],
+    features: [
+      'Personalized meal schedule generation (Breakfast, Lunch, Snacks, Dinner) tailored to age, sex, and activity level',
+      'Strict allergen protection: automatically filters out dairy, gluten, peanuts, tree nuts, soy, eggs, seafood, mustard, and sesame',
+      'Customizable dietary preferences: Vegetarian, Vegan, Egg-friendly, Non-vegetarian, and Jain / Sattvic',
+      'Instant [Replace Meal] function to swap any meal with compatible wholesome alternatives',
+      'Pediatric growth guidance for minors (under 18) avoiding calorie restriction and focusing on wholesome fueling',
+      'Integrated Nutrition Science guide explaining proteins, carbohydrates, healthy fats, fiber, vitamins, and minerals',
+      'Premium 7-Day Weekly Meal Planning and automated ingredient grocery shopping checklists'
+    ],
+    howToUse: [
+      'Enter your Age, Activity Level, Dietary Preference, and number of meals per day.',
+      'Select any food allergies or intolerances to strictly exclude those ingredients.',
+      'Choose foods you dislike and pick your general health focus.',
+      'Click Update Meal Plan to generate your personalized meal recommendations and hydration targets.',
+      'Use [Replace Meal] to switch any dish, or upgrade to Plus to unlock the 7-day schedule and grocery checklist.'
+    ],
+    faqs: [
+      {
+        question: 'Does this tool provide aggressive weight-loss or calorie-deficit diets?',
+        answer: 'No. NAVIKO follows evidence-based nutritional science and the Balanced Plate model, emphasizing wholesome nutrient density, gut health, and sustainable lifestyle habits rather than extreme restriction.'
+      },
+      {
+        question: 'How are food allergies handled by the Diet Plan Manager?',
+        answer: 'Allergies are treated as strict exclusion constraints. When you select an allergen (such as dairy, gluten, or peanuts), the generator removes any meal or ingredient containing that allergen, including replacement alternatives.'
+      },
+      {
+        question: 'What is the nutritional guidance for minors under 18?',
+        answer: 'For teenagers and children, restrictive dieting and calorie counting are contraindicated. Our plans focus on energy for sports, bone mineralization (calcium), cognitive function, and growth.'
       }
     ]
   },
@@ -1851,8 +1911,11 @@ export const getToolByPath = (path: string): ToolMeta | undefined => {
   if (cleanPath === '/tools/random-study-question-generator') {
     return TOOLS_DATA.find((t) => t.id === 'random-question-generator');
   }
-  if (cleanPath === '/bmi' || cleanPath === '/tools/bmi-calculator') {
+  if (cleanPath === '/bmi' || cleanPath === '/tools/bmi' || cleanPath === '/tools/bmi-calculator') {
     return TOOLS_DATA.find((t) => t.id === 'bmi-calculator');
+  }
+  if (cleanPath === '/diet-plan' || cleanPath === '/diet-plan-manager' || cleanPath === '/tools/diet-plan' || cleanPath === '/tools/diet-plan-manager') {
+    return TOOLS_DATA.find((t) => t.id === 'diet-plan-manager');
   }
   if (cleanPath === '/nutrition' || cleanPath === '/tools/nutrition-science') {
     return TOOLS_DATA.find((t) => t.id === 'nutrition-science');
@@ -1872,7 +1935,7 @@ export const CATEGORIES_META = [
     description: 'Simple tools and educational resources for understanding health, nutrition and everyday wellbeing.',
     icon: 'HeartPulse',
     path: '/health-tools',
-    toolsCount: 2
+    toolsCount: 3
   },
   {
     id: 'finance',
