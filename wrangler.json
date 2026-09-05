@@ -1,9 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "naviko",
-  "main": "functions/api/[[path]].ts",
-  "compatibility_date": "2025-02-01",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-04",
   "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -13,7 +16,7 @@
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "YOUR_KV_NAMESPACE_ID"
+      "id": "abfb0a4b28d84e08ae3db137edc0c5af"
     }
   ]
 }
