@@ -68,6 +68,7 @@ export const DiscountCalculator: React.FC = () => {
       priceAfterSecond,
       firstSavings,
       extraSavings,
+      totalSavingsPerUnit,
       effectiveDiscountPercent,
       taxAmountPerUnit,
       finalPricePerUnit,

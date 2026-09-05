@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { getToolByPath } from './data/toolsData';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Fallback loader for lazy-loaded tools and secondary routes
 const PageLoadingFallback: React.FC = () => (
@@ -375,9 +376,11 @@ export default function App() {
               />
 
               <main className="flex-1">
-                <Suspense fallback={<PageLoadingFallback />}>
-                  {renderContent()}
-                </Suspense>
+                <ErrorBoundary>
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    {renderContent()}
+                  </Suspense>
+                </ErrorBoundary>
               </main>
 
               <Footer onNavigate={navigate} />

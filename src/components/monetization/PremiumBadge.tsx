@@ -4,6 +4,7 @@ import { PlanType } from '../../config/pricing';
 
 interface PremiumBadgeProps {
   tier?: PlanType | 'premium';
+  plan?: PlanType | 'premium' | string;
   size?: 'xs' | 'sm' | 'md';
   variant?: 'amber' | 'indigo' | 'emerald' | 'gradient' | 'pro';
   icon?: boolean;
@@ -12,13 +13,15 @@ interface PremiumBadgeProps {
 }
 
 export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
-  tier = 'plus',
+  tier,
+  plan,
   size = 'xs',
   variant,
   icon = true,
   className = '',
   label,
 }) => {
+  const activeTier = (tier || plan || 'plus') as PlanType | 'premium';
   const sizeClasses = {
     xs: 'text-[9px] px-1.5 py-0.5 font-extrabold tracking-wider',
     sm: 'text-[10px] px-2 py-0.5 font-bold tracking-wider',
@@ -31,7 +34,7 @@ export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
     md: 'w-3.5 h-3.5',
   };
 
-  const displayTier = tier === 'premium' ? 'plus' : tier;
+  const displayTier = activeTier === 'premium' ? 'plus' : activeTier;
 
   let effectiveVariant = variant;
   if (!effectiveVariant) {
