@@ -72,6 +72,7 @@ const SUBSCRIPTIONS_FILE = path.join(DATA_DIR, 'subscriptions.json');
 const PROCESSED_EVENTS_FILE = path.join(DATA_DIR, 'processed_events.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
+const SAVED_PLANS_FILE = path.join(DATA_DIR, 'saved_plans.json');
 
 export interface UserAccount {
   id: string;
@@ -114,6 +115,22 @@ let subscriptionsCache: Record<string, ServerSubscriptionRecord> = {};
 let processedEventsCache: Set<string> = new Set();
 let usersCache: Record<string, UserAccount> = {};
 let sessionsCache: Record<string, UserSession> = {};
+let savedPlansCache: Record<string, any[]> = {};
+
+function syncSavedPlansFromDisk(): Record<string, any[]> {
+  try {
+    if (fs.existsSync(SAVED_PLANS_FILE)) {
+      const data = fs.readFileSync(SAVED_PLANS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        savedPlansCache = { ...savedPlansCache, ...parsed };
+      }
+    }
+  } catch (err) {
+    console.warn('Could not read saved plans from disk:', err);
+  }
+  return savedPlansCache;
+}
 
 function syncUsersFromDisk(): Record<string, UserAccount> {
   try {
@@ -177,6 +194,7 @@ function loadPersistedData() {
 
   syncUsersFromDisk();
   syncSessionsFromDisk();
+  syncSavedPlansFromDisk();
 }
 
 function saveSubscriptions() {
@@ -216,6 +234,15 @@ function saveSessions() {
     fs.writeFileSync(SESSIONS_FILE, JSON.stringify(sessionsCache, null, 2), 'utf8');
   } catch (err) {
     console.error('Failed to save sessions:', err);
+  }
+}
+
+function saveSavedPlans() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SAVED_PLANS_FILE, JSON.stringify(savedPlansCache, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to save saved plans:', err);
   }
 }
 
@@ -424,28 +451,6 @@ app.get('/api/health', (_req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     razorpayConfigured: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
-  });
-});
-
-// Cloudflare KV worker test & demonstration route
-app.all(['/api/kv', '/kv'], async (_req, res) => {
-  const simulatedStore = new Map<string, string>();
-  // write a key-value pair
-  simulatedStore.set('KEY', 'VALUE');
-  // read a key-value pair
-  const value = simulatedStore.get('KEY');
-  // list all key-value pairs
-  const allKeys = {
-    keys: Array.from(simulatedStore.keys()).map((k) => ({ name: k })),
-    list_complete: true,
-  };
-  // delete a key-value pair
-  simulatedStore.delete('KEY');
-
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.json({
-    value: value,
-    allKeys: allKeys,
   });
 });
 
@@ -918,6 +923,74 @@ app.get('/api/user/recent-tools', (req, res) => {
   } catch (err: any) {
     console.error('Error fetching recent tools:', err);
     return res.status(500).json({ success: false, error: 'Failed to fetch recent tools.' });
+  }
+});
+
+// User: Saved Plans (GET, POST, DELETE)
+app.get('/api/user/saved-plans', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required to retrieve saved plans.' });
+    }
+    const plans = savedPlansCache[user.id] || [];
+    return res.json({ success: true, items: plans });
+  } catch (err: any) {
+    console.error('Error fetching saved plans:', err);
+    return res.status(500).json({ success: false, error: 'Failed to fetch saved plans.' });
+  }
+});
+
+app.post('/api/user/saved-plans', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required to save plans.' });
+    }
+    const { id, type, title, name, data, plan } = req.body;
+    const planData = data || plan || {};
+    const planTitle = title || name || 'Saved Meal Plan';
+
+    const record = {
+      id: id || `plan_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type: type || 'diet_plan',
+      title: planTitle,
+      createdAt: new Date().toISOString(),
+      plan: planData,
+      data: planData,
+    };
+
+    const existingList = savedPlansCache[user.id] || [];
+    const updated = [record, ...existingList.filter((p: any) => p.id !== record.id)].slice(0, 30);
+    savedPlansCache[user.id] = updated;
+    saveSavedPlans();
+
+    return res.json({ success: true, item: record, items: updated });
+  } catch (err: any) {
+    console.error('Error saving plan:', err);
+    return res.status(500).json({ success: false, error: 'Failed to save plan.' });
+  }
+});
+
+app.delete('/api/user/saved-plans', (req, res) => {
+  try {
+    const user = getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required to delete saved plans.' });
+    }
+    const planId = req.query.id as string;
+    if (!planId) {
+      return res.status(400).json({ success: false, error: 'Plan ID parameter is required.' });
+    }
+    const existingList = savedPlansCache[user.id] || [];
+    const updated = existingList.filter((p: any) => p.id !== planId);
+    savedPlansCache[user.id] = updated;
+    saveSavedPlans();
+
+    return res.json({ success: true, message: 'Plan removed successfully.', items: updated });
+  } catch (err: any) {
+    console.error('Error deleting saved plan:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete plan.' });
   }
 });
 

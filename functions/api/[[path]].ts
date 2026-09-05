@@ -18,6 +18,7 @@ const edgeUsers: Record<string, any> = {};
 const edgeSessions: Record<string, any> = {};
 const edgeSubscriptions: Record<string, any> = {};
 const edgeRecentTools: Record<string, any[]> = {};
+const edgeSavedPlans: Record<string, any[]> = {};
 const edgeProcessedEvents = new Set<string>();
 
 // Helper: Standard CORS & JSON response
@@ -131,10 +132,11 @@ async function loadEdgeDataFiles(env?: Env) {
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
   if (kv && typeof kv.get === 'function') {
     try {
-      const [uStr, sStr, sessStr] = await Promise.all([
+      const [uStr, sStr, sessStr, plansStr] = await Promise.all([
         kv.get('naviko_users'),
         kv.get('naviko_subscriptions'),
         kv.get('naviko_sessions'),
+        kv.get('naviko_saved_plans'),
       ]);
       if (uStr) {
         const uParsed = typeof uStr === 'string' ? JSON.parse(uStr) : uStr;
@@ -147,6 +149,10 @@ async function loadEdgeDataFiles(env?: Env) {
       if (sessStr) {
         const sessParsed = typeof sessStr === 'string' ? JSON.parse(sessStr) : sessStr;
         Object.assign(edgeSessions, sessParsed);
+      }
+      if (plansStr) {
+        const pParsed = typeof plansStr === 'string' ? JSON.parse(plansStr) : plansStr;
+        Object.assign(edgeSavedPlans, pParsed);
       }
     } catch (kvErr) {
       console.warn('Error reading edge data from KV:', kvErr);
@@ -172,10 +178,14 @@ async function loadEdgeDataFiles(env?: Env) {
       const sess = JSON.parse(fs.readFileSync(path.join(dataDir, 'sessions.json'), 'utf8'));
       Object.assign(edgeSessions, sess);
     }
+    if (fs.existsSync(path.join(dataDir, 'saved_plans.json'))) {
+      const p = JSON.parse(fs.readFileSync(path.join(dataDir, 'saved_plans.json'), 'utf8'));
+      Object.assign(edgeSavedPlans, p);
+    }
   } catch {}
 }
 
-async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env?: Env) {
+async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions' | 'plans', env?: Env, targetUserId?: string) {
   // 1. Cloudflare KV persistence (via env.NAVIKO_KV)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
   if (kv && typeof kv.put === 'function') {
@@ -215,6 +225,11 @@ async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env
           }
         }
         await Promise.all(sessPromises);
+      } else if (type === 'plans') {
+        await kv.put('naviko_saved_plans', JSON.stringify(edgeSavedPlans));
+        if (targetUserId && edgeSavedPlans[targetUserId]) {
+          await kv.put(`plans:${targetUserId}`, JSON.stringify(edgeSavedPlans[targetUserId]));
+        }
       }
     } catch (kvErr) {
       console.warn('Error writing edge data to KV:', kvErr);
@@ -237,6 +252,8 @@ async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env
       fs.writeFileSync(path.join(dataDir, 'subscriptions.json'), JSON.stringify(edgeSubscriptions, null, 2), 'utf8');
     } else if (type === 'sessions') {
       fs.writeFileSync(path.join(dataDir, 'sessions.json'), JSON.stringify(edgeSessions, null, 2), 'utf8');
+    } else if (type === 'plans') {
+      fs.writeFileSync(path.join(dataDir, 'saved_plans.json'), JSON.stringify(edgeSavedPlans, null, 2), 'utf8');
     }
   } catch {}
 }
@@ -983,7 +1000,20 @@ export async function onRequest(context: {
         return jsonResponse({ success: false, error: 'Name, email, and password (minimum 8 characters) required.' }, 400);
       }
       const normalizedEmail = email.trim().toLowerCase();
-      const existing = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+      let existing = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+      const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+      if (!existing && kv && typeof kv.get === 'function') {
+        try {
+          const userIdFromEmail = await kv.get(`user_by_email:${normalizedEmail}`);
+          if (userIdFromEmail) {
+            const uVal = await kv.get(`user:${userIdFromEmail}`);
+            if (uVal) {
+              existing = typeof uVal === 'string' ? JSON.parse(uVal) : uVal;
+              if (existing?.id) edgeUsers[existing.id] = existing;
+            }
+          }
+        } catch {}
+      }
       if (existing) {
         return jsonResponse({ success: false, error: 'An account with this email already exists. Please log in instead.' }, 400);
       }
@@ -1154,38 +1184,230 @@ export async function onRequest(context: {
     }
   }
 
-  // --- KV Test / Worker KV demonstration endpoint (/api/kv) ---
-  if (isPath('/api/kv') || isPath('/kv')) {
-    const kv = env?.NAVIKO_KV || env?.KV;
-    if (kv && typeof kv.put === 'function') {
-      // write a key-value pair
-      await kv.put('KEY', 'VALUE');
-
-      // read a key-value pair
-      const value = await kv.get('KEY');
-
-      // list all key-value pairs
-      const allKeys = await kv.list();
-
-      // delete a key-value pair
-      await kv.delete('KEY');
-
-      // return a Workers response
-      return new Response(
-        JSON.stringify({
-          value: value,
-          allKeys: allKeys,
-        }),
-        {
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        }
-      );
+  // --- POST /api/auth/logout-all ---
+  if (isPath('/api/auth/logout-all') && method === 'POST') {
+    const authUser = await getEdgeUser(request, env);
+    if (!authUser) {
+      return jsonResponse({ success: false, error: 'Authentication required.' }, 401);
     }
+    const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+    const tokensToDelete: string[] = [];
+    for (const [token, sess] of Object.entries(edgeSessions)) {
+      if (sess.userId === authUser.id) {
+        tokensToDelete.push(token);
+        delete edgeSessions[token];
+      }
+    }
+    if (kv && typeof kv.delete === 'function') {
+      for (const t of tokensToDelete) {
+        try { await kv.delete(`session:${t}`); } catch {}
+      }
+    }
+    await persistEdgeData('sessions', env);
+    return jsonResponse({ success: true, message: 'Successfully logged out of all devices and active sessions.' });
+  }
+
+  // --- POST /api/auth/forgot-password ---
+  if (isPath('/api/auth/forgot-password') && method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    const { email } = body;
+    if (!email || typeof email !== 'string') {
+      return jsonResponse({ success: false, error: 'Please provide a valid email address.' }, 400);
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+    let user = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+    const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+    if (!user && kv && typeof kv.get === 'function') {
+      try {
+        const uid = await kv.get(`user_by_email:${normalizedEmail}`);
+        if (uid) {
+          const uVal = await kv.get(`user:${uid}`);
+          if (uVal) user = typeof uVal === 'string' ? JSON.parse(uVal) : uVal;
+        }
+      } catch {}
+    }
+    if (!user) {
+      return jsonResponse({
+        success: true,
+        message: 'If an account exists with this email, password reset instructions have been created.',
+      });
+    }
+    const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    user.updatedAt = new Date().toISOString();
+    edgeUsers[user.id] = user;
+    await persistEdgeData('users', env);
     return jsonResponse({
-      value: 'VALUE',
-      allKeys: { keys: [{ name: 'KEY' }], list_complete: true },
-      notice: 'Simulated KV response. Configure "kv_namespaces" with binding "NAVIKO_KV" in wrangler.json for live Cloudflare Edge KV.'
+      success: true,
+      message: 'Password reset link prepared.',
+      resetToken,
+      resetLink: `/reset-password?token=${resetToken}`,
     });
+  }
+
+  // --- POST /api/auth/reset-password ---
+  if (isPath('/api/auth/reset-password') && method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    const { token, newPassword } = body;
+    if (!token || typeof token !== 'string') {
+      return jsonResponse({ success: false, error: 'Reset token is required.' }, 400);
+    }
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+      return jsonResponse({ success: false, error: 'New password must be at least 8 characters long.' }, 400);
+    }
+    let user = Object.values(edgeUsers).find((u: any) => u.resetPasswordToken === token);
+    if (!user) {
+      return jsonResponse({ success: false, error: 'Invalid or expired password reset link.' }, 400);
+    }
+    if (!user.resetPasswordExpires || new Date(user.resetPasswordExpires).getTime() < Date.now()) {
+      return jsonResponse({ success: false, error: 'This password reset link has expired. Please request a new one.' }, 400);
+    }
+    const { salt, hash } = await hashEdgePassword(newPassword);
+    user.salt = salt;
+    user.passwordHash = hash;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpires;
+    user.updatedAt = new Date().toISOString();
+    edgeUsers[user.id] = user;
+    await persistEdgeData('users', env);
+
+    // Revoke previous sessions
+    const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+    for (const [sToken, sess] of Object.entries(edgeSessions)) {
+      if (sess.userId === user.id) {
+        delete edgeSessions[sToken];
+        if (kv && typeof kv.delete === 'function') {
+          try { await kv.delete(`session:${sToken}`); } catch {}
+        }
+      }
+    }
+
+    // Issue fresh session
+    const freshToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    edgeSessions[freshToken] = { token: freshToken, userId: user.id, expiresAt };
+    await persistEdgeData('sessions', env);
+
+    return jsonResponse({
+      success: true,
+      message: 'Your password has been successfully updated.',
+      token: freshToken,
+      user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
+    });
+  }
+
+  // --- PUT /api/auth/profile ---
+  if (isPath('/api/auth/profile') && method === 'PUT') {
+    const authUser = await getEdgeUser(request, env);
+    if (!authUser) {
+      return jsonResponse({ success: false, error: 'Authentication required.' }, 401);
+    }
+    const body = await request.json().catch(() => ({}));
+    const { name, preferences } = body;
+    if (name && typeof name === 'string' && name.trim().length >= 2) {
+      authUser.name = name.trim();
+    }
+    if (preferences && typeof preferences === 'object') {
+      authUser.preferences = { ...(authUser.preferences || {}), ...preferences };
+    }
+    authUser.updatedAt = new Date().toISOString();
+    edgeUsers[authUser.id] = authUser;
+    await persistEdgeData('users', env);
+    return jsonResponse({
+      success: true,
+      message: 'Profile updated successfully.',
+      user: { id: authUser.id, name: authUser.name, email: authUser.email, createdAt: authUser.createdAt },
+    });
+  }
+
+  // --- PUT /api/auth/change-password ---
+  if (isPath('/api/auth/change-password') && method === 'PUT') {
+    const authUser = await getEdgeUser(request, env);
+    if (!authUser) {
+      return jsonResponse({ success: false, error: 'Authentication required.' }, 401);
+    }
+    const body = await request.json().catch(() => ({}));
+    const { currentPassword, newPassword } = body;
+    if (!currentPassword || !newPassword) {
+      return jsonResponse({ success: false, error: 'Both current and new password are required.' }, 400);
+    }
+    if (newPassword.length < 8) {
+      return jsonResponse({ success: false, error: 'New password must be at least 8 characters long.' }, 400);
+    }
+    const isMatch = await verifyEdgePassword(currentPassword, authUser.salt, authUser.passwordHash);
+    if (!isMatch) {
+      return jsonResponse({ success: false, error: 'Current password is incorrect.' }, 400);
+    }
+    const { salt, hash } = await hashEdgePassword(newPassword);
+    authUser.salt = salt;
+    authUser.passwordHash = hash;
+    authUser.updatedAt = new Date().toISOString();
+    edgeUsers[authUser.id] = authUser;
+    await persistEdgeData('users', env);
+    return jsonResponse({ success: true, message: 'Password updated successfully.' });
+  }
+
+  // --- GET, POST, DELETE /api/user/saved-plans (Persistent user plan storage via Cloudflare KV) ---
+  if (isPath('/api/user/saved-plans')) {
+    const authUser = await getEdgeUser(request, env);
+    if (!authUser) {
+      return jsonResponse({ success: false, error: 'Authentication required to manage saved plans.' }, 401);
+    }
+    const userId = authUser.id;
+    const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+
+    if (method === 'GET') {
+      let plans = edgeSavedPlans[userId];
+      if (!plans && kv && typeof kv.get === 'function') {
+        try {
+          const pVal = await kv.get(`plans:${userId}`);
+          if (pVal) {
+            plans = typeof pVal === 'string' ? JSON.parse(pVal) : pVal;
+            edgeSavedPlans[userId] = plans;
+          }
+        } catch {}
+      }
+      return jsonResponse({ success: true, items: plans || [] });
+    }
+
+    if (method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const planData = body.data || body.plan || {};
+      const planTitle = body.title || body.name || 'Saved Meal Plan';
+      const record = {
+        id: body.id || `plan_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        type: body.type || 'diet_plan',
+        title: planTitle,
+        createdAt: new Date().toISOString(),
+        plan: planData,
+        data: planData,
+      };
+
+      const existingList = edgeSavedPlans[userId] || [];
+      const updated = [record, ...existingList.filter((p: any) => p.id !== record.id)].slice(0, 30);
+      edgeSavedPlans[userId] = updated;
+
+      await persistEdgeData('plans', env, userId);
+      return jsonResponse({ success: true, item: record, items: updated });
+    }
+
+    if (method === 'DELETE') {
+      const planId = url.searchParams.get('id');
+      if (!planId) {
+        return jsonResponse({ success: false, error: 'Plan ID parameter is required.' }, 400);
+      }
+      const existingList = edgeSavedPlans[userId] || [];
+      const updated = existingList.filter((p: any) => p.id !== planId);
+      edgeSavedPlans[userId] = updated;
+
+      await persistEdgeData('plans', env, userId);
+      return jsonResponse({ success: true, message: 'Plan removed successfully.', items: updated });
+    }
   }
 
   // Fallback for any other /api/* route: Return JSON 404, NEVER HTML index.html
@@ -1201,33 +1423,6 @@ export async function onRequest(context: {
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
     const url = new URL(request.url);
-    const kv = env?.NAVIKO_KV || env?.KV;
-
-    // If accessing KV directly or if only KV route is requested
-    if ((url.pathname === '/api/kv' || url.pathname === '/kv') && kv && typeof kv.put === 'function') {
-      // write a key-value pair
-      await kv.put('KEY', 'VALUE');
-
-      // read a key-value pair
-      const value = await kv.get('KEY');
-
-      // list all key-value pairs
-      const allKeys = await kv.list();
-
-      // delete a key-value pair
-      await kv.delete('KEY');
-
-      // return a Workers response
-      return new Response(
-        JSON.stringify({
-          value: value,
-          allKeys: allKeys,
-        }),
-        {
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        }
-      );
-    }
 
     if (url.pathname.startsWith('/api/') || url.pathname === '/api') {
       return onRequest({
