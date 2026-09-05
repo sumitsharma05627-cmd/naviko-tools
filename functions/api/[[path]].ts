@@ -7,13 +7,13 @@ export interface Env {
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
   ASSETS?: { fetch: (request: Request) => Promise<Response> };
-  KV?: any;
   NAVIKO_KV?: any;
+  KV?: any;
   USERS_KV?: any;
   [key: string]: any;
 }
 
-// In-memory edge stores for serverless lifecycle
+// In-memory edge stores for serverless lifecycle (synchronized with Cloudflare KV)
 const edgeUsers: Record<string, any> = {};
 const edgeSessions: Record<string, any> = {};
 const edgeSubscriptions: Record<string, any> = {};
@@ -136,9 +136,18 @@ async function loadEdgeDataFiles(env?: Env) {
         kv.get('naviko_subscriptions'),
         kv.get('naviko_sessions'),
       ]);
-      if (uStr) Object.assign(edgeUsers, JSON.parse(uStr));
-      if (sStr) Object.assign(edgeSubscriptions, JSON.parse(sStr));
-      if (sessStr) Object.assign(edgeSessions, JSON.parse(sessStr));
+      if (uStr) {
+        const uParsed = typeof uStr === 'string' ? JSON.parse(uStr) : uStr;
+        Object.assign(edgeUsers, uParsed);
+      }
+      if (sStr) {
+        const sParsed = typeof sStr === 'string' ? JSON.parse(sStr) : sStr;
+        Object.assign(edgeSubscriptions, sParsed);
+      }
+      if (sessStr) {
+        const sessParsed = typeof sessStr === 'string' ? JSON.parse(sessStr) : sessStr;
+        Object.assign(edgeSessions, sessParsed);
+      }
     } catch (kvErr) {
       console.warn('Error reading edge data from KV:', kvErr);
     }
@@ -167,16 +176,45 @@ async function loadEdgeDataFiles(env?: Env) {
 }
 
 async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env?: Env) {
-  // 1. Cloudflare KV persistence
+  // 1. Cloudflare KV persistence (via env.NAVIKO_KV)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
   if (kv && typeof kv.put === 'function') {
     try {
       if (type === 'users') {
         await kv.put('naviko_users', JSON.stringify(edgeUsers));
+        // Individual O(1) user records for robust Cloudflare KV lookups
+        const userPromises: Promise<any>[] = [];
+        for (const u of Object.values(edgeUsers)) {
+          if (u?.id) {
+            userPromises.push(kv.put(`user:${u.id}`, JSON.stringify(u)));
+            if (u.email) {
+              userPromises.push(kv.put(`user_by_email:${u.email.toLowerCase()}`, u.id));
+            }
+          }
+        }
+        await Promise.all(userPromises);
       } else if (type === 'subscriptions') {
         await kv.put('naviko_subscriptions', JSON.stringify(edgeSubscriptions));
+        const subPromises = Object.entries(edgeSubscriptions).map(([userId, sub]) =>
+          kv.put(`sub:${userId}`, JSON.stringify(sub))
+        );
+        await Promise.all(subPromises);
       } else if (type === 'sessions') {
         await kv.put('naviko_sessions', JSON.stringify(edgeSessions));
+        const sessPromises: Promise<any>[] = [];
+        for (const [token, session] of Object.entries(edgeSessions)) {
+          if (token && session) {
+            const ttlSeconds = session.expiresAt
+              ? Math.max(60, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000))
+              : undefined;
+            if (ttlSeconds && ttlSeconds > 60) {
+              sessPromises.push(kv.put(`session:${token}`, JSON.stringify(session), { expirationTtl: ttlSeconds }));
+            } else {
+              sessPromises.push(kv.put(`session:${token}`, JSON.stringify(session)));
+            }
+          }
+        }
+        await Promise.all(sessPromises);
       }
     } catch (kvErr) {
       console.warn('Error writing edge data to KV:', kvErr);
@@ -203,15 +241,37 @@ async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions', env
   } catch {}
 }
 
-// Helper: Retrieve subscription with cross-linking by user email
-function getEdgeUserSubscription(userId: string, env?: Env): any {
+// Helper: Retrieve subscription with cross-linking by user email and Cloudflare KV fallback
+async function getEdgeUserSubscription(userId: string, env?: Env): Promise<any> {
   if (!userId) return null;
-  const direct = edgeSubscriptions[userId];
+  const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+
+  let direct = edgeSubscriptions[userId];
+  if (!direct && kv && typeof kv.get === 'function') {
+    try {
+      const sVal = await kv.get(`sub:${userId}`);
+      if (sVal) {
+        direct = typeof sVal === 'string' ? JSON.parse(sVal) : sVal;
+        edgeSubscriptions[userId] = direct;
+      }
+    } catch {}
+  }
+
   if (direct && (direct.status === 'ACTIVE' || direct.status === 'TRIAL_ACTIVE')) {
     return direct;
   }
 
-  const user = edgeUsers[userId];
+  let user = edgeUsers[userId];
+  if (!user && kv && typeof kv.get === 'function') {
+    try {
+      const uVal = await kv.get(`user:${userId}`);
+      if (uVal) {
+        user = typeof uVal === 'string' ? JSON.parse(uVal) : uVal;
+        edgeUsers[userId] = user;
+      }
+    } catch {}
+  }
+
   if (user && user.email) {
     const userEmail = user.email.toLowerCase();
     const activeMatch = Object.values(edgeSubscriptions).find(
@@ -226,7 +286,7 @@ function getEdgeUserSubscription(userId: string, env?: Env): any {
         userId: user.id,
         updatedAt: new Date().toISOString(),
       };
-      persistEdgeData('subscriptions', env);
+      await persistEdgeData('subscriptions', env);
       return edgeSubscriptions[userId];
     }
   }
@@ -234,18 +294,51 @@ function getEdgeUserSubscription(userId: string, env?: Env): any {
   return direct || null;
 }
 
-// Helper: Extract session user from Request
-function getEdgeUser(request: Request): any | null {
+// Helper: Extract session user from Request with Cloudflare KV fallback
+async function getEdgeUser(request: Request, env?: Env): Promise<any | null> {
   const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7).trim();
-  const session = edgeSessions[token];
+  if (!token) return null;
+
+  const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+  let session = edgeSessions[token];
+
+  // If not found in memory, query KV directly
+  if (!session && kv && typeof kv.get === 'function') {
+    try {
+      const sVal = await kv.get(`session:${token}`);
+      if (sVal) {
+        session = typeof sVal === 'string' ? JSON.parse(sVal) : sVal;
+        edgeSessions[token] = session;
+      }
+    } catch {}
+  }
+
   if (!session) return null;
+
   if (new Date(session.expiresAt).getTime() < Date.now()) {
     delete edgeSessions[token];
+    if (kv && typeof kv.delete === 'function') {
+      try {
+        await kv.delete(`session:${token}`);
+      } catch {}
+    }
     return null;
   }
-  return edgeUsers[session.userId] || null;
+
+  let user = edgeUsers[session.userId];
+  if (!user && kv && typeof kv.get === 'function') {
+    try {
+      const uVal = await kv.get(`user:${session.userId}`);
+      if (uVal) {
+        user = typeof uVal === 'string' ? JSON.parse(uVal) : uVal;
+        edgeUsers[session.userId] = user;
+      }
+    } catch {}
+  }
+
+  return user || null;
 }
 
 // Pre-seed test user if empty
@@ -335,7 +428,7 @@ export async function onRequest(context: {
 
   // --- GET /api/subscription/status (also accepts POST) ---
   if (isPath('/api/subscription/status') && (method === 'GET' || method === 'POST')) {
-    const authUser = getEdgeUser(request);
+    const authUser = await getEdgeUser(request, env);
     if (!authUser) {
       return jsonResponse({
         status: 'FREE',
@@ -354,7 +447,7 @@ export async function onRequest(context: {
     }
 
     const userId = authUser.id;
-    const sub = getEdgeUserSubscription(userId, env);
+    const sub = await getEdgeUserSubscription(userId, env);
     const now = new Date();
 
     if (sub?.status === 'TRIAL_ACTIVE' && sub.trialEndsAt) {
@@ -381,7 +474,7 @@ export async function onRequest(context: {
       } else {
         sub.status = 'FREE';
         sub.plan = 'free';
-        persistEdgeData('subscriptions', env);
+        await persistEdgeData('subscriptions', env);
         return jsonResponse({
           status: 'FREE',
           plan: 'free',
@@ -435,7 +528,7 @@ export async function onRequest(context: {
   // --- POST /api/subscription/create-trial-order ---
   if (isPath('/api/subscription/create-trial-order') && method === 'POST') {
     try {
-      const authUser = getEdgeUser(request);
+      const authUser = await getEdgeUser(request, env);
       if (!authUser) {
         return jsonResponse({
           success: false,
@@ -448,7 +541,7 @@ export async function onRequest(context: {
       const userId = authUser.id;
       const customerEmail = authUser.email;
 
-      const existing = edgeSubscriptions[userId];
+      const existing = await getEdgeUserSubscription(userId, env);
       if (existing?.trialUsed || existing?.status === 'TRIAL_ACTIVE') {
         return jsonResponse({
           success: false,
@@ -514,7 +607,7 @@ export async function onRequest(context: {
   // --- POST /api/subscription/verify-trial-payment ---
   if (isPath('/api/subscription/verify-trial-payment') && method === 'POST') {
     try {
-      const authUser = getEdgeUser(request);
+      const authUser = await getEdgeUser(request, env);
       if (!authUser) {
         return jsonResponse({
           success: false,
@@ -566,7 +659,7 @@ export async function onRequest(context: {
         customerEmail: authUser.email,
         updatedAt: trialStartAt,
       };
-      persistEdgeData('subscriptions', env);
+      await persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -585,7 +678,7 @@ export async function onRequest(context: {
   // --- POST /api/subscription/create-order ---
   if (isPath('/api/subscription/create-order') && method === 'POST') {
     try {
-      const authUser = getEdgeUser(request);
+      const authUser = await getEdgeUser(request, env);
       if (!authUser) {
         return jsonResponse({
           success: false,
@@ -657,7 +750,7 @@ export async function onRequest(context: {
   // --- POST /api/subscription/verify-payment ---
   if (isPath('/api/subscription/verify-payment') && method === 'POST') {
     try {
-      const authUser = getEdgeUser(request);
+      const authUser = await getEdgeUser(request, env);
       if (!authUser) {
         return jsonResponse({
           success: false,
@@ -709,7 +802,7 @@ export async function onRequest(context: {
         customerEmail: authUser.email,
         updatedAt: now.toISOString(),
       };
-      persistEdgeData('subscriptions', env);
+      await persistEdgeData('subscriptions', env);
 
       return jsonResponse({
         success: true,
@@ -725,7 +818,7 @@ export async function onRequest(context: {
 
   // --- POST /api/subscription/cancel ---
   if (isPath('/api/subscription/cancel') && method === 'POST') {
-    const authUser = getEdgeUser(request);
+    const authUser = await getEdgeUser(request, env);
     const body = await request.json().catch(() => ({}));
     const userId = authUser ? authUser.id : body.userId;
 
@@ -733,13 +826,14 @@ export async function onRequest(context: {
       edgeSubscriptions[userId].status = 'CANCELLED';
       edgeSubscriptions[userId].plan = 'free';
       edgeSubscriptions[userId].updatedAt = new Date().toISOString();
+      await persistEdgeData('subscriptions', env);
     }
     return jsonResponse({ success: true, message: 'Subscription cancelled.' });
   }
 
   // --- POST /api/subscription/authorize-feature ---
   if (isPath('/api/subscription/authorize-feature') && method === 'POST') {
-    const authUser = getEdgeUser(request);
+    const authUser = await getEdgeUser(request, env);
     const body = await request.json().catch(() => ({}));
     const { userId: clientUserId, requiredTier } = body;
     const effectiveUserId = authUser ? authUser.id : clientUserId;
@@ -752,7 +846,7 @@ export async function onRequest(context: {
       }, 400);
     }
 
-    const sub = edgeSubscriptions[effectiveUserId];
+    const sub = await getEdgeUserSubscription(effectiveUserId, env);
     const nowTime = Date.now();
     const isActive =
       sub &&
@@ -934,7 +1028,7 @@ export async function onRequest(context: {
         success: true,
         token,
         user: { id: newUser.id, name: newUser.name, email: newUser.email, createdAt: newUser.createdAt },
-        subscription: getEdgeUserSubscription(userId, env) || { status: 'FREE', plan: 'free' },
+        subscription: (await getEdgeUserSubscription(userId, env)) || { status: 'FREE', plan: 'free' },
       }, 201);
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Registration failed.' }, 500);
@@ -950,7 +1044,22 @@ export async function onRequest(context: {
         return jsonResponse({ success: false, error: 'Email and password are required.' }, 400);
       }
       const normalizedEmail = email.trim().toLowerCase();
-      const user = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+      let user = Object.values(edgeUsers).find((u: any) => u.email?.toLowerCase() === normalizedEmail);
+
+      // KV lookup fallback if user not in memory
+      const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+      if (!user && kv && typeof kv.get === 'function') {
+        try {
+          const userIdFromEmail = await kv.get(`user_by_email:${normalizedEmail}`);
+          if (userIdFromEmail) {
+            const uVal = await kv.get(`user:${userIdFromEmail}`);
+            if (uVal) {
+              user = typeof uVal === 'string' ? JSON.parse(uVal) : uVal;
+              if (user?.id) edgeUsers[user.id] = user;
+            }
+          }
+        } catch {}
+      }
 
       if (!user) {
         return jsonResponse({ success: false, error: 'Incorrect email or password.' }, 401);
@@ -989,7 +1098,7 @@ export async function onRequest(context: {
         success: true,
         token,
         user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-        subscription: getEdgeUserSubscription(user.id, env) || { status: 'FREE', plan: 'free' },
+        subscription: (await getEdgeUserSubscription(user.id, env)) || { status: 'FREE', plan: 'free' },
       });
     } catch (err: any) {
       return jsonResponse({ success: false, error: 'Login failed.' }, 500);
@@ -998,22 +1107,29 @@ export async function onRequest(context: {
 
   // --- GET /api/auth/me ---
   if (isPath('/api/auth/me') && method === 'GET') {
-    const user = getEdgeUser(request);
+    const user = await getEdgeUser(request, env);
     if (!user) {
       return jsonResponse({ success: false, error: 'Not authenticated or session expired.', sessionExpired: true }, 401);
     }
     return jsonResponse({
       success: true,
       user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt },
-      subscription: getEdgeUserSubscription(user.id, env) || { status: 'FREE', plan: 'free' },
+      subscription: (await getEdgeUserSubscription(user.id, env)) || { status: 'FREE', plan: 'free' },
     });
   }
 
   // --- POST /api/auth/logout ---
   if (isPath('/api/auth/logout') && method === 'POST') {
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
     if (authHeader?.startsWith('Bearer ')) {
-      delete edgeSessions[authHeader.substring(7).trim()];
+      const token = authHeader.substring(7).trim();
+      delete edgeSessions[token];
+      const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
+      if (kv && typeof kv.delete === 'function') {
+        try {
+          await kv.delete(`session:${token}`);
+        } catch {}
+      }
       await persistEdgeData('sessions', env);
     }
     return jsonResponse({ success: true, message: 'Logged out successfully.' });
@@ -1021,7 +1137,7 @@ export async function onRequest(context: {
 
   // --- GET & POST /api/user/recent-tools ---
   if (isPath('/api/user/recent-tools')) {
-    const authUser = getEdgeUser(request);
+    const authUser = await getEdgeUser(request, env);
     const userId = authUser ? authUser.id : (url.searchParams.get('userId') || 'anon');
 
     if (method === 'GET') {
@@ -1040,18 +1156,19 @@ export async function onRequest(context: {
 
   // --- KV Test / Worker KV demonstration endpoint (/api/kv) ---
   if (isPath('/api/kv') || isPath('/kv')) {
-    if (env?.KV) {
+    const kv = env?.NAVIKO_KV || env?.KV;
+    if (kv && typeof kv.put === 'function') {
       // write a key-value pair
-      await env.KV.put('KEY', 'VALUE');
+      await kv.put('KEY', 'VALUE');
 
       // read a key-value pair
-      const value = await env.KV.get('KEY');
+      const value = await kv.get('KEY');
 
       // list all key-value pairs
-      const allKeys = await env.KV.list();
+      const allKeys = await kv.list();
 
       // delete a key-value pair
-      await env.KV.delete('KEY');
+      await kv.delete('KEY');
 
       // return a Workers response
       return new Response(
@@ -1067,7 +1184,7 @@ export async function onRequest(context: {
     return jsonResponse({
       value: 'VALUE',
       allKeys: { keys: [{ name: 'KEY' }], list_complete: true },
-      notice: 'Simulated KV response. Configure "kv_namespaces" with binding "KV" in wrangler.json for live Cloudflare Edge KV.'
+      notice: 'Simulated KV response. Configure "kv_namespaces" with binding "NAVIKO_KV" in wrangler.json for live Cloudflare Edge KV.'
     });
   }
 
@@ -1084,20 +1201,21 @@ export async function onRequest(context: {
 export default {
   async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
     const url = new URL(request.url);
+    const kv = env?.NAVIKO_KV || env?.KV;
 
     // If accessing KV directly or if only KV route is requested
-    if ((url.pathname === '/api/kv' || url.pathname === '/kv') && env?.KV) {
+    if ((url.pathname === '/api/kv' || url.pathname === '/kv') && kv && typeof kv.put === 'function') {
       // write a key-value pair
-      await env.KV.put('KEY', 'VALUE');
+      await kv.put('KEY', 'VALUE');
 
       // read a key-value pair
-      const value = await env.KV.get('KEY');
+      const value = await kv.get('KEY');
 
       // list all key-value pairs
-      const allKeys = await env.KV.list();
+      const allKeys = await kv.list();
 
       // delete a key-value pair
-      await env.KV.delete('KEY');
+      await kv.delete('KEY');
 
       // return a Workers response
       return new Response(
@@ -1105,6 +1223,9 @@ export default {
           value: value,
           allKeys: allKeys,
         }),
+        {
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        }
       );
     }
 

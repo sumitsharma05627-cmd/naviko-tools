@@ -15,7 +15,7 @@
   },
   "kv_namespaces": [
     {
-      "binding": "KV",
+      "binding": "NAVIKO_KV",
       "id": "abfb0a4b28d84e08ae3db137edc0c5af"
     }
   ]
