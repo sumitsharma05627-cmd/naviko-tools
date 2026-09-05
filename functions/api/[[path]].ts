@@ -128,7 +128,7 @@ async function verifyEdgePassword(password: string, salt: string, expectedHash: 
 
 // Helper: Synchronize edge stores with KV (production) and local .data/ files (Node/development)
 async function loadEdgeDataFiles(env?: Env) {
-  // 1. Cloudflare KV persistence (when NAVIKO_KV / KV / USERS_KV binding is configured)
+  // Cloudflare KV persistence (when NAVIKO_KV / KV / USERS_KV binding is configured)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
   if (kv && typeof kv.get === 'function') {
     try {
@@ -158,35 +158,10 @@ async function loadEdgeDataFiles(env?: Env) {
       console.warn('Error reading edge data from KV:', kvErr);
     }
   }
-
-  // 2. Node filesystem persistence (in local development or container environments)
-  try {
-    // @ts-ignore
-    const fs = await import('node:fs');
-    // @ts-ignore
-    const path = await import('node:path');
-    const dataDir = path.join(process.cwd(), '.data');
-    if (fs.existsSync(path.join(dataDir, 'users.json'))) {
-      const u = JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'));
-      Object.assign(edgeUsers, u);
-    }
-    if (fs.existsSync(path.join(dataDir, 'subscriptions.json'))) {
-      const s = JSON.parse(fs.readFileSync(path.join(dataDir, 'subscriptions.json'), 'utf8'));
-      Object.assign(edgeSubscriptions, s);
-    }
-    if (fs.existsSync(path.join(dataDir, 'sessions.json'))) {
-      const sess = JSON.parse(fs.readFileSync(path.join(dataDir, 'sessions.json'), 'utf8'));
-      Object.assign(edgeSessions, sess);
-    }
-    if (fs.existsSync(path.join(dataDir, 'saved_plans.json'))) {
-      const p = JSON.parse(fs.readFileSync(path.join(dataDir, 'saved_plans.json'), 'utf8'));
-      Object.assign(edgeSavedPlans, p);
-    }
-  } catch {}
 }
 
 async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions' | 'plans', env?: Env, targetUserId?: string) {
-  // 1. Cloudflare KV persistence (via env.NAVIKO_KV)
+  // Cloudflare KV persistence (via env.NAVIKO_KV)
   const kv = env?.NAVIKO_KV || env?.KV || env?.USERS_KV;
   if (kv && typeof kv.put === 'function') {
     try {
@@ -235,27 +210,6 @@ async function persistEdgeData(type: 'users' | 'subscriptions' | 'sessions' | 'p
       console.warn('Error writing edge data to KV:', kvErr);
     }
   }
-
-  // 2. Node filesystem persistence
-  try {
-    // @ts-ignore
-    const fs = await import('node:fs');
-    // @ts-ignore
-    const path = await import('node:path');
-    const dataDir = path.join(process.cwd(), '.data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    if (type === 'users') {
-      fs.writeFileSync(path.join(dataDir, 'users.json'), JSON.stringify(edgeUsers, null, 2), 'utf8');
-    } else if (type === 'subscriptions') {
-      fs.writeFileSync(path.join(dataDir, 'subscriptions.json'), JSON.stringify(edgeSubscriptions, null, 2), 'utf8');
-    } else if (type === 'sessions') {
-      fs.writeFileSync(path.join(dataDir, 'sessions.json'), JSON.stringify(edgeSessions, null, 2), 'utf8');
-    } else if (type === 'plans') {
-      fs.writeFileSync(path.join(dataDir, 'saved_plans.json'), JSON.stringify(edgeSavedPlans, null, 2), 'utf8');
-    }
-  } catch {}
 }
 
 // Helper: Retrieve subscription with cross-linking by user email and Cloudflare KV fallback
@@ -746,8 +700,8 @@ export async function onRequest(context: {
     }
   }
 
-  // --- POST /api/subscription/verify-payment ---
-  if (isPath('/api/subscription/verify-payment') && method === 'POST') {
+  // --- POST /api/subscription/verify-payment or /api/subscription/verify ---
+  if ((isPath('/api/subscription/verify-payment') || isPath('/api/subscription/verify')) && method === 'POST') {
     try {
       const authUser = await getEdgeUser(request, env);
       if (!authUser) {
