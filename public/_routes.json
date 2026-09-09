@@ -4,5 +4,7 @@
     "/api",
     "/api/*"
   ],
-  "exclude": []
+  "exclude": [
+    "/assets/*"
+  ]
 }
