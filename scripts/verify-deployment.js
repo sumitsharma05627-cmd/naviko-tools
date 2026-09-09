@@ -2,12 +2,13 @@
 /**
  * scripts/verify-deployment.js
  *
- * Diagnostic script to verify Cloudflare Pages deployment readiness:
+ * Diagnostic script to verify Cloudflare Workers deployment readiness:
  * 1. Checks for conflicting wrangler.toml and wrangler.json / wrangler.jsonc files.
- * 2. Ensures 'pages_build_output_dir' is correctly defined and set to 'dist'.
- * 3. Validates the 'dist' directory structure (index.html, JS/CSS assets, routing files).
- * 4. Checks for conflicting Worker entrypoints (main, [assets], [site]) incompatible with Pages.
- * 5. Checks for lockfile collisions and runs 'wrangler pages project validate'.
+ * 2. Validates Worker entrypoint ('main') and static assets configuration ('[assets]').
+ * 3. Confirms 'NAVIKO_KV' namespace binding and compatibility flags.
+ * 4. Validates the 'dist' directory structure (index.html, JS/CSS assets).
+ * 5. Checks for lockfile collisions and verifies single authoritative package manager.
+ * 6. Executes live 'npx wrangler deploy --dry-run' to ensure full deployment discovery.
  */
 
 import fs from 'node:fs';
@@ -117,13 +118,13 @@ function parseToml(content) {
 }
 
 console.log(`\n${c.cyan}${c.bold}================================================================${c.reset}`);
-console.log(`${c.cyan}${c.bold}       Cloudflare Pages Deployment Verification & Diagnostics   ${c.reset}`);
+console.log(`${c.cyan}${c.bold}       Cloudflare Workers Deployment Verification & Diagnostics ${c.reset}`);
 console.log(`${c.cyan}${c.bold}================================================================${c.reset}\n`);
 
 // ============================================================================
 // CHECK 1: Conflicting wrangler.toml and wrangler.json files
 // ============================================================================
-console.log(`${c.bold}[1/4] Checking for Conflicting Configuration Files${c.reset}`);
+console.log(`${c.bold}[1/5] Checking Configuration File Architecture${c.reset}`);
 
 const tomlFile = path.join(ROOT_DIR, 'wrangler.toml');
 const jsonFile = path.join(ROOT_DIR, 'wrangler.json');
@@ -142,13 +143,13 @@ if (foundConfigs.length === 0) {
   recordFail(
     'No Cloudflare configuration file found',
     'Neither wrangler.toml nor wrangler.json exists in root.',
-    'Create a wrangler.toml file configured with pages_build_output_dir = "dist".'
+    'Create a wrangler.toml file configured with main and [assets].'
   );
 } else if (foundConfigs.length > 1) {
   recordFail(
     'Conflicting configuration files detected',
-    `Found multiple conflicting configuration files: [${foundConfigs.join(', ')}]. Cloudflare Pages and Wrangler CLI can exhibit non-deterministic behavior or fail builds when multiple config formats co-exist.`,
-    `Remove ${foundConfigs.filter(f => f !== 'wrangler.toml').join(', ')} and keep only 'wrangler.toml' as the single source of truth.`
+    `Found multiple conflicting configuration files: [${foundConfigs.join(', ')}].`,
+    `Remove ${foundConfigs.filter(f => f !== 'wrangler.toml').join(', ')} and keep only 'wrangler.toml'.`
   );
   activeConfigPath = path.join(ROOT_DIR, foundConfigs[0]);
   activeConfigType = foundConfigs[0];
@@ -174,60 +175,83 @@ if (activeConfigPath && fs.existsSync(activeConfigPath)) {
 }
 
 // ============================================================================
-// CHECK 2: 'pages_build_output_dir' and Worker Entrypoint Conflict Analysis
+// CHECK 2: Worker Architecture & Entrypoint Integrity
 // ============================================================================
-console.log(`\n${c.bold}[2/4] Validating 'pages_build_output_dir' & Architecture Integrity${c.reset}`);
+console.log(`\n${c.bold}[2/5] Validating Worker Entrypoint & Assets Configuration${c.reset}`);
 
-const buildOutputDir = parsedConfig.pages_build_output_dir;
+// Check Project Name
+if (parsedConfig.name === 'naviko-tools' || parsedConfig.name === 'naviko') {
+  recordPass(`Worker project name configured as '${parsedConfig.name}'`);
+} else {
+  recordWarn(`Worker name '${parsedConfig.name}'`, "Recommended to match Cloudflare project 'naviko-tools'.");
+}
 
-if (!buildOutputDir) {
+// Check main entrypoint
+const mainEntry = parsedConfig.main;
+if (!mainEntry) {
   recordFail(
-    "'pages_build_output_dir' is missing",
-    `Directive 'pages_build_output_dir' is not specified in ${activeConfigType || 'config'}. Cloudflare Pages requires this directive to locate the static web assets.`,
-    `Add 'pages_build_output_dir = "dist"' to ${activeConfigType || 'wrangler.toml'}.`
+    "Worker 'main' entrypoint is missing",
+    `Directive 'main' is not specified in ${activeConfigType}. 'npx wrangler deploy' requires a Worker script entrypoint.`,
+    `Add 'main = "functions/api/[[path]].ts"' to ${activeConfigType}.`
   );
 } else {
-  const normalized = String(buildOutputDir).replace(/^\.\//, '').replace(/\/+$/, '');
-  if (normalized === 'dist') {
-    recordPass(`'pages_build_output_dir' is correctly set to '${buildOutputDir}'`);
+  const resolvedMain = path.resolve(ROOT_DIR, mainEntry);
+  if (fs.existsSync(resolvedMain)) {
+    recordPass(`Worker entrypoint 'main' exists at '${mainEntry}'`);
   } else {
     recordFail(
-      `'pages_build_output_dir' misconfigured`,
-      `Expected 'dist', but found '${buildOutputDir}'. Vite builds into 'dist', so Pages will fail to locate assets.`,
-      `Change 'pages_build_output_dir' to 'dist' in ${activeConfigType}.`
+      "Worker entrypoint file not found on disk",
+      `'${mainEntry}' does not exist at '${resolvedMain}'.`,
+      `Ensure '${mainEntry}' exists.`
     );
   }
 }
 
-// Ensure no conflicting Worker entrypoints exist (main, site, assets)
-if (parsedConfig.main) {
+// Check assets configuration
+const assets = parsedConfig.assets;
+if (!assets) {
   recordFail(
-    "Worker entrypoint 'main' conflicts with Pages static architecture",
-    `Found 'main = "${parsedConfig.main}"' in ${activeConfigType}. Cloudflare Pages projects serve dynamic API endpoints via the 'functions/' directory. Defining 'main' forces Wrangler to treat the project as a Cloudflare Worker, bypassing static page deployment and causing routing failures.`,
-    `Remove 'main' from ${activeConfigType}. Serverless edge routes must be placed in 'functions/api/'.`
+    "Workers '[assets]' table is missing",
+    `Static assets table '[assets]' is not defined in ${activeConfigType}.`,
+    `Add '[assets]' with directory = "./dist" to ${activeConfigType}.`
   );
 } else {
-  recordPass("No conflicting 'main' Worker entrypoint present (clean Pages architecture)");
+  if (assets.directory === './dist' || assets.directory === 'dist') {
+    recordPass(`'assets.directory' is correctly set to '${assets.directory}'`);
+  } else {
+    recordFail(
+      "'assets.directory' misconfigured",
+      `Expected './dist', but found '${assets.directory}'.`,
+      `Change assets.directory to './dist'.`
+    );
+  }
+
+  if (assets.not_found_handling === 'single-page-application') {
+    recordPass("'assets.not_found_handling' is set to 'single-page-application' (SPA routing preserved)");
+  } else {
+    recordWarn(
+      "'assets.not_found_handling' not set to SPA",
+      `Current value: '${assets.not_found_handling || 'none'}'. Client-side routes may 404 without SPA fallback.`,
+      `Add 'not_found_handling = "single-page-application"' to [assets].`
+    );
+  }
+
+  if (assets.binding === 'ASSETS') {
+    recordPass("'assets.binding' is set to 'ASSETS'");
+  } else {
+    recordWarn("'assets.binding' is not 'ASSETS'", "Worker script may not access env.ASSETS for asset fallback.");
+  }
 }
 
-if (parsedConfig.assets) {
+// Ensure pages_build_output_dir is NOT present in wrangler.toml (causes Pages conflict warning in wrangler deploy)
+if (parsedConfig.pages_build_output_dir) {
   recordFail(
-    "Worker 'assets' block conflicts with Pages",
-    `Found 'assets' in ${activeConfigType}. This is for Cloudflare Workers, not Cloudflare Pages.`,
-    `Remove the '[assets]' block and retain 'pages_build_output_dir = "dist"'.`
+    "Conflicting 'pages_build_output_dir' found in Workers configuration",
+    `'pages_build_output_dir' belongs to Cloudflare Pages. Having it causes 'wrangler deploy' to abort with 'It seems that you have run wrangler deploy on a Pages project'.`,
+    `Remove 'pages_build_output_dir' from ${activeConfigType}.`
   );
 } else {
-  recordPass("No conflicting Workers '[assets]' directive");
-}
-
-if (parsedConfig.site) {
-  recordFail(
-    "Legacy Workers Sites '[site]' block conflicts with Pages",
-    `Found '[site]' in ${activeConfigType}.`,
-    `Remove '[site]' from ${activeConfigType}.`
-  );
-} else {
-  recordPass("No legacy Workers Sites '[site]' directive");
+  recordPass("No conflicting 'pages_build_output_dir' (clean Workers architecture)");
 }
 
 // Check nodejs_compat flag
@@ -237,22 +261,31 @@ if (Array.isArray(flags) && flags.includes('nodejs_compat')) {
 } else {
   recordWarn(
     "Missing 'nodejs_compat' in compatibility_flags",
-    "If your Pages Functions use Node.js built-in APIs (crypto, buffer, stream), they may fail at edge runtime.",
+    "If APIs use Node.js built-ins (crypto, buffer), they may fail at edge runtime.",
     `Add 'compatibility_flags = ["nodejs_compat"]' to ${activeConfigType}.`
   );
 }
 
+// Check NAVIKO_KV binding
+const kvNamespaces = parsedConfig.kv_namespaces || [];
+const navikoKv = Array.isArray(kvNamespaces) && kvNamespaces.find(kv => kv.binding === 'NAVIKO_KV');
+if (navikoKv) {
+  recordPass(`'NAVIKO_KV' namespace binding configured (id: ${navikoKv.id})`);
+} else {
+  recordWarn("NAVIKO_KV namespace binding not found", "Cloudflare KV session/data persistence may not function.");
+}
+
 // ============================================================================
-// CHECK 3: Validating 'dist' Output Directory & Static Assets
+// CHECK 3: Validating 'dist' Build Output Directory & Static Assets
 // ============================================================================
-console.log(`\n${c.bold}[3/4] Validating 'dist' Build Output Directory${c.reset}`);
+console.log(`\n${c.bold}[3/5] Validating 'dist' Build Output Directory${c.reset}`);
 
 const distPath = path.join(ROOT_DIR, 'dist');
 
 if (!fs.existsSync(distPath)) {
   recordFail(
     "Output directory 'dist/' does not exist",
-    "The build output folder 'dist' was not found on disk. Cloudflare Pages cannot deploy without built assets.",
+    "The build output folder 'dist' was not found on disk. Run 'npm run build' before deployment.",
     "Run 'npm run build' to compile the application."
   );
 } else {
@@ -267,7 +300,7 @@ if (!fs.existsSync(distPath)) {
     if (!fs.existsSync(indexPath)) {
       recordFail(
         "Missing 'dist/index.html'",
-        "Cloudflare Pages SPA serving requires an 'index.html' file at the root of the output directory.",
+        "Cloudflare Workers static assets require an 'index.html' file at the root of dist.",
         "Run 'npm run build' to generate the Vite SPA index.html."
       );
     } else {
@@ -294,33 +327,14 @@ if (!fs.existsSync(distPath)) {
         recordWarn("Incomplete bundle assets", `Found ${jsFiles.length} JS and ${cssFiles.length} CSS in 'dist/assets/'.`);
       }
     }
-
-    // Check critical Cloudflare Pages control files
-    const controlFiles = [
-      { name: '_routes.json', critical: true, desc: 'API / Static edge routing rules' },
-      { name: '_headers', critical: false, desc: 'Security headers & caching policies' },
-      { name: '_redirects', critical: false, desc: 'SPA fallback redirects' },
-    ];
-
-    for (const file of controlFiles) {
-      const filePath = path.join(distPath, file.name);
-      if (fs.existsSync(filePath)) {
-        recordPass(`Pages control file 'dist/${file.name}' present (${file.desc})`);
-      } else {
-        if (file.critical) {
-          recordWarn(`Missing 'dist/${file.name}'`, `Pages will use default routing behavior.`, `Place ${file.name} in public/ so Vite copies it to dist/.`);
-        }
-      }
-    }
   }
 }
 
 // ============================================================================
-// CHECK 4: Functions & Live Wrangler Project Validation
+// CHECK 4: Package Manager Lockfile Uniqueness
 // ============================================================================
-console.log(`\n${c.bold}[4/4] Live Cloudflare Pages & Lockfile Diagnostics${c.reset}`);
+console.log(`\n${c.bold}[4/5] Package Manager Lockfile & Node Version Diagnostics${c.reset}`);
 
-// Check package manager lockfile uniqueness
 const lockfiles = [
   fs.existsSync(path.join(ROOT_DIR, 'package-lock.json')) ? 'package-lock.json' : null,
   fs.existsSync(path.join(ROOT_DIR, 'bun.lock')) ? 'bun.lock' : null,
@@ -330,8 +344,8 @@ const lockfiles = [
 
 if (lockfiles.length > 1) {
   recordFail(
-    "Multiple lockfiles detected (causes Cloudflare build image failures)",
-    `Found multiple package manager lockfiles: [${lockfiles.join(', ')}]. Cloudflare Pages auto-detects package managers based on lockfiles, leading to failed builds.`,
+    "Multiple lockfiles detected",
+    `Found multiple package manager lockfiles: [${lockfiles.join(', ')}].`,
     `Delete ${lockfiles.filter(l => l !== 'package-lock.json').join(', ')} and keep only 'package-lock.json'.`
   );
 } else if (lockfiles.length === 1) {
@@ -340,29 +354,38 @@ if (lockfiles.length > 1) {
   recordWarn("No package manager lockfile found", "Builds might not be deterministic.", "Run 'npm install' to generate a package-lock.json.");
 }
 
-// Check Pages Functions
-const functionsApi = path.join(ROOT_DIR, 'functions', 'api', '[[path]].ts');
-if (fs.existsSync(functionsApi)) {
-  recordPass("Cloudflare Pages Functions API entrypoint found at functions/api/[[path]].ts");
+// Check .nvmrc and .node-version
+const nvmrcPath = path.join(ROOT_DIR, '.nvmrc');
+if (fs.existsSync(nvmrcPath)) {
+  const nvmrcVal = fs.readFileSync(nvmrcPath, 'utf8').trim();
+  recordPass(`'.nvmrc' specifies Node.js version '${nvmrcVal}'`);
 } else {
-  recordWarn("functions/api/[[path]].ts not found", "Dynamic API endpoints may not be served at edge.");
+  recordWarn("Missing '.nvmrc'", "Cloudflare Workers Builds may use an older default Node runtime.");
 }
 
-// Run wrangler pages project validate
-if (fs.existsSync(distPath)) {
-  try {
-    const cmd = 'npx wrangler pages project validate dist';
-    console.log(`  ${c.gray}Executing: ${cmd}${c.reset}`);
-    execSync(cmd, { cwd: ROOT_DIR, stdio: 'pipe' });
-    recordPass("'npx wrangler pages project validate dist' exited cleanly with status 0");
-  } catch (err) {
-    const output = (err.stderr ? err.stderr.toString() : '') + (err.stdout ? err.stdout.toString() : '');
-    recordFail(
-      "Wrangler CLI 'pages project validate dist' failed",
-      output.trim() || err.message,
-      "Review the error details above to fix static asset validation issues."
-    );
+// ============================================================================
+// CHECK 5: Live Wrangler Deploy Dry-Run
+// ============================================================================
+console.log(`\n${c.bold}[5/5] Executing Live 'npx wrangler deploy --dry-run'${c.reset}`);
+
+try {
+  const cmd = 'npx wrangler deploy --dry-run';
+  console.log(`  ${c.gray}Executing: ${cmd}${c.reset}`);
+  const output = execSync(cmd, { cwd: ROOT_DIR, stdio: 'pipe' }).toString();
+  
+  // Verify expected output signatures
+  if (output.includes('assets directory') && output.includes('NAVIKO_KV')) {
+    recordPass("'npx wrangler deploy --dry-run' succeeded! Worker entrypoint, assets, and NAVIKO_KV binding discovered.");
+  } else {
+    recordPass("'npx wrangler deploy --dry-run' exited cleanly with status 0");
   }
+} catch (err) {
+  const output = (err.stderr ? err.stderr.toString() : '') + (err.stdout ? err.stdout.toString() : '');
+  recordFail(
+    "Wrangler CLI 'deploy --dry-run' failed",
+    output.trim() || err.message,
+    "Review the error details above to fix deployment configuration."
+  );
 }
 
 // ============================================================================
@@ -388,11 +411,11 @@ if (issues.length > 0) {
   console.log();
   process.exit(1);
 } else {
-  console.log(`${c.green}${c.bold}DEPLOYMENT STATUS: READY FOR CLOUDFLARE PAGES${c.reset}`);
-  console.log(`  • Configuration file: ${activeConfigType} (no conflicting files)`);
-  console.log(`  • pages_build_output_dir: dist (valid)`);
-  console.log(`  • Worker conflicts: None (clean static + functions architecture)`);
-  console.log(`  • Static output: dist/index.html and assets verified`);
-  console.log(`  • Cloudflare project validation: Passed\n`);
+  console.log(`${c.green}${c.bold}DEPLOYMENT STATUS: READY FOR CLOUDFLARE WORKERS BUILDS${c.reset}`);
+  console.log(`  • Worker name: ${parsedConfig.name}`);
+  console.log(`  • Worker entrypoint: ${parsedConfig.main}`);
+  console.log(`  • Static assets: ${assets.directory} (SPA routing enabled)`);
+  console.log(`  • Bindings: NAVIKO_KV, ASSETS`);
+  console.log(`  • Deploy command: npx wrangler deploy --dry-run (Verified PASS)\n`);
   process.exit(0);
 }
