@@ -4,6 +4,7 @@ import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
+import { Interactive3DCard } from '../components/3d/Interactive3DCard';
 
 interface StudentToolsPageProps {
   onNavigate: (path: string) => void;
@@ -64,32 +65,33 @@ export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {studentTools.map((tool) => (
-              <div
-                key={tool.id}
-                className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-indigo-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 flex items-center justify-center mb-4 transition-colors">
-                    <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+              <Interactive3DCard key={tool.id} className="h-full" elevation={5} maxTilt={5}>
+                <div
+                  className="h-full p-6 rounded-2xl bg-white border border-slate-200 hover:border-indigo-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 flex items-center justify-center mb-4 transition-colors">
+                      <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      {tool.name}
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {tool.shortDescription}
+                    </p>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    {tool.name}
-                  </h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    {tool.shortDescription}
-                  </p>
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100">
-                  <button
-                    onClick={() => onNavigate(tool.path)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Launch Tool</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="mt-6 pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => onNavigate(tool.path)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Launch Tool</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </Interactive3DCard>
             ))}
           </div>
         </div>

@@ -8,6 +8,7 @@ import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { getToolByPath } from './data/toolsData';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Ambient3DBackground } from './components/3d/Ambient3DBackground';
 
 // Fallback loader for lazy-loaded tools and secondary routes
 const PageLoadingFallback: React.FC = () => (
@@ -368,7 +369,8 @@ export default function App() {
       <LanguageProvider>
         <AuthProvider>
           <SubscriptionProvider>
-            <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white">
+            <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative">
+              <Ambient3DBackground />
               <Header
                 onNavigate={navigate}
                 onOpenSearch={() => setIsSearchOpen(true)}

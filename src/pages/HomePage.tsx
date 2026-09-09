@@ -9,6 +9,12 @@ import { DynamicIcon } from '../components/DynamicIcon';
 import { AdSenseDisplayAd } from '../components/AdSenseDisplayAd';
 import { useLanguage } from '../context/LanguageContext';
 import { useSEO } from '../utils/seo';
+import { Hero3DVisual } from '../components/3d/Hero3DVisual';
+import { Hero3DScene } from '../components/3d/Hero3DScene';
+import { Interactive3DCard } from '../components/3d/Interactive3DCard';
+import { Finance3DDashboardVisual } from '../components/3d/Finance3DDashboardVisual';
+import { AiNodes3DVisual } from '../components/3d/AiNodes3DVisual';
+import { Premium3DVisual } from '../components/3d/Premium3DVisual';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -28,6 +34,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
   });
   
   // Interactive mini-calculator state on hero for instant Gen Z engagement!
+  const [heroTab, setHeroTab] = useState<'3d' | 'sip'>('3d');
   const [quickSip, setQuickSip] = useState(5000);
   const [quickYears, setQuickYears] = useState(10);
   const quickReturn = 12; // 12% p.a.
@@ -56,6 +63,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
         {/* Optimized radial glow decorations (Zero GPU filter overhead) */}
         <div className="absolute top-10 left-1/4 w-96 h-96 [background:radial-gradient(circle,_rgba(99,102,241,0.18)_0%,_transparent_70%)] rounded-full pointer-events-none"></div>
         <div className="absolute bottom-10 right-1/4 w-96 h-96 [background:radial-gradient(circle,_rgba(16,185,129,0.15)_0%,_transparent_70%)] rounded-full pointer-events-none"></div>
+
+        {/* CSS 3D Scene: Floating abstract geometric representations of AI, Finance, and Tools */}
+        <Hero3DScene onNavigate={onNavigate} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -139,81 +149,132 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
               </div>
             </div>
 
-            {/* Right Hero: Live Interactive SIP Mini Widget */}
-            <div className="lg:col-span-5">
-              <div className="p-6 sm:p-7 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl space-y-5 text-left">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                      {t('hero.quickSipTitle', 'Live Compound SIP Estimator')}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    12% CAGR
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-300 font-medium mb-1">
-                      <span>{t('hero.monthlyInvest', 'Monthly Investment')}</span>
-                      <span className="font-bold text-white font-mono">₹{quickSip.toLocaleString('en-IN')}/mo</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1000"
-                      max="50000"
-                      step="1000"
-                      value={quickSip}
-                      onChange={(e) => setQuickSip(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-300 font-medium mb-1">
-                      <span>{t('hero.timeHorizon', 'Time Horizon')}</span>
-                      <span className="font-bold text-white font-mono">{quickYears} Years</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="30"
-                      step="1"
-                      value={quickYears}
-                      onChange={(e) => setQuickYears(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Wealth Result Box */}
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-2">
-                  <div className="text-xs text-slate-400">{t('hero.estValue', 'Estimated Maturity Value')}:</div>
-                  <div className="text-3xl font-black text-emerald-400 font-mono">
-                    ₹{quickMaturity.toLocaleString('en-IN')}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-white/10">
-                    <div>
-                      <span className="text-slate-400">{t('hero.invested', 'Total Invested')}: </span>
-                      <span className="font-bold text-slate-200">₹{quickInvested.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t('hero.wealthGain', 'Est. Wealth Gain')}: </span>
-                      <span className="font-bold text-emerald-400">+₹{(quickMaturity - quickInvested).toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                </div>
-
+            {/* Right Hero: 3D Interactive Hub & Live SIP Mini Widget */}
+            <div className="lg:col-span-5 flex flex-col gap-3">
+              {/* Segmented Switcher for 3D Orbit Hub & Live SIP Estimator */}
+              <div className="flex p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 w-full max-w-sm mx-auto lg:mx-0 shadow-lg">
                 <button
-                  onClick={() => onNavigate('/tools/sip-calculator')}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  type="button"
+                  onClick={() => setHeroTab('3d')}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    heroTab === '3d'
+                      ? 'bg-emerald-500 text-slate-950 shadow-md'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
                 >
-                  <span>{t('hero.openFullCalc', 'Open Full SIP Calculator & Charts')}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>3D Interactive Hub</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroTab('sip')}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    heroTab === 'sip'
+                      ? 'bg-emerald-500 text-slate-950 shadow-md'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Live SIP Calc</span>
                 </button>
               </div>
+
+              {heroTab === '3d' ? (
+                <div className="p-4 sm:p-5 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/15 shadow-2xl flex flex-col items-center">
+                  <Hero3DVisual onNavigate={onNavigate} />
+
+                  {/* Compact Live Compounding Indicator with one-click slider jump */}
+                  <div className="w-full mt-3 p-3 rounded-2xl bg-slate-950/60 border border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs text-slate-300 font-medium">
+                        SIP Compounding: <strong className="text-white font-mono">₹5k/mo ➔ ₹11.6L</strong>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setHeroTab('sip')}
+                      className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 cursor-pointer"
+                    >
+                      Adjust Sliders →
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 sm:p-7 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl space-y-5 text-left">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                        {t('hero.quickSipTitle', 'Live Compound SIP Estimator')}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      12% CAGR
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-xs text-slate-300 font-medium mb-1">
+                        <span>{t('hero.monthlyInvest', 'Monthly Investment')}</span>
+                        <span className="font-bold text-white font-mono">₹{quickSip.toLocaleString('en-IN')}/mo</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1000"
+                        max="50000"
+                        step="1000"
+                        value={quickSip}
+                        onChange={(e) => setQuickSip(Number(e.target.value))}
+                        className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-xs text-slate-300 font-medium mb-1">
+                        <span>{t('hero.timeHorizon', 'Time Horizon')}</span>
+                        <span className="font-bold text-white font-mono">{quickYears} Years</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="30"
+                        step="1"
+                        value={quickYears}
+                        onChange={(e) => setQuickYears(Number(e.target.value))}
+                        className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Wealth Result Box */}
+                  <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-2">
+                    <div className="text-xs text-slate-400">{t('hero.estValue', 'Estimated Maturity Value')}:</div>
+                    <div className="text-3xl font-black text-emerald-400 font-mono">
+                      ₹{quickMaturity.toLocaleString('en-IN')}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-white/10">
+                      <div>
+                        <span className="text-slate-400">{t('hero.invested', 'Total Invested')}: </span>
+                        <span className="font-bold text-slate-200">₹{quickInvested.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">{t('hero.wealthGain', 'Est. Wealth Gain')}: </span>
+                        <span className="font-bold text-emerald-400">+₹{(quickMaturity - quickInvested).toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => onNavigate('/tools/sip-calculator')}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>{t('hero.openFullCalc', 'Open Full SIP Calculator & Charts')}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -247,121 +308,127 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
           {/* Health & Wellness 3-Card Showcase */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Card 1: BMI Calculator */}
-            <div
-              onClick={() => onNavigate('/tools/bmi-calculator')}
-              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Scale className="w-6 h-6" />
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={6}>
+              <div
+                onClick={() => onNavigate('/tools/bmi-calculator')}
+                className="p-6 sm:p-7 h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <Scale className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+                      Adult &amp; Pediatric
+                    </span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
-                    Adult &amp; Pediatric
-                  </span>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    BMI Calculator
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                    Calculate Body Mass Index across metric and imperial units, view healthy reference weight ranges, explore under-18 pediatric growth guidelines, and save calculation records.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Metric &amp; Imperial
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Visual Gauge
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Pediatric Safety
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  BMI Calculator
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
-                  Calculate Body Mass Index across metric and imperial units, view healthy reference weight ranges, explore under-18 pediatric growth guidelines, and save calculation records.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Metric &amp; Imperial
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Visual Gauge
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Pediatric Safety
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                <span>Calculate BMI</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                  <span>Calculate BMI</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-            </div>
+            </Interactive3DCard>
 
             {/* Card 2: Diet Plan Manager */}
-            <div
-              onClick={() => onNavigate('/tools/diet-plan-manager')}
-              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Utensils className="w-6 h-6" />
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={6}>
+              <div
+                onClick={() => onNavigate('/tools/diet-plan-manager')}
+                className="p-6 sm:p-7 h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-emerald-400/60 dark:hover:border-emerald-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <Utensils className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+                      New Nutrition Tool
+                    </span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
-                    New Nutrition Tool
-                  </span>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    Diet Plan Manager
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                    Personalized meal structuring for Vegetarian, Vegan, Egg, Non-Veg, and Jain preferences with strict allergen exclusions, one-click meal swaps, and automated grocery lists.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Allergen Filtering
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Replace Meal
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Grocery Checklist
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  Diet Plan Manager
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
-                  Personalized meal structuring for Vegetarian, Vegan, Egg, Non-Veg, and Jain preferences with strict allergen exclusions, one-click meal swaps, and automated grocery lists.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Allergen Filtering
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Replace Meal
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Grocery Checklist
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
-                <span>Manage Diet Plan</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">
+                  <span>Manage Diet Plan</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-            </div>
+            </Interactive3DCard>
 
             {/* Card 3: Nutrition Science */}
-            <div
-              onClick={() => onNavigate('/tools/nutrition-science')}
-              className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-teal-400/60 dark:hover:border-teal-500/50 transition-all group cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <Apple className="w-6 h-6" />
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={6}>
+              <div
+                onClick={() => onNavigate('/tools/nutrition-science')}
+                className="p-6 sm:p-7 h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-lg hover:border-teal-400/60 dark:hover:border-teal-500/50 transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <Apple className="w-6 h-6" />
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 text-[11px] font-bold border border-teal-200/80 dark:border-teal-800/80">
+                      Interactive Database
+                    </span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 text-[11px] font-bold border border-teal-200/80 dark:border-teal-800/80">
-                    Interactive Database
-                  </span>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    Nutrition Science
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
+                    Interactive nutrient guide (Macronutrients, Vitamins, Minerals), comprehensive Indian whole food nutrient database, balanced meal plate builder, and packaged food label reader.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Nutrient Guide
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Indian Food DB
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
+                      Plate Builder &amp; Label Reader
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                  Nutrition Science
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 leading-relaxed">
-                  Interactive nutrient guide (Macronutrients, Vitamins, Minerals), comprehensive Indian whole food nutrient database, balanced meal plate builder, and packaged food label reader.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Nutrient Guide
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Indian Food DB
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-semibold">
-                    Plate Builder &amp; Label Reader
-                  </span>
-                </div>
-              </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300">
-                <span>Explore Nutrition Database</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs sm:text-sm font-bold text-teal-600 dark:text-teal-400 group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                  <span>Explore Nutrition Database</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-            </div>
+            </Interactive3DCard>
           </div>
         </div>
       </section>
@@ -369,41 +436,47 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
       {/* Privacy & Guarantee Section */}
       <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
-              <Zap className="w-5 h-5" />
+          <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
+            <div className="p-6 h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+                {t('privacy.feat1Title', '100% Client-Side Engine')}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t('privacy.feat1Desc', 'Calculations and file processing happen locally in real-time with zero latency.')}
+              </p>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
-              {t('privacy.feat1Title', '100% Client-Side Engine')}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('privacy.feat1Desc', 'Calculations and file processing happen locally in real-time with zero latency.')}
-            </p>
-          </div>
+          </Interactive3DCard>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
-              <ShieldCheck className="w-5 h-5" />
+          <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
+            <div className="p-6 h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+                {t('privacy.feat2Title', 'Zero Data Collection')}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t('privacy.feat2Desc', 'No tracking cookies, no accounts required, no telemetry, and no storage of personal inputs.')}
+              </p>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
-              {t('privacy.feat2Title', 'Zero Data Collection')}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('privacy.feat2Desc', 'No tracking cookies, no accounts required, no telemetry, and no storage of personal inputs.')}
-            </p>
-          </div>
+          </Interactive3DCard>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
-              <Lock className="w-5 h-5" />
+          <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
+            <div className="p-6 h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
+                {t('privacy.feat3Title', 'Instant & Offline-Ready')}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t('privacy.feat3Desc', 'Ultra-lightweight architecture with immediate response times on mobile and desktop.')}
+              </p>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
-              {t('privacy.feat3Title', 'Instant & Offline-Ready')}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('privacy.feat3Desc', 'Ultra-lightweight architecture with immediate response times on mobile and desktop.')}
-            </p>
-          </div>
+          </Interactive3DCard>
         </div>
       </section>
 
@@ -467,24 +540,31 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
             ].map((f, i) => {
               const Icon = f.icon;
               return (
-                <button
-                  key={i}
-                  onClick={() => onNavigate(f.path)}
-                  className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-all group cursor-pointer"
-                >
-                  <Icon className={`w-6 h-6 ${f.color} mb-2 group-hover:scale-110 transition-transform`} />
-                  <div className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-                    {f.title}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-1 leading-snug">
-                    {f.desc}
-                  </div>
-                </button>
+                <Interactive3DCard key={i} className="h-full" elevation={6} maxTilt={5}>
+                  <button
+                    onClick={() => onNavigate(f.path)}
+                    className="w-full h-full p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-all group cursor-pointer"
+                  >
+                    <Icon className={`w-6 h-6 ${f.color} mb-2 group-hover:scale-110 transition-transform`} />
+                    <div className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+                      {f.title}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 leading-snug">
+                      {f.desc}
+                    </div>
+                  </button>
+                </Interactive3DCard>
               );
             })}
           </div>
+
+          {/* Interactive 3D Financial Modeling Dashboard */}
+          <Finance3DDashboardVisual onNavigate={onNavigate} />
         </div>
       </section>
+
+      {/* Futuristic 3D AI Neural Nodes & Smart Utilities */}
+      <AiNodes3DVisual onNavigate={onNavigate} />
 
       {/* Google AdSense Responsive Display Ad Placement (Slot 5557042993) */}
       <AdSenseDisplayAd />
@@ -512,33 +592,34 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {CATEGORIES_META.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => onNavigate(cat.path)}
-                className="p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-500 text-left group transition-all flex flex-col justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center mb-4 transition-colors">
-                    <DynamicIcon name={cat.icon} className="w-6 h-6" />
+              <Interactive3DCard key={cat.id} className="h-full" elevation={6} maxTilt={4}>
+                <button
+                  onClick={() => onNavigate(cat.path)}
+                  className="w-full h-full p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-500 text-left group transition-all flex flex-col justify-between cursor-pointer"
+                >
+                  <div>
+                    <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center mb-4 transition-colors">
+                      <DynamicIcon name={cat.icon} className="w-6 h-6" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {cat.title}
+                      </h3>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                        {cat.toolsCount} {t('cat.toolsCount', 'tools')}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {cat.description}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {cat.title}
-                    </h3>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                      {cat.toolsCount} {t('cat.toolsCount', 'tools')}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {cat.description}
-                  </p>
-                </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700">
-                  <span>{t('cat.exploreCategory', 'Explore Category')}</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
+                  <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700 flex items-center justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700">
+                    <span>{t('cat.exploreCategory', 'Explore Category')}</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              </Interactive3DCard>
             ))}
           </div>
         </div>
@@ -567,118 +648,129 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
             </p>
           </div>
 
+          {/* 3D Premium Experience Showcase */}
+          <div className="mb-10 max-w-5xl mx-auto">
+            <Premium3DVisual onUpgrade={() => onNavigate('/premium')} />
+          </div>
+
           {/* 3-Tier Compact Preview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* 1. FREE */}
-            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-all">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                    FREE PLAN
-                  </span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
-                    Casual
-                  </span>
+            <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
+              <div className="p-6 h-full rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-all">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                      FREE PLAN
+                    </span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
+                      Casual
+                    </span>
+                  </div>
+                  <div className="text-3xl font-black text-white mb-1">₹0</div>
+                  <div className="text-xs text-slate-400 mb-4">Forever free without mandatory registration</div>
+                  <ul className="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-400">✓</span> 25+ Core Calculators &amp; Student Hub
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-400">✓</span> BMI &amp; Pediatric Growth Percentiles
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-emerald-400">✓</span> 5 daily operations on AI / heavy tools
+                    </li>
+                  </ul>
                 </div>
-                <div className="text-3xl font-black text-white mb-1">₹0</div>
-                <div className="text-xs text-slate-400 mb-4">Forever free without mandatory registration</div>
-                <ul className="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
-                  <li className="flex items-center gap-2">
-                    <span className="text-emerald-400">✓</span> 25+ Core Calculators &amp; Student Hub
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-emerald-400">✓</span> BMI &amp; Pediatric Growth Percentiles
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-emerald-400">✓</span> 5 daily operations on AI / heavy tools
-                  </li>
-                </ul>
+                <button
+                  onClick={() => onNavigate('/tools')}
+                  className="mt-6 w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Use Free Tools
+                </button>
               </div>
-              <button
-                onClick={() => onNavigate('/tools')}
-                className="mt-6 w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer"
-              >
-                Use Free Tools
-              </button>
-            </div>
+            </Interactive3DCard>
 
             {/* 2. PLUS */}
-            <div className="p-6 rounded-3xl bg-indigo-950/40 border-2 border-indigo-500/80 flex flex-col justify-between relative shadow-lg shadow-indigo-500/10">
-              <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider">
-                POPULAR
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                    NAVIKO PLUS
-                  </span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200">
-                    Everyday
-                  </span>
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={6}>
+              <div className="p-6 h-full rounded-3xl bg-indigo-950/40 border-2 border-indigo-500/80 flex flex-col justify-between relative shadow-lg shadow-indigo-500/10">
+                <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-wider">
+                  POPULAR
                 </div>
-                <div className="text-3xl font-black text-white mb-1">₹99 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
-                <div className="text-xs text-indigo-300 mb-4">Or ₹799/year (Save ~33%)</div>
-                <ul className="text-xs text-slate-200 space-y-2 border-t border-indigo-500/30 pt-4">
-                  <li className="flex items-center gap-2">
-                    <span className="text-indigo-400 font-bold">✓</span> 50 daily ops limit (10x Free)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-indigo-400 font-bold">✓</span> 7-Day Nutrition Planner &amp; Grocery List
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-indigo-400 font-bold">✓</span> Mock Test Trend Projections
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-indigo-400 font-bold">✓</span> Saved Items &amp; Persistent Workspace
-                  </li>
-                </ul>
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+                      NAVIKO PLUS
+                    </span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200">
+                      Everyday
+                    </span>
+                  </div>
+                  <div className="text-3xl font-black text-white mb-1">₹99 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
+                  <div className="text-xs text-indigo-300 mb-4">Or ₹799/year (Save ~33%)</div>
+                  <ul className="text-xs text-slate-200 space-y-2 border-t border-indigo-500/30 pt-4">
+                    <li className="flex items-center gap-2">
+                      <span className="text-indigo-400 font-bold">✓</span> 50 daily ops limit (10x Free)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-indigo-400 font-bold">✓</span> 7-Day Nutrition Planner &amp; Grocery List
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-indigo-400 font-bold">✓</span> Mock Test Trend Projections
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-indigo-400 font-bold">✓</span> Saved Items &amp; Persistent Workspace
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => onNavigate('/premium')}
+                  className="mt-6 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Upgrade to Plus
+                </button>
               </div>
-              <button
-                onClick={() => onNavigate('/premium')}
-                className="mt-6 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
-              >
-                Upgrade to Plus
-              </button>
-            </div>
+            </Interactive3DCard>
 
             {/* 3. PRO */}
-            <div className="p-6 rounded-3xl bg-slate-900/90 border-2 border-purple-500/80 flex flex-col justify-between relative shadow-xl shadow-purple-500/10">
-              <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider">
-                POWER USERS
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
-                    NAVIKO PRO
-                  </span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
-                    Maximum
-                  </span>
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={6}>
+              <div className="p-6 h-full rounded-3xl bg-slate-900/90 border-2 border-purple-500/80 flex flex-col justify-between relative shadow-xl shadow-purple-500/10">
+                <div className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider">
+                  POWER USERS
                 </div>
-                <div className="text-3xl font-black text-white mb-1">₹199 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
-                <div className="text-xs text-purple-300 mb-4">Or ₹1,499/year (Save ~37%)</div>
-                <ul className="text-xs text-slate-200 space-y-2 border-t border-purple-500/30 pt-4">
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span> 200 daily ops limit
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span> Batch Document Processing
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span> Full Predictive Study Analytics
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold">✓</span> 100% Ad-Free Distractionless
-                  </li>
-                </ul>
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300">
+                      NAVIKO PRO
+                    </span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-200">
+                      Maximum
+                    </span>
+                  </div>
+                  <div className="text-3xl font-black text-white mb-1">₹199 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
+                  <div className="text-xs text-purple-300 mb-4">Or ₹1,499/year (Save ~37%)</div>
+                  <ul className="text-xs text-slate-200 space-y-2 border-t border-purple-500/30 pt-4">
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">✓</span> 200 daily ops limit
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">✓</span> Batch Document Processing
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">✓</span> Full Predictive Study Analytics
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">✓</span> 100% Ad-Free Distractionless
+                    </li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => onNavigate('/premium')}
+                  className="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                >
+                  Upgrade to Pro
+                </button>
               </div>
-              <button
-                onClick={() => onNavigate('/premium')}
-                className="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all cursor-pointer"
-              >
-                Upgrade to Pro
-              </button>
-            </div>
+            </Interactive3DCard>
           </div>
         </div>
       </section>
@@ -706,32 +798,33 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {popularTools.map((tool) => (
-              <div
-                key={tool.id}
-                className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500 shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-4">
-                    <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+              <Interactive3DCard key={tool.id} className="h-full" elevation={6} maxTilt={4}>
+                <div
+                  className="p-6 h-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500 shadow-2xs hover:shadow-lg transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 flex items-center justify-center mb-4">
+                      <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      {tool.name}
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {tool.shortDescription}
+                    </p>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {tool.name}
-                  </h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {tool.shortDescription}
-                  </p>
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    onClick={() => onNavigate(tool.path)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span>{t('tools.useTool', 'Use Tool')}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={() => onNavigate(tool.path)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>{t('tools.useTool', 'Use Tool')}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </Interactive3DCard>
             ))}
           </div>
         </div>

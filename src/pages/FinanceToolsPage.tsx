@@ -7,6 +7,8 @@ import { TOOLS_DATA } from '../data/toolsData';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
+import { Finance3DDashboardVisual } from '../components/3d/Finance3DDashboardVisual';
+import { Interactive3DCard } from '../components/3d/Interactive3DCard';
 
 interface FinanceToolsPageProps {
   onNavigate: (path: string) => void;
@@ -24,7 +26,7 @@ export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }
   const financeTools = TOOLS_DATA.filter((t) => t.category === 'finance');
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-20">
       {/* Hero Header */}
       <section className="bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 text-white pt-14 pb-20 border-b border-indigo-900/40 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -66,6 +68,11 @@ export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }
               <div className="text-[11px] text-orange-400 mt-0.5">Lean, Standard &amp; Fat</div>
             </div>
           </div>
+
+          {/* Interactive 3D Financial Modeling Dashboard */}
+          <div className="mt-12 text-left">
+            <Finance3DDashboardVisual onNavigate={onNavigate} />
+          </div>
         </div>
       </section>
 
@@ -79,10 +86,10 @@ export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               All Financial Calculators
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Select any calculator below for instant mathematical breakdowns.
             </p>
           </div>
@@ -90,44 +97,45 @@ export const FinanceToolsPage: React.FC<FinanceToolsPageProps> = ({ onNavigate }
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {financeTools.map((tool) => (
-            <div
-              key={tool.id}
-              className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xl hover:border-indigo-300 hover:-translate-y-0.5 transition-all flex flex-col justify-between group"
-            >
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center mb-4 transition-colors">
-                  <DynamicIcon name={tool.iconName} className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                  {tool.name}
-                </h3>
-                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {tool.description}
-                </p>
+            <Interactive3DCard key={tool.id} className="h-full" elevation={6} maxTilt={5}>
+              <div
+                className="p-6 h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-500 transition-all flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 group-hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 group-hover:text-white flex items-center justify-center mb-4 transition-colors">
+                    <DynamicIcon name={tool.iconName} className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {tool.name}
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {tool.description}
+                  </p>
 
-                {/* Tags */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {tool.tags.slice(0, 3).map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+                  {/* Tags */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {tool.tags.slice(0, 3).map((tag, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-semibold"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => onNavigate(tool.path)}
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <span>Open Calculator</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100">
-                <button
-                  onClick={() => onNavigate(tool.path)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                >
-                  <span>Open Calculator</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+            </Interactive3DCard>
           ))}
         </div>
       </section>

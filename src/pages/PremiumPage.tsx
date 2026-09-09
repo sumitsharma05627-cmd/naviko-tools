@@ -34,6 +34,8 @@ import { CurrencySelector } from '../components/monetization/CurrencySelector';
 import { ComparisonTable } from '../components/monetization/ComparisonTable';
 import { PremiumBadge } from '../components/monetization/PremiumBadge';
 import { useSEO, CANONICAL_DOMAIN } from '../utils/seo';
+import { Premium3DVisual } from '../components/3d/Premium3DVisual';
+import { Interactive3DCard } from '../components/3d/Interactive3DCard';
 
 interface PremiumPageProps {
   onNavigate: (path: string) => void;
@@ -325,6 +327,11 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
           >
             Explore Free Tools
           </button>
+        </div>
+
+        {/* 3D Premium Floating Showcase Visual */}
+        <div className="mt-12 max-w-5xl mx-auto">
+          <Premium3DVisual onUpgrade={() => { const el = document.getElementById('pricing-cards'); el?.scrollIntoView({ behavior: 'smooth' }); }} />
         </div>
 
         {/* Razorpay Verified Security Assurance */}
@@ -677,76 +684,79 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
         {activeViewTab !== 'side_by_side' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto items-stretch">
             {/* 1. FREE PLAN CARD */}
-            <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between transition-colors relative">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold tracking-wider uppercase">
-                    FREE
-                  </span>
-                  <span className="text-xs font-semibold text-slate-400">Casual &amp; New Users</span>
+            <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
+              <div className="h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between transition-colors relative">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold tracking-wider uppercase">
+                      FREE
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">Casual &amp; New Users</span>
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+                        {formatCurrencyPrice(0, currency)}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                        forever
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      Essential tools, everyday health calculators, and basic utilities.
+                    </p>
+                  </div>
+
+                  {/* Free Features Checklist */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                    <div className="font-bold text-slate-900 dark:text-white mb-2">What&apos;s Included:</div>
+
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>Access to core NAVIKO tools (25+ tools)</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>Basic calculators (SIP, EMI, Budget, Salary, Age)</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>Basic student tools (CGPA, Attendance, Timetable)</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>BMI &amp; pediatric growth guidance</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>Basic Nutrition Science &amp; Food Explorer</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>5 daily operations on AI / heavy utilities</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span>100% Client-side privacy (zero data selling)</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-                      {formatCurrencyPrice(0, currency)}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                      forever
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Essential tools, everyday health calculators, and basic utilities.
-                  </p>
-                </div>
-
-                {/* Free Features Checklist */}
-                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-                  <div className="font-bold text-slate-900 dark:text-white mb-2">What&apos;s Included:</div>
-
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>Access to core NAVIKO tools (25+ tools)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>Basic calculators (SIP, EMI, Budget, Salary, Age)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>Basic student tools (CGPA, Attendance, Timetable)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>BMI &amp; pediatric growth guidance</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>Basic Nutrition Science &amp; Food Explorer</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>5 daily operations on AI / heavy utilities</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>100% Client-side privacy (zero data selling)</span>
-                  </div>
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => onNavigate('/tools')}
+                    className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center"
+                  >
+                    {plan === 'free' ? 'Current Plan — Continue Free' : 'Switch to Free'}
+                  </button>
                 </div>
               </div>
-
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  onClick={() => onNavigate('/tools')}
-                  className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer text-center"
-                >
-                  {plan === 'free' ? 'Current Plan — Continue Free' : 'Switch to Free'}
-                </button>
-              </div>
-            </div>
+            </Interactive3DCard>
 
             {/* 2. PLUS PLAN CARD */}
-            <div className="rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-500/80 p-6 sm:p-7 shadow-lg flex flex-col justify-between relative transition-colors">
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={5}>
+              <div className="h-full rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-500/80 p-6 sm:p-7 shadow-lg flex flex-col justify-between relative transition-colors">
               {/* Badge */}
               <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-black text-[10px] tracking-wider uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
@@ -894,9 +904,11 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
                 )}
               </div>
             </div>
+            </Interactive3DCard>
 
             {/* 3. PRO PLAN CARD */}
-            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-2 border-purple-500/80 p-6 sm:p-7 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+            <Interactive3DCard className="h-full" elevation={8} maxTilt={5}>
+              <div className="h-full rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-2 border-purple-500/80 p-6 sm:p-7 shadow-2xl flex flex-col justify-between relative overflow-hidden">
               {/* Best Value Badge */}
               <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-amber-500 text-slate-950 font-black text-[10px] tracking-wider uppercase px-4 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
                 <Crown className="w-3 h-3 text-slate-950" />
@@ -1030,6 +1042,7 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
                 )}
               </div>
             </div>
+            </Interactive3DCard>
           </div>
         )}
 

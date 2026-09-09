@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
+import { Interactive3DCard } from '../components/3d/Interactive3DCard';
 
 interface PdfToolsPageProps {
   onNavigate: (path: string) => void;
@@ -95,33 +96,34 @@ export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
           {pdfTools.map((tool) => {
             const Icon = tool.icon;
             return (
-              <div
-                key={tool.id}
-                onClick={() => onNavigate(tool.path)}
-                className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                      <Icon className="w-5 h-5" />
+              <Interactive3DCard key={tool.id} className="h-full" elevation={6} maxTilt={6}>
+                <div
+                  onClick={() => onNavigate(tool.path)}
+                  className="h-full group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
+                        {tool.tag}
+                      </span>
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
-                      {tool.tag}
-                    </span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      {tool.name}
+                    </h3>
+                    <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {tool.description}
+                    </p>
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                    {tool.name}
-                  </h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {tool.description}
-                  </p>
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-bold">
-                  <span>Open Tool</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-indigo-600 dark:text-indigo-400 font-bold">
+                    <span>Open Tool</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-              </div>
+              </Interactive3DCard>
             );
           })}
         </div>

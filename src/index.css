@@ -12,6 +12,231 @@
   }
 }
 
+/* 3D Perspective & Depth System */
+.perspective-800 {
+  perspective: 800px;
+}
+.perspective-1000 {
+  perspective: 1000px;
+}
+.perspective-1200 {
+  perspective: 1200px;
+}
+.perspective-1600 {
+  perspective: 1600px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.translate-z-0 {
+  transform: translateZ(0px);
+}
+.translate-z-8 {
+  transform: translateZ(8px);
+}
+.translate-z-16 {
+  transform: translateZ(16px);
+}
+.translate-z-24 {
+  transform: translateZ(24px);
+}
+.translate-z-32 {
+  transform: translateZ(32px);
+}
+
+/* Subtle Floating Animations */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-1deg);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes orbit-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 7s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 4s ease-in-out infinite;
+}
+
+.animate-orbit-ring {
+  animation: orbit-ring 32s linear infinite;
+}
+
+/* 3D Geometric Scene Animations */
+@keyframes spin-3d-slow {
+  0% {
+    transform: rotateY(0deg) rotateX(15deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateX(15deg);
+  }
+}
+
+@keyframes spin-3d-reverse {
+  0% {
+    transform: rotateY(360deg) rotateX(-15deg);
+  }
+  100% {
+    transform: rotateY(0deg) rotateX(-15deg);
+  }
+}
+
+@keyframes float-3d-ai {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotateX(8deg) rotateY(-10deg);
+  }
+  50% {
+    transform: translate3d(0, -14px, 25px) rotateX(16deg) rotateY(5deg);
+  }
+}
+
+@keyframes float-3d-finance {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotateX(12deg) rotateY(15deg);
+  }
+  50% {
+    transform: translate3d(0, -12px, -20px) rotateX(5deg) rotateY(-10deg);
+  }
+}
+
+@keyframes float-3d-tools {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotateX(-10deg) rotateY(12deg);
+  }
+  50% {
+    transform: translate3d(0, -16px, 15px) rotateX(-18deg) rotateY(-8deg);
+  }
+}
+
+@keyframes gyro-ring-a {
+  0% {
+    transform: rotateX(65deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(65deg) rotateY(360deg) rotateZ(360deg);
+  }
+}
+
+@keyframes gyro-ring-b {
+  0% {
+    transform: rotateY(65deg) rotateX(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateY(65deg) rotateX(360deg) rotateZ(-360deg);
+  }
+}
+
+.animate-spin-3d-slow {
+  animation: spin-3d-slow 24s linear infinite;
+}
+
+.animate-spin-3d-reverse {
+  animation: spin-3d-reverse 28s linear infinite;
+}
+
+.animate-float-3d-ai {
+  animation: float-3d-ai 7s ease-in-out infinite;
+}
+
+.animate-float-3d-finance {
+  animation: float-3d-finance 8s ease-in-out infinite;
+}
+
+.animate-float-3d-tools {
+  animation: float-3d-tools 7.5s ease-in-out infinite;
+}
+
+.animate-gyro-a {
+  animation: gyro-ring-a 16s linear infinite;
+}
+
+.animate-gyro-b {
+  animation: gyro-ring-b 20s linear infinite;
+}
+
+/* 3D Glass Layer with Light Sheen */
+.glass-panel-3d {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-panel-3d {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Accessibility: Strict Respect for prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float-gentle,
+  .animate-float-reverse,
+  .animate-pulse-soft,
+  .animate-orbit-ring,
+  .animate-spin-3d-slow,
+  .animate-spin-3d-reverse,
+  .animate-float-3d-ai,
+  .animate-float-3d-finance,
+  .animate-float-3d-tools,
+  .animate-gyro-a,
+  .animate-gyro-b {
+    animation: none !important;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden;
