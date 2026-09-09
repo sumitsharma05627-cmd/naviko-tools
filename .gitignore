@@ -8,3 +8,5 @@ coverage/
 !.env.example
 .data/
 .wrangler/
+bun.lock
+bun.lockb
