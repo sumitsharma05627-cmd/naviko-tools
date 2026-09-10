@@ -2,15 +2,7 @@
 /**
  * scripts/verify-deployment.js
  *
- * Cloudflare Pages + Pages Functions Deployment Verification Suite
- *
- * Validates:
- * 1. Single authoritative 'wrangler.toml' (no conflicting wrangler.json / wrangler.jsonc).
- * 2. Cloudflare Pages configuration ('pages_build_output_dir = "dist"', no conflicting Worker 'main'/'[assets]').
- * 3. NAVIKO_KV binding and nodejs_compat flags for Cloudflare Pages Functions.
- * 4. Pages Functions compilation via 'npx wrangler pages functions build'.
- * 5. Static SPA output ('dist/index.html', assets, _routes.json, _headers, _redirects).
- * 6. Wrangler Pages project validation via 'npx wrangler pages project validate dist'.
+ * Cloudflare Deployment Verification Suite (Supports both Workers with Assets and Pages)
  */
 
 import fs from 'node:fs';
@@ -113,7 +105,7 @@ function parseToml(content) {
 }
 
 console.log(`\n${c.cyan}${c.bold}================================================================${c.reset}`);
-console.log(`${c.cyan}${c.bold}      Cloudflare Pages & Functions Deployment Verification      ${c.reset}`);
+console.log(`${c.cyan}${c.bold}      Cloudflare Deployment & Architecture Verification         ${c.reset}`);
 console.log(`${c.cyan}${c.bold}================================================================${c.reset}\n`);
 
 // ============================================================================
@@ -136,7 +128,7 @@ if (foundConfigs.length === 0) {
   recordFail(
     'No Cloudflare configuration file found',
     'Neither wrangler.toml nor wrangler.json exists in root.',
-    'Create wrangler.toml configured with pages_build_output_dir = "dist".'
+    'Create wrangler.toml configured for Cloudflare deployment.'
   );
 } else if (foundConfigs.length > 1) {
   recordFail(
@@ -158,46 +150,36 @@ if (fs.existsSync(tomlFile)) {
   }
 }
 
-// Check Pages name
+// Check project name
 if (parsedConfig.name === 'naviko-tools' || parsedConfig.name === 'naviko') {
-  recordPass(`Pages project name configured as '${parsedConfig.name}'`);
+  recordPass(`Cloudflare project name configured as '${parsedConfig.name}'`);
 } else {
-  recordWarn(`Pages project name '${parsedConfig.name}'`, "Recommended to match Cloudflare Pages project 'naviko-tools'.");
+  recordWarn(`Project name '${parsedConfig.name}'`, "Recommended to match Cloudflare project 'naviko-tools'.");
 }
 
-// Check pages_build_output_dir
-const pagesOutputDir = parsedConfig.pages_build_output_dir;
-if (!pagesOutputDir) {
-  recordFail(
-    "'pages_build_output_dir' is missing",
-    "Directives 'pages_build_output_dir = \"dist\"' is required for Cloudflare Pages. Without it, Wrangler treats the file as a Worker configuration.",
-    'Add pages_build_output_dir = "dist" to wrangler.toml.'
-  );
-} else if (pagesOutputDir === 'dist' || pagesOutputDir === './dist') {
-  recordPass(`'pages_build_output_dir' correctly set to '${pagesOutputDir}'`);
-} else {
-  recordFail("'pages_build_output_dir' misconfigured", `Found '${pagesOutputDir}', expected 'dist'.`, 'Set pages_build_output_dir = "dist".');
-}
+// Determine architecture: Worker with Assets vs Pages
+const isWorkerWithAssets = Boolean(parsedConfig.main && parsedConfig.assets);
+const isPages = Boolean(parsedConfig.pages_build_output_dir);
 
-// Ensure no conflicting Worker entrypoints
-if (parsedConfig.main) {
-  recordFail(
-    "Conflicting Worker 'main' found in Pages configuration",
-    `'main = "${parsedConfig.main}"' instructs Wrangler to treat this as a standalone Worker. In Cloudflare Pages, backend functions are managed via functions/ directory.`,
-    'Remove main directive from wrangler.toml.'
-  );
+if (isWorkerWithAssets) {
+  recordPass("Architecture: Cloudflare Worker with Static Assets (Workers Builds compatible)");
+  recordPass(`Worker entrypoint: '${parsedConfig.main}'`);
+  recordPass(`Static assets directory: '${parsedConfig.assets?.directory || parsedConfig.assets}'`);
+  if (parsedConfig.assets?.not_found_handling === 'single-page-application') {
+    recordPass("SPA fallback configured via 'not_found_handling = single-page-application'");
+  }
+  if (parsedConfig.assets?.run_worker_first) {
+    recordPass(`run_worker_first configured: ${JSON.stringify(parsedConfig.assets.run_worker_first)}`);
+  }
+} else if (isPages) {
+  recordPass("Architecture: Cloudflare Pages with Pages Functions");
+  recordPass(`Pages build output directory: '${parsedConfig.pages_build_output_dir}'`);
 } else {
-  recordPass("No conflicting Worker 'main' entrypoint (Pages architecture preserved)");
-}
-
-if (parsedConfig.assets) {
   recordFail(
-    "Conflicting Workers Assets '[assets]' table found",
-    "'[assets]' belongs to Cloudflare Workers with Assets, which conflicts with Pages 'pages_build_output_dir'.",
-    'Remove [assets] block from wrangler.toml.'
+    "Ambiguous or missing deployment target in wrangler.toml",
+    "Must specify either 'main' + '[assets]' (Workers Builds) or 'pages_build_output_dir' (Pages).",
+    "Configure main and [assets] for Workers or pages_build_output_dir for Pages."
   );
-} else {
-  recordPass("No conflicting Workers Assets '[assets]' directive");
 }
 
 // Check nodejs_compat flag
@@ -218,17 +200,24 @@ if (navikoKv) {
 }
 
 // ============================================================================
-// CHECK 2: Pages Functions Verification & Test Build
+// CHECK 2: Backend API Handler & Universal Entrypoint
 // ============================================================================
-console.log(`\n${c.bold}[2/6] Cloudflare Pages Functions Verification${c.reset}`);
+console.log(`\n${c.bold}[2/6] Backend API Handler & Universal Entrypoint${c.reset}`);
 
 const functionsEntry = path.join(ROOT_DIR, 'functions', 'api', '[[path]].ts');
 if (fs.existsSync(functionsEntry)) {
   const content = fs.readFileSync(functionsEntry, 'utf8');
-  if (content.includes('export async function onRequest') || content.includes('export const onRequest')) {
-    recordPass("Pages Function catch-all 'functions/api/[[path]].ts' found with valid onRequest export");
+  const hasOnRequest = content.includes('export async function onRequest') || content.includes('export const onRequest');
+  const hasDefaultExport = content.includes('export default');
+
+  if (hasOnRequest && hasDefaultExport) {
+    recordPass("Universal backend entrypoint 'functions/api/[[path]].ts' exports both onRequest and default { fetch }");
+  } else if (hasOnRequest) {
+    recordPass("Pages Function entrypoint 'functions/api/[[path]].ts' exports onRequest");
+  } else if (hasDefaultExport) {
+    recordPass("Worker entrypoint 'functions/api/[[path]].ts' exports default { fetch }");
   } else {
-    recordFail("Pages Function entrypoint missing onRequest export", "functions/api/[[path]].ts must export onRequest handler.");
+    recordFail("functions/api/[[path]].ts missing valid export", "Must export onRequest or default { fetch }.");
   }
 
   // Check that all critical API handlers are present
@@ -241,26 +230,10 @@ if (fs.existsSync(functionsEntry)) {
     }
   }
   if (allFound) {
-    recordPass("All essential API routes present in catch-all handler (auth, subscription, razorpay, user, health)");
+    recordPass("All essential API routes present in catch-all handler (auth, subscription, razorpay, user profile, health)");
   }
 } else {
-  recordFail("Missing 'functions/api/[[path]].ts'", "Pages Functions catch-all handler not found.");
-}
-
-// Test build Pages Functions
-try {
-  const tmpOut = path.join(ROOT_DIR, 'dist', '.verify-functions-build');
-  execSync(`npx wrangler pages functions build --build-output-directory dist --outdir "${tmpOut}" --compatibility-flags nodejs_compat`, {
-    cwd: ROOT_DIR,
-    stdio: 'pipe',
-  });
-  if (fs.existsSync(path.join(tmpOut, 'index.js'))) {
-    recordPass("Pages Functions bundled successfully with 'npx wrangler pages functions build'");
-  }
-  fs.rmSync(tmpOut, { recursive: true, force: true });
-} catch (err) {
-  const msg = (err.stderr ? err.stderr.toString() : '') || err.message;
-  recordFail("Pages Functions compilation failed", msg, "Ensure functions/api/[[path]].ts has valid TypeScript and imports.");
+  recordFail("Missing 'functions/api/[[path]].ts'", "Backend catch-all handler not found.");
 }
 
 // ============================================================================
@@ -291,24 +264,20 @@ if (!fs.existsSync(distPath)) {
 }
 
 // ============================================================================
-// CHECK 4: Pages Routing Rules (_routes.json, _headers, _redirects)
+// CHECK 4: Routing & SPA Fallbacks
 // ============================================================================
-console.log(`\n${c.bold}[4/6] Pages Routing & Fallback Rules${c.reset}`);
+console.log(`\n${c.bold}[4/6] Routing & SPA Fallback Rules${c.reset}`);
 
 const routesFile = path.join(ROOT_DIR, 'public', '_routes.json');
 if (fs.existsSync(routesFile)) {
   try {
     const routes = JSON.parse(fs.readFileSync(routesFile, 'utf8'));
     if (routes.include?.includes('/api/*') || routes.include?.includes('/api')) {
-      recordPass("'_routes.json' correctly routes '/api/*' to Cloudflare Pages Functions");
-    } else {
-      recordWarn("'_routes.json' does not include '/api/*'");
+      recordPass("'_routes.json' correctly routes '/api/*' to edge backend");
     }
   } catch (err) {
     recordFail("Failed to parse '_routes.json'", err.message);
   }
-} else {
-  recordWarn("'_routes.json' not found in public/", "Functions will route all traffic through worker unless configured.");
 }
 
 const redirectsFile = path.join(ROOT_DIR, 'public', '_redirects');
@@ -316,8 +285,6 @@ if (fs.existsSync(redirectsFile)) {
   const content = fs.readFileSync(redirectsFile, 'utf8');
   if (content.includes('/*') && content.includes('/index.html') && content.includes('200')) {
     recordPass("'_redirects' configures client-side SPA fallback (/* /index.html 200)");
-  } else {
-    recordWarn("'_redirects' SPA rule missing or formatted differently");
   }
 }
 
@@ -350,18 +317,22 @@ if (fs.existsSync(nvmrcPath)) {
 }
 
 // ============================================================================
-// CHECK 6: Wrangler Pages Project Validation
+// CHECK 6: Wrangler Deploy Dry-Run Validation
 // ============================================================================
-console.log(`\n${c.bold}[6/6] Wrangler Pages Project Validation${c.reset}`);
+console.log(`\n${c.bold}[6/6] Wrangler Deploy Validation (--dry-run)${c.reset}`);
 
 try {
-  const cmd = 'npx wrangler pages project validate dist';
+  const cmd = 'npx wrangler deploy --dry-run';
   console.log(`  ${c.gray}Executing: ${cmd}${c.reset}`);
-  execSync(cmd, { cwd: ROOT_DIR, stdio: 'pipe' });
-  recordPass("'npx wrangler pages project validate dist' passed with 0 errors");
+  const out = execSync(cmd, { cwd: ROOT_DIR, stdio: 'pipe' }).toString();
+  if (out.includes('--dry-run: exiting now') || out.includes('Total Upload:')) {
+    recordPass("'npx wrangler deploy --dry-run' passed with 0 errors");
+  } else {
+    recordPass("'npx wrangler deploy --dry-run' completed successfully");
+  }
 } catch (err) {
-  const msg = (err.stderr ? err.stderr.toString() : '') || err.message;
-  recordFail("Wrangler pages project validate failed", msg);
+  const msg = (err.stderr ? err.stderr.toString() : '') || (err.stdout ? err.stdout.toString() : '') || err.message;
+  recordFail("Wrangler deploy --dry-run failed", msg);
 }
 
 // ============================================================================
@@ -385,12 +356,12 @@ if (issues.length > 0) {
   });
   process.exit(1);
 } else {
-  console.log(`${c.green}${c.bold}STATUS: READY FOR CLOUDFLARE PAGES DEPLOYMENT${c.reset}`);
-  console.log(`  • Architecture: Cloudflare Pages with Pages Functions`);
-  console.log(`  • Project name: ${parsedConfig.name}`);
-  console.log(`  • Build output directory: ${parsedConfig.pages_build_output_dir}`);
-  console.log(`  • Functions directory: functions/api/[[path]].ts`);
-  console.log(`  • Required Deploy Command: npx wrangler pages deploy dist`);
+  console.log(`${c.green}${c.bold}STATUS: READY FOR CLOUDFLARE DEPLOYMENT${c.reset}`);
+  console.log(`  • Service: ${parsedConfig.name}`);
+  console.log(`  • Architecture: ${isWorkerWithAssets ? 'Cloudflare Workers with Static Assets' : 'Cloudflare Pages'}`);
+  console.log(`  • Deploy Command: npx wrangler deploy`);
+  console.log(`  • Main Entrypoint: functions/api/[[path]].ts`);
+  console.log(`  • Static Assets: ./dist`);
   console.log(`  • Bindings: NAVIKO_KV`);
   console.log(`  • Validation: PASS\n`);
   process.exit(0);
