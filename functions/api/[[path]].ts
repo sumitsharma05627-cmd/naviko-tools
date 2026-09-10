@@ -1430,9 +1430,14 @@ export default {
       // If an application route (e.g. /tools, /dashboard, /pricing) wasn't found as a static file,
       // serve index.html as the SPA fallback
       if (response.status === 404) {
-        const indexRequest = new Request(new URL('/index.html', request.url), request);
-        const indexResponse = await env.ASSETS.fetch(indexRequest);
+        let indexResponse = await env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+        // If the asset fetch returns a redirect (e.g. 301, 302, 307, 308), follow the target location
+        if (indexResponse.status >= 300 && indexResponse.status < 400) {
+          const loc = indexResponse.headers.get('location') || '/';
+          indexResponse = await env.ASSETS.fetch(new Request(new URL(loc, request.url), request));
+        }
         const newHeaders = new Headers(indexResponse.headers);
+        newHeaders.delete('location');
         newHeaders.set('Content-Type', 'text/html; charset=utf-8');
         newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
         return new Response(indexResponse.body, {
