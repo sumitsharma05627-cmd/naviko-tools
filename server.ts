@@ -1792,7 +1792,11 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
+    app.get('*', (req, res) => {
+      // Never fall back to index.html for static assets or files with extensions
+      if (req.path.startsWith('/assets/') || req.path.includes('.')) {
+        return res.status(404).type('text/plain').send('Asset not found');
+      }
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
