@@ -5,6 +5,12 @@
     "/api/*"
   ],
   "exclude": [
-    "/assets/*"
+    "/assets/*",
+    "/site.webmanifest",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/ads.txt",
+    "/favicon.ico",
+    "/favicon.svg"
   ]
 }

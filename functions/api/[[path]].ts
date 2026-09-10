@@ -1379,7 +1379,53 @@ export default {
     }
     // Static assets fallback if invoked directly via Worker
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const pathname = url.pathname;
+      const isAssetPath =
+        pathname.startsWith('/assets/') ||
+        /\.(?:js|css|map|webmanifest|svg|png|jpe?g|ico|json|txt|xml|woff2?|ttf|eot)$/i.test(pathname);
+
+      const response = await env.ASSETS.fetch(request);
+
+      // Guard static assets against SPA fallback hijacking
+      if (isAssetPath) {
+        const contentType = response.headers.get('content-type') || '';
+
+        // If an asset path returned HTML, it means the asset was missing and incorrectly fell back to index.html
+        if (response.status === 200 && contentType.includes('text/html')) {
+          return new Response('Asset not found', {
+            status: 404,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+            },
+          });
+        }
+
+        // Ensure correct MIME types for static assets
+        if (response.status === 200) {
+          let expectedMime = '';
+          if (pathname.endsWith('.js')) expectedMime = 'application/javascript; charset=utf-8';
+          else if (pathname.endsWith('.css')) expectedMime = 'text/css; charset=utf-8';
+          else if (pathname.endsWith('.json') || pathname.endsWith('.map')) expectedMime = 'application/json; charset=utf-8';
+          else if (pathname.endsWith('.webmanifest') || pathname === '/site.webmanifest') expectedMime = 'application/manifest+json; charset=utf-8';
+          else if (pathname.endsWith('.svg')) expectedMime = 'image/svg+xml';
+          else if (pathname.endsWith('.png')) expectedMime = 'image/png';
+          else if (/\.jpe?g$/i.test(pathname)) expectedMime = 'image/jpeg';
+          else if (pathname.endsWith('.ico')) expectedMime = 'image/x-icon';
+
+          if (expectedMime && (!contentType || contentType === 'text/plain' || contentType.includes('octet-stream'))) {
+            const newHeaders = new Headers(response.headers);
+            newHeaders.set('Content-Type', expectedMime);
+            return new Response(response.body, {
+              status: response.status,
+              statusText: response.statusText,
+              headers: newHeaders,
+            });
+          }
+        }
+      }
+
+      return response;
     }
     return new Response('Not found', { status: 404 });
   },

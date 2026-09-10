@@ -1,4 +1,5 @@
-# Cloudflare Pages SPA Routing Rules
-# Client-side SPA routes fallback to index.html with HTTP 200 (API routes /api/* are handled directly by Functions via _routes.json)
-/*      /  200
+# NAVIKO — Cloudflare Redirects Configuration
+# Static assets (/assets/*, /favicon.*, /site.webmanifest, etc.) are served directly by Cloudflare Pages / Workers.
+# Single Page Application (SPA) routing for frontend pages is handled natively by Cloudflare Pages / Workers assets binding.
+# Catch-all rewrites (e.g. /* -> index.html 200) MUST NOT be declared here to prevent rewriting static assets to text/html.
 

@@ -283,8 +283,15 @@ if (fs.existsSync(routesFile)) {
 const redirectsFile = path.join(ROOT_DIR, 'public', '_redirects');
 if (fs.existsSync(redirectsFile)) {
   const content = fs.readFileSync(redirectsFile, 'utf8');
-  if (content.includes('/*') && content.includes('200')) {
-    recordPass("'_redirects' configures client-side SPA fallback without infinite loop (/* / 200)");
+  const hasCatchAllRewrite = /^\s*\/\*\s+.*\s+200\b/m.test(content);
+  if (!hasCatchAllRewrite) {
+    recordPass("'_redirects' does NOT contain catch-all rewrite (static assets /assets/* served directly without text/html hijacking)");
+  } else {
+    recordFail(
+      "Catch-all rewrite detected in '_redirects'",
+      "A rule like '/* / 200' intercepts static assets and returns text/html index.html instead of JS/CSS.",
+      "Remove the catch-all rewrite from '_redirects'."
+    );
   }
 }
 
