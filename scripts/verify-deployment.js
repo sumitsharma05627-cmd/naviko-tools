@@ -283,8 +283,8 @@ if (fs.existsSync(routesFile)) {
 const redirectsFile = path.join(ROOT_DIR, 'public', '_redirects');
 if (fs.existsSync(redirectsFile)) {
   const content = fs.readFileSync(redirectsFile, 'utf8');
-  if (content.includes('/*') && content.includes('/index.html') && content.includes('200')) {
-    recordPass("'_redirects' configures client-side SPA fallback (/* /index.html 200)");
+  if (content.includes('/*') && content.includes('200')) {
+    recordPass("'_redirects' configures client-side SPA fallback without infinite loop (/* / 200)");
   }
 }
 
