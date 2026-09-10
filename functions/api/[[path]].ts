@@ -1377,7 +1377,7 @@ export default {
         next: () => (env.ASSETS ? env.ASSETS.fetch(request) : Promise.resolve(new Response(null))),
       });
     }
-    // Static assets fallback if invoked directly via Worker
+    // Static assets fallback and SPA routing if invoked directly via Worker
     if (env.ASSETS) {
       const pathname = url.pathname;
       const isAssetPath =
@@ -1386,12 +1386,12 @@ export default {
 
       const response = await env.ASSETS.fetch(request);
 
-      // Guard static assets against SPA fallback hijacking
+      // Guard static assets against SPA fallback hijacking:
+      // If an asset path returned 404 OR returned text/html, it MUST return 404 with no-cache!
       if (isAssetPath) {
         const contentType = response.headers.get('content-type') || '';
 
-        // If an asset path returned HTML, it means the asset was missing and incorrectly fell back to index.html
-        if (response.status === 200 && contentType.includes('text/html')) {
+        if (response.status === 404 || (response.status === 200 && contentType.includes('text/html'))) {
           return new Response('Asset not found', {
             status: 404,
             headers: {
@@ -1423,6 +1423,22 @@ export default {
             });
           }
         }
+
+        return response;
+      }
+
+      // If an application route (e.g. /tools, /dashboard, /pricing) wasn't found as a static file,
+      // serve index.html as the SPA fallback
+      if (response.status === 404) {
+        const indexRequest = new Request(new URL('/index.html', request.url), request);
+        const indexResponse = await env.ASSETS.fetch(indexRequest);
+        const newHeaders = new Headers(indexResponse.headers);
+        newHeaders.set('Content-Type', 'text/html; charset=utf-8');
+        newHeaders.set('Cache-Control', 'public, max-age=0, must-revalidate');
+        return new Response(indexResponse.body, {
+          status: 200,
+          headers: newHeaders,
+        });
       }
 
       return response;

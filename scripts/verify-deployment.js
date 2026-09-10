@@ -165,8 +165,8 @@ if (isWorkerWithAssets) {
   recordPass("Architecture: Cloudflare Worker with Static Assets (Workers Builds compatible)");
   recordPass(`Worker entrypoint: '${parsedConfig.main}'`);
   recordPass(`Static assets directory: '${parsedConfig.assets?.directory || parsedConfig.assets}'`);
-  if (parsedConfig.assets?.not_found_handling === 'single-page-application') {
-    recordPass("SPA fallback configured via 'not_found_handling = single-page-application'");
+  if (parsedConfig.assets?.not_found_handling) {
+    recordPass(`Static asset not_found_handling configured as '${parsedConfig.assets.not_found_handling}'`);
   }
   if (parsedConfig.assets?.run_worker_first) {
     recordPass(`run_worker_first configured: ${JSON.stringify(parsedConfig.assets.run_worker_first)}`);
