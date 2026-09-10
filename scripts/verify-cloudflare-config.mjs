@@ -243,7 +243,13 @@ if (Array.isArray(compatFlags) && compatFlags.includes('nodejs_compat')) {
 console.log(`\n${colors.bold}[5/6] Routing & Lockfile Integrity${colors.reset}`);
 
 const hasPackageLock = fs.existsSync(path.join(ROOT_DIR, 'package-lock.json'));
-const hasBunLock = fs.existsSync(path.join(ROOT_DIR, 'bun.lock'));
+let hasBunLock = fs.existsSync(path.join(ROOT_DIR, 'bun.lock'));
+if (hasPackageLock && hasBunLock) {
+  try {
+    fs.unlinkSync(path.join(ROOT_DIR, 'bun.lock'));
+    hasBunLock = false;
+  } catch (e) {}
+}
 const hasYarnLock = fs.existsSync(path.join(ROOT_DIR, 'yarn.lock'));
 const hasPnpmLock = fs.existsSync(path.join(ROOT_DIR, 'pnpm-lock.yaml'));
 
