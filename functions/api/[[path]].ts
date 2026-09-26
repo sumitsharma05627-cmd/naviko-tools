@@ -2,6 +2,15 @@
 // Native 100% Cloudflare edge backend for NAVIKO (Option A).
 // Handles all /api/* routes directly on Cloudflare Edge with zero external servers required.
 
+import {
+  PRICING_CONFIG,
+  resolveOfficialPricing,
+  getOfficialPlansCatalog,
+  getSubunitAmount,
+  PlanId,
+  CurrencyCode,
+} from '../../src/config/pricing';
+
 export interface Env {
   RAZORPAY_KEY_ID?: string;
   RAZORPAY_KEY_SECRET?: string;
@@ -387,6 +396,19 @@ export async function onRequest(context: {
     });
   }
 
+  // --- GET /api/subscription/plans ---
+  if (isPath('/api/subscription/plans') && method === 'GET') {
+    const rawCurrency = url.searchParams.get('currency') || 'INR';
+    const currency = (rawCurrency.toUpperCase() in PRICING_CONFIG ? rawCurrency.toUpperCase() : 'INR') as CurrencyCode;
+    const plans = getOfficialPlansCatalog(currency);
+    return jsonResponse({
+      success: true,
+      currency,
+      plans,
+      pricingConfig: PRICING_CONFIG[currency],
+    });
+  }
+
   // --- GET /api/subscription/status (also accepts POST) ---
   if (isPath('/api/subscription/status') && (method === 'GET' || method === 'POST')) {
     const authUser = await getEdgeUser(request, env);
@@ -648,7 +670,7 @@ export async function onRequest(context: {
       }
 
       const body = await request.json().catch(() => ({}));
-      const { tier, interval, customerName } = body;
+      const { planId, tier, interval, currency, customerName } = body;
       const userId = authUser.id;
       const customerEmail = authUser.email;
 
@@ -659,23 +681,29 @@ export async function onRequest(context: {
         }, 503);
       }
 
-      // Pricing amounts in paise: Plus Monthly: ₹199, Pro Monthly: ₹499, Plus Yearly: ₹1990, Pro Yearly: ₹4990
-      let amountPaise = 49900;
-      if (tier === 'plus') {
-        amountPaise = interval === 'yearly' ? 199000 : 19900;
-      } else {
-        amountPaise = interval === 'yearly' ? 499000 : 49900;
-      }
+      // Authoritative pricing from centralized SINGLE SOURCE OF TRUTH
+      // Backend controls the final price. Client-submitted prices are NEVER trusted.
+      const officialPlan = resolveOfficialPricing({
+        planId,
+        tier,
+        interval,
+        currency,
+      });
+
+      const amountPaise = officialPlan.subunitAmount;
+      const orderCurrency = officialPlan.currency;
 
       const credentials = btoa(`${keyId}:${keySecret}`);
       const orderPayload = {
         amount: amountPaise,
-        currency: 'INR',
+        currency: orderCurrency,
         receipt: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         notes: {
           userId,
-          tier: tier || 'pro',
-          interval: interval || 'yearly',
+          planId: officialPlan.planId,
+          tier: officialPlan.tier,
+          interval: officialPlan.interval,
+          officialAmount: String(officialPlan.amount),
           customerEmail: customerEmail || 'guest@naviko.in',
           customerName: customerName || 'NAVIKO Member',
         },
@@ -696,11 +724,36 @@ export async function onRequest(context: {
       }
 
       const orderData: any = await razorpayRes.json();
+
+      // Save pending state on server with authoritative pendingTier & pendingInterval
+      const existing = await getEdgeUserSubscription(userId, env);
+      edgeSubscriptions[userId] = {
+        userId,
+        status: 'PAYMENT_PENDING',
+        plan: existing?.plan || 'free',
+        pendingPlanId: officialPlan.planId,
+        pendingTier: officialPlan.tier,
+        pendingInterval: officialPlan.interval,
+        billingInterval: officialPlan.interval,
+        currency: officialPlan.currency,
+        amount: officialPlan.amount,
+        razorpayOrderId: orderData.id,
+        customerEmail: customerEmail || existing?.customerEmail,
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await persistEdgeData('subscriptions', env);
+
       return jsonResponse({
         success: true,
         orderId: orderData.id,
-        amount: amountPaise,
-        currency: 'INR',
+        amount: orderData.amount ?? amountPaise,
+        currency: orderData.currency ?? orderCurrency,
+        planId: officialPlan.planId,
+        tier: officialPlan.tier,
+        interval: officialPlan.interval,
+        officialPrice: officialPlan.amount,
+        formattedPrice: officialPlan.formattedPrice,
         keyId,
       });
     } catch (err: any) {
@@ -724,8 +777,8 @@ export async function onRequest(context: {
         razorpay_order_id,
         razorpay_payment_id,
         razorpay_signature,
-        tier = 'pro',
-        interval = 'yearly',
+        tier = 'plus',
+        interval = 'monthly',
       } = body;
       const userId = authUser.id;
 
@@ -737,6 +790,15 @@ export async function onRequest(context: {
         return jsonResponse({ success: false, error: 'Server secret missing.' }, 503);
       }
 
+      // Security check: Verify order belongs to active pending record for this user
+      const existing = await getEdgeUserSubscription(userId, env);
+      if (existing && existing.razorpayOrderId && existing.razorpayOrderId !== razorpay_order_id) {
+        return jsonResponse({
+          success: false,
+          error: 'Order mismatch: Payment does not match the active pending order for this account.',
+        }, 400);
+      }
+
       const signData = `${razorpay_order_id}|${razorpay_payment_id}`;
       const isValid = await verifyHmacSha256(keySecret, signData, razorpay_signature);
 
@@ -744,9 +806,15 @@ export async function onRequest(context: {
         return jsonResponse({ success: false, error: 'Invalid payment signature.' }, 400);
       }
 
+      // Enforce verified tier and interval from server-side pending record to prevent client payload manipulation
+      const verifiedTier = existing?.pendingTier || tier || 'plus';
+      const verifiedInterval = existing?.pendingInterval || interval || 'monthly';
+      const verifiedCurrency = existing?.currency || 'INR';
+      const verifiedAmount = existing?.amount;
+
       const now = new Date();
       const renewalDate = new Date(
-        interval === 'monthly'
+        verifiedInterval === 'monthly'
           ? now.getTime() + 30 * 24 * 60 * 60 * 1000
           : now.getTime() + 365 * 24 * 60 * 60 * 1000
       ).toISOString();
@@ -754,8 +822,10 @@ export async function onRequest(context: {
       edgeSubscriptions[userId] = {
         userId,
         status: 'ACTIVE',
-        plan: tier,
-        billingInterval: interval,
+        plan: verifiedTier,
+        billingInterval: verifiedInterval,
+        currency: verifiedCurrency,
+        amount: verifiedAmount,
         startDate: now.toISOString(),
         renewalDate,
         razorpayOrderId: razorpay_order_id,
@@ -767,9 +837,10 @@ export async function onRequest(context: {
 
       return jsonResponse({
         success: true,
-        message: 'Subscription activated successfully.',
+        message: `NAVIKO ${verifiedTier.toUpperCase()} activated successfully.`,
         status: 'ACTIVE',
-        plan: tier,
+        plan: verifiedTier,
+        billingInterval: verifiedInterval,
         renewalDate,
       });
     } catch (err: any) {

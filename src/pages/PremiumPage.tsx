@@ -253,44 +253,54 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
     }
   };
 
+  const [faqCategory, setFaqCategory] = useState<'all' | 'plans' | 'billing' | 'features'>('all');
+
   const faqs = [
     {
+      category: 'plans',
+      q: 'Which plan is right for me: Free, Plus, or Pro?',
+      a: 'The Free Plan is permanently free for all 46+ essential tools including standard calculators, age, percentage, unit converters, and basic student utilities with zero account requirement. Choose Plus (50 ops/day) if you need automated meal planning, study timetable generation, and mock test score projections. Choose Pro (200 ops/day) if you need high-volume batch processing, deep predictive analytics, priority queue processing, and a 100% ad-free experience across all tools.',
+    },
+    {
+      category: 'plans',
       q: 'How does the ₹1 7-Day Premium Trial work?',
-      a: 'Pay exactly ₹1 (100 paise) via Razorpay to activate full NAVIKO Premium access for 7 days. Your trial does NOT automatically renew, and your card or UPI will NEVER be automatically charged. When the 7-day period expires, your account automatically returns to the Free plan unless you separately choose to purchase a Plus or Pro subscription.',
+      a: 'You pay exactly ₹1 (100 paise) via Razorpay to unlock full NAVIKO Premium capabilities for 7 days. The trial does NOT auto-renew, and your card or UPI will NEVER be automatically billed after expiration. Once the 7-day period finishes, your account smoothly reverts to the Free plan unless you consciously choose to purchase an ongoing Plus or Pro membership.',
     },
     {
-      q: 'Will NAVIKO core tools always remain free?',
-      a: 'Yes! Core calculators, BMI calculator, basic student utilities, and basic nutrition science are 100% free forever without mandatory registration.',
+      category: 'billing',
+      q: 'What billing cycles are available, and can I pay monthly?',
+      a: `We offer both Monthly (30-day cycle) and Yearly (365-day cycle) options for both Plus and Pro tiers. You can subscribe to standalone monthly plans anytime (${plusMonthlyFormatted}/month for Plus or ${proMonthlyFormatted}/month for Pro) without long-term commitments. Yearly billing bundles full 12-month access at a steep discount, saving you ${plusSavingsPct}% on Plus and ${proSavingsPct}% on Pro compared to 12 separate monthly payments.`,
     },
     {
-      q: 'What is the main difference between Plus and Pro?',
-      a: 'NAVIKO Plus (50 ops/day) is ideal for students and health enthusiasts needing meal planning, study analytics, and saved histories. NAVIKO Pro (200 ops/day) is designed for power users who require batch document processing, advanced predictive score modeling, custom export reports, and a 100% ad-free experience.',
+      category: 'billing',
+      q: 'How does payment processing work and what methods are supported?',
+      a: 'Payments in India (INR) are securely processed via Razorpay with instant verification. We support UPI (Google Pay, PhonePe, Paytm, BHIM), all major Credit & Debit cards (Visa, MasterCard, RuPay), and NetBanking. International transactions (USD, EUR, GBP, etc.) are processed via Stripe supporting credit/debit cards and Apple Pay/Google Pay. The price displayed on our page is exactly the authoritative amount charged with zero hidden fees.',
     },
     {
-      q: 'Are separate monthly plans available without long-term contracts?',
-      a: `Yes! You can choose standalone monthly billing anytime: ${plusMonthlyFormatted}/month for Plus and ${proMonthlyFormatted}/month for Pro. Monthly subscriptions operate on a 30-day cycle with zero annual commitment and can be cancelled or paused at any time from your account with a single click.`,
+      category: 'billing',
+      q: 'Can I cancel, upgrade, or switch my subscription at any time?',
+      a: 'Yes! You have complete control from your Account and Billing dashboard. If you upgrade from Plus to Pro, the new tier activates immediately. If you cancel your recurring subscription, you retain full paid premium benefits until the end of your prepaid billing period, after which no further charges are incurred.',
     },
     {
-      q: 'What is the benefit of Yearly billing?',
-      a: `Yearly billing gives you substantial savings: save ${plusAnnualSavingsFormatted} (${plusSavingsPct}%) on Plus and ${proAnnualSavingsFormatted} (${proSavingsPct}%) on Pro annually compared to paying 12 individual monthly installments in ${activePricing.name}.`,
+      category: 'features',
+      q: 'How do daily feature quotas and computational limits work?',
+      a: 'Everyday standard tools (basic calculators, text tools, converters) feature unlimited usage for all users. Advanced tools requiring heavy background computation, high-resolution conversions, or AI planning (like 7-day diet planners, multi-PDF compression, and mock exam analyzers) are governed by fair-use quotas: 5 operations/day for Free users, 50 operations/day for Plus members, and 200 operations/day for Pro members. Quotas automatically reset each day at midnight UTC.',
     },
     {
-      q: 'How do daily usage limits work?',
-      a: 'Core tools have no limits. Tools requiring heavy server/AI computations have daily quotas that reset automatically at midnight UTC: 5 ops/day for Free, 50 ops/day for Plus, and 200 ops/day for Pro.',
+      category: 'features',
+      q: 'Is NAVIKO 100% ad-free on Premium tiers?',
+      a: 'Yes. Both NAVIKO Plus and Pro provide a clean, distraction-free environment with Google AdSense and promotional banners completely removed from all 46+ tools, dashboards, and calculators.',
     },
     {
-      q: 'What payment methods are accepted?',
-      a: 'For India (INR), we support UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, and NetBanking via Razorpay. For international payments (USD, EUR, GBP, CAD, etc.), all major debit/credit cards and Apple Pay/Google Pay are supported via Stripe.',
-    },
-    {
-      q: 'Can I cancel or switch my plan anytime?',
-      a: 'Yes. You can cancel or switch between plans at any time with a single click in your Account settings. Your benefits will remain active until the end of your paid billing period.',
-    },
-    {
-      q: 'Is my health and personal data private?',
-      a: 'Absolutely. NAVIKO strictly adheres to a client-side privacy philosophy. Your body metrics, nutrition plans, and academic logs are stored locally on your device and are never sold or used for advertising.',
+      category: 'features',
+      q: 'Are my uploaded files, student notes, and health data secure?',
+      a: 'Yes, privacy is foundational to NAVIKO. File processing (such as image compression, PDF merging, and client-side conversion) runs locally in your browser whenever possible. Your student logs, nutrition science inputs, and financial calculations are never sold to third parties or used for profiling.',
     },
   ];
+
+  const filteredFaqs = faqCategory === 'all'
+    ? faqs
+    : faqs.filter(faq => faq.category === faqCategory);
 
   return (
     <div className="min-h-screen bg-slate-50/60 dark:bg-slate-950 pb-24 transition-colors">
@@ -1315,47 +1325,84 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
       {/* 4. DETAILED FEATURE COMPARISON TABLE */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            Feature Comparison
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold mb-3">
+            <Layers className="w-3.5 h-3.5" />
+            <span>Side-by-Side Breakdown</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Plan Feature Comparison
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Compare benefits side-by-side across Free, Plus, and Pro.
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-xl mx-auto">
+            Review detailed feature allowances, computational limits, and ad-free experience across all three NAVIKO tiers.
           </p>
         </div>
 
-        <ComparisonTable />
+        <ComparisonTable
+          onSelectPlan={(tier) => handleUpgrade(tier)}
+          plusPriceFormatted={billingInterval === 'yearly' ? `${plusEffectiveMonthlyFormatted}/mo` : `${plusMonthlyFormatted}/mo`}
+          proPriceFormatted={billingInterval === 'yearly' ? `${proEffectiveMonthlyFormatted}/mo` : `${proMonthlyFormatted}/mo`}
+          currentPlan={plan}
+        />
       </section>
 
       {/* 5. FREQUENTLY ASKED QUESTIONS */}
-      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold mb-3">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Got Questions?</span>
+            <span>Clear Answers, Zero Jargon</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             Frequently Asked Questions
           </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-xl mx-auto">
+            Everything you need to know about NAVIKO membership tiers, billing intervals, payment verification, and computational limits.
+          </p>
         </div>
 
-        <div className="space-y-3">
-          {faqs.map((faq, idx) => {
+        {/* FAQ Category Filter Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          {[
+            { id: 'all', label: 'All Questions' },
+            { id: 'plans', label: 'Subscription Plans' },
+            { id: 'billing', label: 'Billing Cycles & Payments' },
+            { id: 'features', label: 'Feature Access & Limits' },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setFaqCategory(cat.id as any);
+                setActiveFaq(null);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                faqCategory === cat.id
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-3 max-w-3xl mx-auto">
+          {filteredFaqs.map((faq, idx) => {
             const isOpen = activeFaq === idx;
             return (
               <div
                 key={idx}
-                className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs transition-colors"
+                className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs transition-all hover:border-slate-300 dark:hover:border-slate-700"
               >
                 <button
                   onClick={() => setActiveFaq(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors"
+                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                 >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${
-                      isOpen ? 'rotate-180 text-indigo-500' : ''
-                    }`}
-                  />
+                  <span className="pr-4">{faq.q}</span>
+                  <div className={`p-1 rounded-lg shrink-0 transition-transform ${
+                    isOpen ? 'rotate-180 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
+                  }`}>
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </button>
                 {isOpen && (
                   <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-3">
@@ -1365,6 +1412,17 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
               </div>
             );
           })}
+        </div>
+
+        {/* Bottom Help Contact Link */}
+        <div className="mt-10 text-center text-xs text-slate-500 dark:text-slate-400">
+          Still have a question or need special student verification?{' '}
+          <button
+            onClick={() => onNavigate('/contact')}
+            className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer ml-1"
+          >
+            Contact NAVIKO Support
+          </button>
         </div>
       </section>
     </div>

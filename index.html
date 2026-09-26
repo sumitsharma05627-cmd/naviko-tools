@@ -37,6 +37,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- Suppress benign Vite dev server HMR websocket rejection in sandbox iframe environments -->
+    <script>
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        var msg = (typeof reason === 'string') ? reason : (reason && reason.message ? reason.message : '');
+        if (msg.indexOf('WebSocket') !== -1 || msg.indexOf('websocket') !== -1) {
+          event.preventDefault();
+        }
+      });
+      window.addEventListener('error', function(event) {
+        var msg = event.message || '';
+        if (msg.indexOf('WebSocket') !== -1 || msg.indexOf('websocket') !== -1) {
+          event.preventDefault();
+        }
+      });
+    </script>
+
     <!-- Google AdSense Verification & Script -->
     <meta name="google-adsense-account" content="ca-pub-4353645659036465">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4353645659036465"

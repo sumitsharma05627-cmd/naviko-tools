@@ -460,6 +460,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const result = await paymentService.processPlanPayment({
           tier,
           interval,
+          planId: `${tier}_${interval}`,
           currency,
           customerEmail: customerEmailAddress,
           customerName: user.name,

@@ -5,7 +5,16 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import fs from 'fs';
-import { PRICING_CONFIG, CurrencyCode, PlanType, BillingInterval } from './src/config/pricing';
+import {
+  PRICING_CONFIG,
+  resolveOfficialPricing,
+  getOfficialPlansCatalog,
+  getSubunitAmount,
+  CurrencyCode,
+  PlanType,
+  BillingInterval,
+  PlanId,
+} from './src/config/pricing';
 
 dotenv.config();
 
@@ -49,6 +58,7 @@ export interface ServerSubscriptionRecord {
   userId: string;
   status: SubscriptionStatusState;
   plan: PlanType;
+  pendingPlanId?: string;
   pendingTier?: PlanType;
   pendingInterval?: BillingInterval;
   billingInterval?: BillingInterval;
@@ -433,14 +443,6 @@ function calculateRenewalDate(interval: BillingInterval, fromDate: Date = new Da
   return d.toISOString();
 }
 
-// Helper: Calculate amount in currency subunits
-function getSubunitAmount(amount: number, currency: string): number {
-  if (currency.toUpperCase() === 'JPY') {
-    return Math.round(amount);
-  }
-  return Math.round(amount * 100);
-}
-
 // ==========================================
 // API ROUTES (Mounted FIRST before Vite)
 // ==========================================
@@ -461,6 +463,19 @@ app.get('/api/subscription/config', (_req, res) => {
     keyId,
     isConfigured: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
     isTestKey: keyId.startsWith('rzp_test_'),
+  });
+});
+
+// 2b. Public official plans catalog (Single Source of Truth)
+app.get('/api/subscription/plans', (req, res) => {
+  const rawCurrency = (req.query.currency as string) || 'INR';
+  const currency = (rawCurrency.toUpperCase() in PRICING_CONFIG ? rawCurrency.toUpperCase() : 'INR') as CurrencyCode;
+  const plans = getOfficialPlansCatalog(currency);
+  res.json({
+    success: true,
+    currency,
+    plans,
+    pricingConfig: PRICING_CONFIG[currency],
   });
 });
 
@@ -1322,17 +1337,9 @@ app.post('/api/subscription/create-order', async (req, res) => {
       });
     }
 
-    const { tier, interval, currency } = req.body;
+    const { planId, tier, interval, currency } = req.body;
     const userId = authUser.id;
     const customerEmail = authUser.email;
-
-    if (tier !== 'plus' && tier !== 'pro') {
-      return res.status(400).json({ success: false, error: 'Invalid plan tier requested. Must be "plus" or "pro".' });
-    }
-
-    if (interval !== 'monthly' && interval !== 'yearly') {
-      return res.status(400).json({ success: false, error: 'Invalid billing interval requested.' });
-    }
 
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -1350,23 +1357,32 @@ app.post('/api/subscription/create-order', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to initialize Razorpay payment client.' });
     }
 
-    const currencyKey = (currency || 'INR') as CurrencyCode;
-    const currencyPricing = PRICING_CONFIG[currencyKey] || PRICING_CONFIG.INR;
-    const tierConfig = currencyPricing[tier];
-    const amountInUnits = tierConfig[interval as BillingInterval];
-    const subunitAmount = getSubunitAmount(amountInUnits, currencyPricing.code);
+    // Authoritative pricing from centralized SINGLE SOURCE OF TRUTH
+    // Backend controls the final price. Client-submitted prices are NEVER trusted.
+    const officialPlan = resolveOfficialPricing({
+      planId,
+      tier,
+      interval,
+      currency,
+    });
+
+    const amountInUnits = officialPlan.amount;
+    const subunitAmount = officialPlan.subunitAmount;
+    const orderCurrency = officialPlan.currency;
 
     const receiptId = `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     // Create real Razorpay order on server
     const order = await razorpay.orders.create({
       amount: subunitAmount,
-      currency: currencyPricing.code,
+      currency: orderCurrency,
       receipt: receiptId,
       notes: {
         userId,
-        tier,
-        interval,
+        planId: officialPlan.planId,
+        tier: officialPlan.tier,
+        interval: officialPlan.interval,
+        officialAmount: String(officialPlan.amount),
         customerEmail: customerEmail || '',
       },
     });
@@ -1377,10 +1393,11 @@ app.post('/api/subscription/create-order', async (req, res) => {
       userId,
       status: 'PAYMENT_PENDING',
       plan: existing?.plan || 'free', // Remain existing or free until verified
-      pendingTier: tier,
-      pendingInterval: interval,
-      billingInterval: interval,
-      currency: currencyPricing.code,
+      pendingPlanId: officialPlan.planId,
+      pendingTier: officialPlan.tier as PlanType,
+      pendingInterval: officialPlan.interval as BillingInterval,
+      billingInterval: officialPlan.interval as BillingInterval,
+      currency: orderCurrency,
       amount: amountInUnits,
       razorpayOrderId: order.id,
       customerEmail: customerEmail || existing?.customerEmail,
@@ -1394,9 +1411,12 @@ app.post('/api/subscription/create-order', async (req, res) => {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
+      planId: officialPlan.planId,
+      tier: officialPlan.tier,
+      interval: officialPlan.interval,
+      officialPrice: officialPlan.amount,
+      formattedPrice: officialPlan.formattedPrice,
       keyId,
-      tier,
-      interval,
     });
   } catch (err: any) {
     console.error('Error creating Razorpay order:', err);

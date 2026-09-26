@@ -4,6 +4,13 @@ export type PlanType = 'free' | 'plus' | 'pro' | 'trial';
 export type BillingInterval = 'monthly' | 'yearly';
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'SGD' | 'AED' | 'SAR' | 'JPY';
 
+export type PlanId =
+  | 'trial'
+  | 'plus_monthly'
+  | 'plus_yearly'
+  | 'pro_monthly'
+  | 'pro_yearly';
+
 export interface TierPrice {
   monthly: number;
   yearly: number;
@@ -39,8 +46,8 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '₹',
     flag: '🇮🇳',
     plus: {
-      monthly: 79,
-      yearly: 599,
+      monthly: 99,
+      yearly: 799,
     },
     pro: {
       monthly: 199,
@@ -226,6 +233,151 @@ export function formatCurrencyPrice(amount: number, currencyCode: CurrencyCode):
   const isInteger = Number.isInteger(amount);
   const formattedNumber = isInteger ? amount.toLocaleString() : amount.toFixed(2);
   return currency.formatString.replace('{price}', formattedNumber);
+}
+
+/**
+ * Calculate amount in currency subunits for payment gateways
+ * (e.g. paise for INR, cents for USD/EUR, integer for JPY).
+ * Razorpay strictly requires smallest currency unit.
+ */
+export function getSubunitAmount(amount: number, currency: CurrencyCode | string = 'INR'): number {
+  if (String(currency).toUpperCase() === 'JPY') {
+    return Math.round(amount);
+  }
+  return Math.round(amount * 100);
+}
+
+/**
+ * Maps tier and interval to official PlanId
+ */
+export function getPlanId(tier: 'plus' | 'pro' | 'trial', interval: BillingInterval | 'trial' = 'monthly'): PlanId {
+  if (tier === 'trial' || interval === 'trial') return 'trial';
+  return `${tier}_${interval === 'yearly' ? 'yearly' : 'monthly'}` as PlanId;
+}
+
+/**
+ * Parses PlanId into tier and interval
+ */
+export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'trial'; interval: BillingInterval | 'trial' } {
+  const normalized = String(planId || '').toLowerCase().trim();
+  if (normalized === 'trial' || normalized === 'pro_trial') {
+    return { tier: 'trial', interval: 'trial' };
+  }
+  if (normalized === 'plus_yearly' || normalized === 'plus_annual') {
+    return { tier: 'plus', interval: 'yearly' };
+  }
+  if (normalized === 'plus_monthly' || normalized === 'plus') {
+    return { tier: 'plus', interval: 'monthly' };
+  }
+  if (normalized === 'pro_yearly' || normalized === 'pro_annual') {
+    return { tier: 'pro', interval: 'yearly' };
+  }
+  if (normalized === 'pro_monthly' || normalized === 'pro') {
+    return { tier: 'pro', interval: 'monthly' };
+  }
+  return { tier: 'plus', interval: 'monthly' };
+}
+
+export interface ResolvedPlanPricing {
+  planId: PlanId;
+  tier: 'plus' | 'pro' | 'trial';
+  interval: BillingInterval | 'trial';
+  currency: CurrencyCode;
+  currencySymbol: string;
+  name: string;
+  amount: number;
+  subunitAmount: number;
+  formattedPrice: string;
+  savingsPercent: number;
+}
+
+/**
+ * SINGLE SOURCE OF TRUTH RESOLVER
+ * Given a planId or { tier, interval, currency }, resolves the authoritative official price
+ * and subunit amount (e.g. paise). No client-provided prices are ever used or trusted.
+ */
+export function resolveOfficialPricing(params: {
+  planId?: string;
+  tier?: string;
+  interval?: string;
+  currency?: string;
+}): ResolvedPlanPricing {
+  const rawCurrency = (params.currency || 'INR').toUpperCase() as CurrencyCode;
+  const currencyKey: CurrencyCode = PRICING_CONFIG[rawCurrency] ? rawCurrency : 'INR';
+  const currencyConfig = PRICING_CONFIG[currencyKey];
+
+  // Resolve plan identifier
+  let planId: PlanId;
+  const rawPlanId = params.planId ? String(params.planId).toLowerCase().trim() : '';
+
+  if (rawPlanId === 'trial' || params.tier === 'trial' || params.interval === 'trial') {
+    planId = 'trial';
+  } else if (rawPlanId === 'plus_yearly' || (params.tier === 'plus' && params.interval === 'yearly')) {
+    planId = 'plus_yearly';
+  } else if (rawPlanId === 'plus_monthly' || (params.tier === 'plus' && params.interval === 'monthly')) {
+    planId = 'plus_monthly';
+  } else if (rawPlanId === 'pro_yearly' || (params.tier === 'pro' && params.interval === 'yearly')) {
+    planId = 'pro_yearly';
+  } else if (rawPlanId === 'pro_monthly' || (params.tier === 'pro' && params.interval === 'monthly')) {
+    planId = 'pro_monthly';
+  } else if (params.tier === 'pro') {
+    planId = params.interval === 'yearly' ? 'pro_yearly' : 'pro_monthly';
+  } else {
+    planId = params.interval === 'yearly' ? 'plus_yearly' : 'plus_monthly';
+  }
+
+  // 1. ₹1 Trial is always ₹1 (100 paise)
+  if (planId === 'trial') {
+    return {
+      planId: 'trial',
+      tier: 'trial',
+      interval: 'trial',
+      currency: 'INR',
+      currencySymbol: '₹',
+      name: 'NAVIKO 7-Day Trial',
+      amount: 1,
+      subunitAmount: 100, // exactly 100 paise
+      formattedPrice: '₹1',
+      savingsPercent: 0,
+    };
+  }
+
+  const { tier, interval } = parsePlanId(planId);
+  const tierConfig = tier === 'pro' ? currencyConfig.pro : currencyConfig.plus;
+  const amount = interval === 'yearly' ? tierConfig.yearly : tierConfig.monthly;
+  const subunitAmount = getSubunitAmount(amount, currencyConfig.code);
+  const formattedPrice = formatCurrencyPrice(amount, currencyConfig.code);
+  const savingsPercent =
+    interval === 'yearly'
+      ? getYearlySavingsPercentage(tierConfig.monthly, tierConfig.yearly)
+      : 0;
+  const name = `NAVIKO ${tier.toUpperCase()} (${interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`;
+
+  return {
+    planId,
+    tier,
+    interval,
+    currency: currencyConfig.code,
+    currencySymbol: currencyConfig.symbol,
+    name,
+    amount,
+    subunitAmount,
+    formattedPrice,
+    savingsPercent,
+  };
+}
+
+/**
+ * Returns catalog of all available plans for a given currency
+ */
+export function getOfficialPlansCatalog(currency: CurrencyCode = 'INR'): ResolvedPlanPricing[] {
+  return [
+    resolveOfficialPricing({ planId: 'plus_monthly', currency }),
+    resolveOfficialPricing({ planId: 'plus_yearly', currency }),
+    resolveOfficialPricing({ planId: 'pro_monthly', currency }),
+    resolveOfficialPricing({ planId: 'pro_yearly', currency }),
+    resolveOfficialPricing({ planId: 'trial', currency }),
+  ];
 }
 
 /**

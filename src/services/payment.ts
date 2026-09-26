@@ -1,4 +1,4 @@
-import { CurrencyCode, BillingInterval, PlanType } from '../config/pricing';
+import { CurrencyCode, BillingInterval, PlanType, PlanId } from '../config/pricing';
 import { getApiUrl } from '../config/api';
 import { safeApiFetch } from './apiClient';
 
@@ -15,6 +15,7 @@ export interface PaymentPlanRequest {
   tier: 'plus' | 'pro';
   interval: BillingInterval;
   currency: CurrencyCode;
+  planId?: PlanId;
   customerEmail?: string;
   customerName?: string;
   userId: string;
@@ -181,10 +182,12 @@ class PaymentService {
     }
 
     // 3. Request server to create a verified Razorpay Order
+    const planId: PlanId = request.planId || `${request.tier}_${request.interval}`;
     const res = await safeApiFetch<any>('/api/subscription/create-order', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({
+        planId,
         tier: request.tier,
         interval: request.interval,
         currency: request.currency,
@@ -222,12 +225,18 @@ class PaymentService {
     return new Promise<PaymentResult>((resolve) => {
       let isSettled = false;
 
+      const planTitle = request.tier.toUpperCase();
+      const planInterval = request.interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass';
+      const orderDescription = orderData.formattedPrice
+        ? `NAVIKO ${planTitle} (${orderData.formattedPrice} • ${planInterval})`
+        : `NAVIKO ${planTitle} Plan (${request.interval})`;
+
       const options = {
         key: keyId,
         amount: amount,
         currency: currency,
         name: 'NAVIKO',
-        description: `NAVIKO ${request.tier.toUpperCase()} Plan (${request.interval})`,
+        description: orderDescription,
         image: '/favicon.svg',
         order_id: orderId,
         prefill: {

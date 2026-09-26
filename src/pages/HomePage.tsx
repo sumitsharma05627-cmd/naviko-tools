@@ -15,6 +15,8 @@ import { Interactive3DCard } from '../components/3d/Interactive3DCard';
 import { Finance3DDashboardVisual } from '../components/3d/Finance3DDashboardVisual';
 import { AiNodes3DVisual } from '../components/3d/AiNodes3DVisual';
 import { Premium3DVisual } from '../components/3d/Premium3DVisual';
+import { useSubscription } from '../context/SubscriptionContext';
+import { PRICING_CONFIG, formatCurrencyPrice, getYearlySavingsPercentage } from '../config/pricing';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -24,6 +26,16 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { t } = useLanguage();
+  const { currency } = useSubscription();
+
+  const activePricing = PRICING_CONFIG[currency] || PRICING_CONFIG.INR;
+  const plusMonthlyFormatted = formatCurrencyPrice(activePricing.plus.monthly, currency);
+  const plusYearlyFormatted = formatCurrencyPrice(activePricing.plus.yearly, currency);
+  const plusSavingsPct = getYearlySavingsPercentage(activePricing.plus.monthly, activePricing.plus.yearly);
+
+  const proMonthlyFormatted = formatCurrencyPrice(activePricing.pro.monthly, currency);
+  const proYearlyFormatted = formatCurrencyPrice(activePricing.pro.yearly, currency);
+  const proSavingsPct = getYearlySavingsPercentage(activePricing.pro.monthly, activePricing.pro.yearly);
 
   useSEO({
     title: 'NAVIKO — Free Online Tools | Calculators, Student, Finance & Productivity',
@@ -705,8 +717,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
                       Everyday
                     </span>
                   </div>
-                  <div className="text-3xl font-black text-white mb-1">₹99 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
-                  <div className="text-xs text-indigo-300 mb-4">Or ₹799/year (Save ~33%)</div>
+                  <div className="text-3xl font-black text-white mb-1">
+                    {plusMonthlyFormatted} <span className="text-xs text-slate-400 font-normal">/ mo</span>
+                  </div>
+                  <div className="text-xs text-indigo-300 mb-4">
+                    Or {plusYearlyFormatted}/year (Save ~{plusSavingsPct}%)
+                  </div>
                   <ul className="text-xs text-slate-200 space-y-2 border-t border-indigo-500/30 pt-4">
                     <li className="flex items-center gap-2">
                       <span className="text-indigo-400 font-bold">✓</span> 50 daily ops limit (10x Free)
@@ -746,8 +762,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
                       Maximum
                     </span>
                   </div>
-                  <div className="text-3xl font-black text-white mb-1">₹199 <span className="text-xs text-slate-400 font-normal">/ mo</span></div>
-                  <div className="text-xs text-purple-300 mb-4">Or ₹1,499/year (Save ~37%)</div>
+                  <div className="text-3xl font-black text-white mb-1">
+                    {proMonthlyFormatted} <span className="text-xs text-slate-400 font-normal">/ mo</span>
+                  </div>
+                  <div className="text-xs text-purple-300 mb-4">
+                    Or {proYearlyFormatted}/year (Save ~{proSavingsPct}%)
+                  </div>
                   <ul className="text-xs text-slate-200 space-y-2 border-t border-purple-500/30 pt-4">
                     <li className="flex items-center gap-2">
                       <span className="text-amber-400 font-bold">✓</span> 200 daily ops limit
