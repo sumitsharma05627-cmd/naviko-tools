@@ -9,7 +9,7 @@ export interface AuthUser {
   updatedAt: string;
   recentTools: string[];
   preferences?: {
-    theme?: 'light' | 'dark' | 'system';
+    theme?: string;
     currency?: string;
     emailNotifications?: boolean;
   };

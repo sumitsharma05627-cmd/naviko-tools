@@ -10,6 +10,8 @@ interface PremiumBadgeProps {
   icon?: boolean;
   className?: string;
   label?: string;
+  onClick?: (e: React.MouseEvent) => void;
+  interactive?: boolean;
 }
 
 export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
@@ -20,6 +22,8 @@ export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
   icon = true,
   className = '',
   label,
+  onClick,
+  interactive = false,
 }) => {
   const activeTier = (tier || plan || 'plus') as PlanType | 'premium';
   const sizeClasses = {
@@ -55,7 +59,13 @@ export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md border uppercase shadow-2xs select-none ${sizeClasses[size]} ${variantClasses[effectiveVariant]} ${className}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      title={onClick ? 'View NAVIKO Premium Plans & Benefits' : undefined}
+      className={`inline-flex items-center gap-1 rounded-md border uppercase shadow-2xs select-none ${sizeClasses[size]} ${variantClasses[effectiveVariant]} ${
+        onClick || interactive ? 'cursor-pointer hover:scale-105 active:scale-95 transition-transform' : ''
+      } ${className}`}
     >
       {icon && (
         displayTier === 'pro' ? (

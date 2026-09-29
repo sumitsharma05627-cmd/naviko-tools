@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowRight, Filter, X, Sparkles } from 'lucide-react';
+import { Search, ArrowRight, Filter, X, Sparkles, Crown } from 'lucide-react';
 import { TOOLS_DATA, CATEGORIES_META } from '../data/toolsData';
 import { ToolCategory } from '../types';
 import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 import { Interactive3DCard } from '../components/3d/Interactive3DCard';
+import { PremiumBadge } from '../components/monetization/PremiumBadge';
 
 interface AllToolsPageProps {
   onNavigate: (path: string) => void;
@@ -135,9 +136,22 @@ export const AllToolsPage: React.FC<AllToolsPageProps> = ({
                       <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 flex items-center justify-center transition-colors">
                         <DynamicIcon name={tool.iconName} className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                        {tool.categoryName}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {tool.badge ? (
+                          <PremiumBadge
+                            plan={tool.badge === 'PRO' ? 'pro' : 'plus'}
+                            label={tool.badge}
+                            size="xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate('/premium');
+                            }}
+                          />
+                        ) : null}
+                        <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          {tool.categoryName}
+                        </span>
+                      </div>
                     </div>
 
                     <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">

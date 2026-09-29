@@ -13,6 +13,7 @@ import {
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 import { Interactive3DCard } from '../components/3d/Interactive3DCard';
+import { PremiumBadge } from '../components/monetization/PremiumBadge';
 
 interface PdfToolsPageProps {
   onNavigate: (path: string) => void;
@@ -46,7 +47,8 @@ export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
       path: '/tools/pdf-compressor',
       description: 'Reduce PDF file size for fast portal uploads and emails while maintaining optimal text sharpness.',
       icon: Minimize2,
-      tag: 'Optimized'
+      tag: 'Optimized',
+      badge: 'PRO' as const
     },
     {
       id: 'jpg-to-pdf',
@@ -106,9 +108,22 @@ export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
                       <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] uppercase tracking-wider font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
-                        {tool.tag}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {'badge' in tool && tool.badge && (
+                          <PremiumBadge
+                            plan="pro"
+                            label={tool.badge}
+                            size="xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate('/premium');
+                            }}
+                          />
+                        )}
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full">
+                          {tool.tag}
+                        </span>
+                      </div>
                     </div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {tool.name}

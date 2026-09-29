@@ -5,6 +5,7 @@ import { DynamicIcon } from '../components/DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 import { Interactive3DCard } from '../components/3d/Interactive3DCard';
+import { PremiumBadge } from '../components/monetization/PremiumBadge';
 
 interface StudentToolsPageProps {
   onNavigate: (path: string) => void;
@@ -70,8 +71,21 @@ export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }
                   className="h-full p-6 rounded-2xl bg-white border border-slate-200 hover:border-indigo-300 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
                 >
                   <div>
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 flex items-center justify-center mb-4 transition-colors">
-                      <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white text-indigo-600 flex items-center justify-center transition-colors">
+                        <DynamicIcon name={tool.iconName} className="w-5 h-5" />
+                      </div>
+                      {tool.badge && (
+                        <PremiumBadge
+                          plan={tool.badge === 'PRO' ? 'pro' : 'plus'}
+                          label={tool.badge}
+                          size="xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onNavigate('/premium');
+                          }}
+                        />
+                      )}
                     </div>
                     <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                       {tool.name}

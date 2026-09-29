@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { User, Mail, Calendar, Shield, ArrowLeft, CheckCircle2, AlertCircle, Save } from 'lucide-react';
+import { User, Mail, Calendar, Shield, ArrowLeft, CheckCircle2, AlertCircle, Save, Palette } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useTheme } from '../context/ThemeContext';
+import { THEME_ORDER, THEMES, ThemeId } from '../config/themes';
 
 interface ProfilePageProps {
   onNavigate: (path: string) => void;
@@ -10,11 +12,13 @@ interface ProfilePageProps {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
   const { user, isAuthenticated, updateProfile } = useAuth();
   const { currency, setCurrency } = useSubscription();
+  const { theme, setTheme } = useTheme();
 
   const [name, setName] = useState(user?.name || '');
   const [emailNotifications, setEmailNotifications] = useState(
     user?.preferences?.emailNotifications ?? true
   );
+  const [selectedTheme, setSelectedTheme] = useState<ThemeId>(theme);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -53,11 +57,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
         preferences: {
           emailNotifications,
           currency,
+          theme: selectedTheme,
         },
       });
 
       if (res.success) {
-        setSuccessMessage('Profile details updated successfully.');
+        setTheme(selectedTheme);
+        setSuccessMessage('Profile details and theme preferences updated successfully.');
       } else {
         setErrorMessage(res.error || 'Failed to update profile.');
       }
@@ -185,7 +191,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onNavigate }) => {
             </select>
           </div>
 
-          {/* Notifications Toggle */}
+          {/* Preferred Interface Theme */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Interface Theme
+            </label>
+            <select
+              value={selectedTheme}
+              onChange={(e) => setSelectedTheme(e.target.value as ThemeId)}
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+            >
+              {THEME_ORDER.map((tId) => (
+                <option key={tId} value={tId}>
+                  {THEMES[tId].name} — {THEMES[tId].tagline}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="pt-2">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input

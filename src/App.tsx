@@ -365,11 +365,14 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <LanguageProvider>
           <SubscriptionProvider>
-            <div className="min-h-screen flex flex-col bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative">
+            <div
+              className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
+              style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+            >
               <Ambient3DBackground />
               <Header
                 onNavigate={navigate}
@@ -402,8 +405,8 @@ export default function App() {
               )}
             </div>
           </SubscriptionProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

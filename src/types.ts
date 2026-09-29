@@ -20,6 +20,7 @@ export interface ToolMeta {
   iconName: string;
   popular?: boolean;
   studentHub?: boolean;
+  badge?: 'PRO' | 'PREMIUM' | 'PLUS' | 'NEW' | 'POPULAR';
   status: 'active' | 'coming_soon';
   tags: string[];
   features?: string[];

@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { TOOLS_DATA } from '../data/toolsData';
+import { PremiumBadge } from '../components/monetization/PremiumBadge';
 
 interface DashboardPageProps {
   onNavigate: (path: string) => void;
@@ -329,10 +330,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                       {tool.category || 'Utility'}
                     </span>
-                    {tool.isPremium && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                        PREMIUM
-                      </span>
+                    {(tool.badge || tool.isPremium) && (
+                      <PremiumBadge
+                        plan={tool.badge === 'PRO' ? 'pro' : 'plus'}
+                        label={tool.badge || 'PREMIUM'}
+                        size="xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenPricing) onOpenPricing();
+                          else onNavigate('/premium');
+                        }}
+                      />
                     )}
                   </div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">

@@ -60,6 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (typeof window !== 'undefined') {
           localStorage.setItem('naviko_uid', res.user.id);
           localStorage.setItem('naviko_user_email', res.user.email);
+          if (res.user.preferences?.theme) {
+            localStorage.setItem('naviko_theme_id', res.user.preferences.theme);
+            window.dispatchEvent(new CustomEvent('naviko:theme-sync', { detail: res.user.preferences.theme }));
+          }
         }
       } else {
         // Token invalid or expired
@@ -95,6 +99,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('naviko_auth_token', res.token);
             localStorage.setItem('naviko_uid', res.user.id);
             localStorage.setItem('naviko_user_email', res.user.email);
+            if (res.user.preferences?.theme) {
+              localStorage.setItem('naviko_theme_id', res.user.preferences.theme);
+              window.dispatchEvent(new CustomEvent('naviko:theme-sync', { detail: res.user.preferences.theme }));
+            }
             if (res.user.recentTools) {
               localStorage.setItem('naviko_recent_tools', JSON.stringify(res.user.recentTools));
               setRecentTools(res.user.recentTools);

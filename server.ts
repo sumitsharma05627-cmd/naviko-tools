@@ -96,7 +96,7 @@ export interface UserAccount {
   resetPasswordExpires?: string;
   recentTools?: string[];
   preferences?: {
-    theme?: 'light' | 'dark' | 'system';
+    theme?: string;
     currency?: string;
     emailNotifications?: boolean;
   };
@@ -446,6 +446,17 @@ function calculateRenewalDate(interval: BillingInterval, fromDate: Date = new Da
 // ==========================================
 // API ROUTES (Mounted FIRST before Vite)
 // ==========================================
+
+// 0. Google AdSense ads.txt route
+app.get('/ads.txt', (_req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const adsPath = path.join(process.cwd(), 'public', 'ads.txt');
+  if (fs.existsSync(adsPath)) {
+    return res.sendFile(adsPath);
+  }
+  return res.send('google.com, pub-4353645659036465, DIRECT, f08c47fec0942fa0\n');
+});
 
 // 1. Health check
 app.get('/api/health', (_req, res) => {

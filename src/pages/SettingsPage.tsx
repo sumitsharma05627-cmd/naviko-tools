@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, ShieldAlert, LogOut, ArrowLeft, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { Lock, Eye, EyeOff, ShieldAlert, LogOut, ArrowLeft, CheckCircle2, AlertCircle, KeyRound, Palette, Sparkles, Check, Sun, Moon, Laptop } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { THEME_ORDER, THEMES } from '../config/themes';
 
 interface SettingsPageProps {
   onNavigate: (path: string) => void;
@@ -8,6 +10,7 @@ interface SettingsPageProps {
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   const { isAuthenticated, changePassword, logoutAll, user } = useAuth();
+  const { theme, setTheme, quickMode, setQuickMode } = useTheme();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -107,11 +110,124 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 sm:p-10 shadow-sm space-y-10">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Account Security & Settings</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Account Settings &amp; Personalization</h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Update your credentials and manage active sessions across your devices.
+            Choose your interface theme, update your credentials, and manage active sessions.
           </p>
         </div>
+
+        {/* Appearance & Themes Section */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-[var(--border)]">
+            <Palette className="w-5 h-5 text-[var(--primary)]" />
+            <h2 className="text-lg font-bold text-[var(--foreground)]">Interface Theme</h2>
+          </div>
+          <p className="text-xs text-[var(--muted-foreground)] max-w-xl">
+            Choose your preferred theme. Your preference is automatically synchronized with your account across all your devices.
+          </p>
+
+          {/* Quick Mode Bar */}
+          <div className="max-w-md pt-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] block mb-1.5">
+              Quick Appearance
+            </span>
+            <div className="grid grid-cols-3 gap-1 bg-[var(--muted)] p-1 rounded-2xl">
+              {[
+                { id: 'light', label: 'Light', icon: Sun },
+                { id: 'dark', label: 'Dark', icon: Moon },
+                { id: 'system', label: 'System', icon: Laptop },
+              ].map((mode) => {
+                const Icon = mode.icon;
+                const isSelected = quickMode === mode.id;
+                return (
+                  <button
+                    key={mode.id}
+                    onClick={() => setQuickMode(mode.id as any)}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[var(--card)] text-[var(--foreground)] shadow-xs'
+                        : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{mode.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+            {THEME_ORDER.map((tId) => {
+              const item = THEMES[tId];
+              const isSelected = theme === tId;
+              return (
+                <button
+                  key={tId}
+                  onClick={() => setTheme(tId)}
+                  className={`p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer group ${
+                    isSelected
+                      ? 'border-[var(--primary)] bg-[var(--secondary)] shadow-xs'
+                      : 'border-[var(--border)] bg-[var(--card)] hover:bg-[var(--muted)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-xl p-1 border shadow-2xs flex items-center justify-center shrink-0 relative overflow-hidden"
+                      style={{
+                        backgroundColor: item.previewColors.bg,
+                        borderColor: item.previewColors.border,
+                      }}
+                    >
+                      <div
+                        className="w-5 h-5 rounded-md shadow-2xs flex items-center justify-center border"
+                        style={{
+                          backgroundColor: item.previewColors.card,
+                          borderColor: item.previewColors.border,
+                        }}
+                      >
+                        <div
+                          className="w-2.5 h-1 rounded-xs"
+                          style={{ backgroundColor: item.previewColors.primary }}
+                        />
+                      </div>
+                      <div
+                        className="w-1.5 h-1.5 rounded-full absolute bottom-1 right-1"
+                        style={{ backgroundColor: item.previewColors.accent }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                        <span>{item.name}</span>
+                        {item.isDark ? (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[var(--muted)] text-[var(--muted-foreground)] font-semibold border border-[var(--border)]">
+                            Dark
+                          </span>
+                        ) : (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[var(--muted)] text-[var(--muted-foreground)] font-semibold border border-[var(--border)]">
+                            Light
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-[var(--muted-foreground)] line-clamp-1">
+                        {item.tagline}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isSelected && (
+                    <div
+                      className="w-5 h-5 rounded-full text-white flex items-center justify-center shrink-0 shadow-xs"
+                      style={{ backgroundColor: 'var(--primary)' }}
+                    >
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Change Password Section */}
         <section className="space-y-6 pt-2">

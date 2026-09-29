@@ -17,6 +17,7 @@ import { AiNodes3DVisual } from '../components/3d/AiNodes3DVisual';
 import { Premium3DVisual } from '../components/3d/Premium3DVisual';
 import { useSubscription } from '../context/SubscriptionContext';
 import { PRICING_CONFIG, formatCurrencyPrice, getYearlySavingsPercentage } from '../config/pricing';
+import { PremiumBadge } from '../components/monetization/PremiumBadge';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -371,9 +372,20 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenSearch }) 
                     <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <Utensils className="w-6 h-6" />
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
-                      New Nutrition Tool
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <PremiumBadge
+                        plan="plus"
+                        label="PREMIUM"
+                        size="xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate('/premium');
+                        }}
+                      />
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200/80 dark:border-emerald-800/80">
+                        Nutrition Suite
+                      </span>
+                    </div>
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     Diet Plan Manager
