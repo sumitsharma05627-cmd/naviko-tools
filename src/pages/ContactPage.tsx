@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, MessageSquare, Send, CheckCircle2, Sparkles } from 'lucide-react';
-import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 
 export const ContactPage: React.FC = () => {
@@ -40,8 +39,41 @@ export const ContactPage: React.FC = () => {
             Contact &amp; Feedback
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-600">
-            Have a suggestion for a new tool or found a bug? We’d love to hear your thoughts.
+            Have a suggestion for a new tool, found a bug, or have a partnership inquiry? We’d love to hear from you.
           </p>
+        </div>
+
+        {/* Direct Contact Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2">
+              <Mail className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-slate-900">Direct Email</div>
+            <a href="mailto:support@naviko.in" className="text-xs text-indigo-600 font-semibold hover:underline block mt-0.5">
+              support@naviko.in
+            </a>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-slate-900">Response Window</div>
+            <span className="text-xs text-slate-600 font-medium block mt-0.5">
+              24–48 Business Hours
+            </span>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-2">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="text-xs font-bold text-slate-900">Platform Status</div>
+            <span className="text-xs text-slate-600 font-medium block mt-0.5">
+              100% Operational
+            </span>
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
@@ -139,8 +171,6 @@ export const ContactPage: React.FC = () => {
           )}
         </div>
 
-        <DesktopAdSlot />
-        <MobileAdSlot />
       </div>
     </div>
   );

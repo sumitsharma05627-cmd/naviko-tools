@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { ShieldCheck, Lock, EyeOff, ServerOff, FileCheck } from 'lucide-react';
-import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 
 export const PrivacyPolicyPage: React.FC = () => {
@@ -66,8 +65,6 @@ export const PrivacyPolicyPage: React.FC = () => {
           </p>
         </div>
 
-        <DesktopAdSlot />
-        <MobileAdSlot />
       </div>
     </div>
   );

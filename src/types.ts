@@ -37,6 +37,7 @@ export interface ToolMeta {
   resultsMeaning?: string;
   limitations?: string[];
   formula?: string;
+  examples?: { title: string; explanation: string; value?: string }[];
 }
 
 export interface BlogPost {

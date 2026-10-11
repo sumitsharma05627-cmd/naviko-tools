@@ -9,6 +9,8 @@ import { HomePage } from './pages/HomePage';
 import { getToolByPath } from './data/toolsData';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Ambient3DBackground } from './components/3d/Ambient3DBackground';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { syncAdSenseRoutePolicy } from './config/adPolicy';
 
 // Fallback loader for lazy-loaded tools and secondary routes
 const PageLoadingFallback: React.FC = () => (
@@ -197,6 +199,10 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    syncAdSenseRoutePolicy(currentPath);
+  }, [currentPath]);
 
   const navigate = (path: string) => {
     if (path.startsWith('http')) {
@@ -403,6 +409,8 @@ export default function App() {
                   />
                 </Suspense>
               )}
+
+              <CookieConsentBanner onNavigate={navigate} />
             </div>
           </SubscriptionProvider>
         </LanguageProvider>

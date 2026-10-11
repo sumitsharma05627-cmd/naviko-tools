@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Sparkles, ShieldCheck, Zap, Lock, Heart, Globe, ArrowRight } from 'lucide-react';
-import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 
 interface AboutPageProps {
@@ -87,8 +86,6 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <DesktopAdSlot />
-        <MobileAdSlot />
       </div>
     </div>
   );

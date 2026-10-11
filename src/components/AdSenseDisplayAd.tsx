@@ -1,87 +1,141 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSubscription } from '../context/SubscriptionContext';
+import { isAdPlacementAllowed } from '../config/adPolicy';
 
 interface AdSenseDisplayAdProps {
   className?: string;
+  currentPath?: string;
+  isToolLocked?: boolean;
+  hasSubstantialContent?: boolean;
+  format?: 'auto' | 'horizontal' | 'rectangle';
+  minHeight?: number;
 }
 
-export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({ className = '' }) => {
+export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({
+  className = '',
+  currentPath,
+  isToolLocked = false,
+  hasSubstantialContent = true,
+  format = 'auto',
+  minHeight = 100
+}) => {
   const { plan, subscriptionStatus } = useSubscription();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const adRef = useRef<HTMLModElement | null>(null);
   const isPushed = useRef(false);
+  const [isRenderable, setIsRenderable] = useState(false);
 
   const isAdFree =
     (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
     (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
 
-  useEffect(() => {
-    // If user has subscription, do not push ads
-    if (isAdFree) return;
+  const path = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
-    // Prevent duplicate push calls during React 18 Strict Mode or re-renders
-    if (isPushed.current) return;
+  // Verify route & content authorization under Google AdSense policies
+  const allowed = isAdPlacementAllowed({
+    path,
+    isPremium: isAdFree,
+    isToolLocked,
+    hasSubstantialContent
+  });
+
+  useEffect(() => {
+    // If ads are prohibited or user is subscribed, do nothing
+    if (!allowed || isAdFree) {
+      setIsRenderable(false);
+      return;
+    }
+
+    setIsRenderable(true);
+  }, [allowed, isAdFree, path]);
+
+  useEffect(() => {
+    if (!isRenderable || isAdFree || isPushed.current) return;
 
     const tryPush = () => {
       if (isPushed.current) return;
       const el = adRef.current;
-      if (!el || el.getAttribute('data-adsbygoogle-status')) return;
+      const container = containerRef.current;
+      if (!el || !container) return;
+      if (el.getAttribute('data-adsbygoogle-status')) return;
 
-      // AdSense throws 'No slot size for availableWidth=0' if container width is 0
-      if (el.offsetWidth > 0) {
+      // AdSense throws 'No slot size for availableWidth=0' if container width is <= 0
+      const width = container.offsetWidth || el.offsetWidth;
+      if (width > 120) {
         try {
           if (typeof window !== 'undefined') {
             ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
             isPushed.current = true;
           }
         } catch (e) {
-          // Gracefully handle ad blocker or initialization errors
-          console.warn('AdSense Display Ad initialization note:', e);
+          // Gracefully log ad blocker or network rejection
+          console.warn('AdSense responsive display ad initialization note:', e);
         }
       }
     };
 
-    // Attempt immediate push if already sized
-    tryPush();
+    // Attempt push after paint
+    const timer = setTimeout(tryPush, 100);
 
-    // If still not pushed because width was 0, observe container until layout finishes
-    if (!isPushed.current && adRef.current && typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver((entries) => {
+    // Observe container width until layout is stabilized with non-zero dimensions
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      observer = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          if (entry.contentRect.width > 0) {
+          if (entry.contentRect.width > 120 && !isPushed.current) {
             tryPush();
-            if (isPushed.current) {
+            if (isPushed.current && observer) {
               observer.disconnect();
             }
           }
         }
       });
-      observer.observe(adRef.current);
-      return () => observer.disconnect();
+      observer.observe(containerRef.current);
     }
-  }, [isAdFree]);
 
-  if (isAdFree) {
-    return null; // Ad-free experience for NAVIKO Plus and Pro members
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+    };
+  }, [isRenderable, isAdFree]);
+
+  if (!isRenderable || !allowed || isAdFree) {
+    return null;
   }
 
   return (
     <section
-      className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8 transition-all ${className}`}
       aria-label="Advertisement"
+      className={`w-full max-w-6xl mx-auto px-4 sm:px-6 my-10 transition-all ${className}`}
     >
-      <div className="w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-4 sm:p-6 shadow-2xs transition-colors">
-        <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+      {/* Visual isolation boundary: clearly distinguishes sponsor content from tools */}
+      <div
+        ref={containerRef}
+        className="w-full rounded-2xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 p-3 sm:p-5 shadow-2xs transition-colors"
+      >
+        {/* Compliance labels: never mistaken for tools or clickable buttons */}
+        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-200/70 dark:border-slate-800 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none select-none">
           <span>Advertisement</span>
           <span>Sponsored</span>
         </div>
-        <div className="w-full overflow-hidden min-h-[90px] flex items-center justify-center">
+
+        {/* Ad container with guaranteed minimum dimensions */}
+        <div
+          className="w-full overflow-hidden flex items-center justify-center text-center"
+          style={{ minHeight: `${minHeight}px` }}
+        >
           <ins
             ref={adRef}
             className="adsbygoogle"
-            style={{ display: 'block' }}
+            style={{
+              display: 'block',
+              width: '100%',
+              minHeight: `${minHeight}px`,
+              minWidth: '200px'
+            }}
             data-ad-client="ca-pub-4353645659036465"
             data-ad-slot="5557042993"
-            data-ad-format="auto"
+            data-ad-format={format}
             data-full-width-responsive="true"
           />
         </div>

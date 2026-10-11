@@ -6,6 +6,7 @@ import { DynamicIcon } from './DynamicIcon';
 import { DesktopAdSlot, MobileAdSlot } from './AdSlot';
 import { BreadcrumbNavigation, getCategoryHierarchy } from './BreadcrumbNavigation';
 import { ToolKnowledgeBase } from './ToolKnowledgeBase';
+import { getStructuredToolExplanation } from '../utils/toolKnowledge';
 import { useLanguage } from '../context/LanguageContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { TOOL_ENTITLEMENTS } from '../config/entitlements';
@@ -34,6 +35,9 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
     (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
   const entitlement = TOOL_ENTITLEMENTS[tool.id];
   const quota = checkQuota(tool.id);
+
+  const structuredData = getStructuredToolExplanation(tool);
+  const activeExamples = (examples && examples.length > 0) ? examples : (tool.examples || structuredData.examples || []);
 
   const toolName = t(`${tool.id}.title`, tool.name);
   const toolDesc = t(`${tool.id}.subtitle`, tool.description);
@@ -237,12 +241,13 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
           )}
         </div>
 
-        {/* Ad Placeholder below tool for Free users */}
-        {!isPremium && (
-          <>
-            <DesktopAdSlot className="mb-10" />
-            <MobileAdSlot className="mb-8" />
-          </>
+        {/* Ad Placement: only rendered for free users on unlocked tools with substantial content */}
+        {!isPremium && canAccess(tool.id) && (
+          <DesktopAdSlot
+            className="my-10"
+            isToolLocked={false}
+            hasSubstantialContent={true}
+          />
         )}
 
         {/* Informational Sections: Comprehensive Guide, How to use, Examples, FAQs, Related */}
@@ -276,8 +281,8 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
               </div>
             )}
 
-            {/* 7. Key Features / Examples */}
-            {examples.length > 0 && (
+            {/* 7. Key Features / Worked Examples */}
+            {activeExamples.length > 0 && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-xs transition-colors">
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -288,7 +293,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
                   </h2>
                 </div>
                 <div className="space-y-4">
-                  {examples.map((ex, idx) => (
+                  {activeExamples.map((ex, idx) => (
                     <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 text-sm">
                       <div className="font-semibold text-slate-900 dark:text-white mb-1">{ex.title}</div>
                       <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{ex.explanation}</p>

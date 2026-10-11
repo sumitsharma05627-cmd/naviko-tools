@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { FileText, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
 import { useSEO } from '../utils/seo';
 
 export const TermsPage: React.FC = () => {
@@ -59,8 +58,6 @@ export const TermsPage: React.FC = () => {
           </p>
         </div>
 
-        <DesktopAdSlot />
-        <MobileAdSlot />
       </div>
     </div>
   );
