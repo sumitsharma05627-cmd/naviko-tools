@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSubscription } from '../context/SubscriptionContext';
-import { isAdPlacementAllowed } from '../config/adPolicy';
+import { useAuth } from '../context/AuthContext';
+import { shouldShowAds, hasActivePaidSubscription } from '../config/adPolicy';
 
 interface AdSenseDisplayAdProps {
   className?: string;
@@ -20,27 +21,26 @@ export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({
   minHeight = 100
 }) => {
   const { plan, subscriptionStatus } = useSubscription();
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const adRef = useRef<HTMLModElement | null>(null);
   const isPushed = useRef(false);
   const [isRenderable, setIsRenderable] = useState(false);
 
-  const isAdFree =
-    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
-    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
+  const subscriptionObj = { plan, subscriptionStatus };
+  const isAdFree = hasActivePaidSubscription(subscriptionObj);
 
   const path = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
-  // Verify route & content authorization under Google AdSense policies
-  const allowed = isAdPlacementAllowed({
+  // Verify route & content authorization under Google AdSense policies using centralized shouldShowAds
+  const allowed = shouldShowAds(user, subscriptionObj, {
     path,
-    isPremium: isAdFree,
     isToolLocked,
     hasSubstantialContent
   });
 
   useEffect(() => {
-    // If ads are prohibited or user is subscribed, do nothing
+    // If ads are prohibited or user is subscribed, do nothing and ensure no render
     if (!allowed || isAdFree) {
       setIsRenderable(false);
       return;
@@ -58,6 +58,7 @@ export const AdSenseDisplayAd: React.FC<AdSenseDisplayAdProps> = ({
       const container = containerRef.current;
       if (!el || !container) return;
       if (el.getAttribute('data-adsbygoogle-status')) return;
+
 
       // AdSense throws 'No slot size for availableWidth=0' if container width is <= 0
       const width = container.offsetWidth || el.offsetWidth;

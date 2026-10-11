@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSubscription } from '../context/SubscriptionContext';
-import { isAdPlacementAllowed } from '../config/adPolicy';
+import { useAuth } from '../context/AuthContext';
+import { shouldShowAds, hasActivePaidSubscription } from '../config/adPolicy';
 
 interface InFeedAdProps {
   className?: string;
@@ -9,20 +10,19 @@ interface InFeedAdProps {
 
 export const InFeedAd: React.FC<InFeedAdProps> = ({ className = '', currentPath }) => {
   const { plan, subscriptionStatus } = useSubscription();
+  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const adRef = useRef<HTMLModElement | null>(null);
   const isPushed = useRef(false);
   const [isRenderable, setIsRenderable] = useState(false);
 
-  const isAdFree =
-    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
-    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
+  const subscriptionObj = { plan, subscriptionStatus };
+  const isAdFree = hasActivePaidSubscription(subscriptionObj);
 
   const path = currentPath || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
-  const allowed = isAdPlacementAllowed({
-    path,
-    isPremium: isAdFree
+  const allowed = shouldShowAds(user, subscriptionObj, {
+    path
   });
 
   useEffect(() => {
@@ -32,6 +32,7 @@ export const InFeedAd: React.FC<InFeedAdProps> = ({ className = '', currentPath 
     }
     setIsRenderable(true);
   }, [allowed, isAdFree, path]);
+
 
   useEffect(() => {
     if (!isRenderable || isAdFree || isPushed.current) return;

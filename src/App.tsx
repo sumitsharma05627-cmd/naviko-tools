@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { SubscriptionProvider } from './context/SubscriptionContext';
+import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -11,6 +11,18 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Ambient3DBackground } from './components/3d/Ambient3DBackground';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
 import { syncAdSenseRoutePolicy } from './config/adPolicy';
+
+// AdPolicyWatcher synchronizes route and active paid subscription state with Google AdSense
+const AdPolicyWatcher: React.FC<{ currentPath: string }> = ({ currentPath }) => {
+  const { isAdFree } = useSubscription();
+
+  useEffect(() => {
+    syncAdSenseRoutePolicy(currentPath, isAdFree);
+  }, [currentPath, isAdFree]);
+
+  return null;
+};
+
 
 // Fallback loader for lazy-loaded tools and secondary routes
 const PageLoadingFallback: React.FC = () => (
@@ -375,6 +387,7 @@ export default function App() {
       <ThemeProvider>
         <LanguageProvider>
           <SubscriptionProvider>
+            <AdPolicyWatcher currentPath={currentPath} />
             <div
               className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
               style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
@@ -385,6 +398,7 @@ export default function App() {
                 onOpenSearch={() => setIsSearchOpen(true)}
                 currentPath={currentPath}
               />
+
 
               <main className="flex-1">
                 <ErrorBoundary>

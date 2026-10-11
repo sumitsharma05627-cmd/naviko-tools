@@ -7,6 +7,7 @@ import {
 } from '../config/pricing';
 import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
 import { paymentService, SubscriptionState } from '../services/payment';
+import { hasActivePaidSubscription, syncAdSenseRoutePolicy } from '../config/adPolicy';
 import { useAuth } from './AuthContext';
 
 export type SubscriptionStatus = SubscriptionState;
@@ -19,6 +20,7 @@ export interface UsageQuotaInfo {
   requiredTier?: 'plus' | 'pro';
   resetTime?: string;
 }
+
 
 export interface UserSavedItem {
   id: string;
@@ -39,8 +41,10 @@ interface SubscriptionContextType {
   userId: string;
   isTestMode: boolean;
   isTrial: boolean;
+  isAdFree: boolean;
   trialUsed: boolean;
   trialStartAt: string | null;
+
   trialEndsAt: string | null;
   remainingTrialDays: number;
   remainingTrialHours: number;
@@ -638,6 +642,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
+  const isAdFree = hasActivePaidSubscription({ plan, subscriptionStatus });
+
+  // Whenever subscription status changes, instantly synchronize Google AdSense SPA request policy
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      syncAdSenseRoutePolicy(window.location.pathname || '/', isAdFree);
+    }
+  }, [isAdFree]);
+
   const totalDailyUsage = Object.values(dailyUsage).reduce<number>(
     (sum, count) => sum + (typeof count === 'number' ? count : 0),
     0
@@ -657,6 +670,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         userId,
         isTestMode,
         isTrial,
+        isAdFree,
         trialUsed,
         trialStartAt,
         trialEndsAt,
@@ -664,6 +678,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         remainingTrialHours,
         toggleTestMode,
         setCurrency,
+
         setBillingInterval,
         canAccess,
         checkQuota,

@@ -14,11 +14,82 @@
  * 5. Coordinates SPA ad request pausing (pauseAdRequests) across route transitions.
  */
 
+import { PlanType } from './pricing';
+
+export interface UserLike {
+  id?: string;
+  email?: string;
+}
+
+export interface SubscriptionLike {
+  plan?: PlanType | string;
+  status?: string;
+  subscriptionStatus?: string;
+  hasActiveSubscription?: boolean;
+}
+
 export interface AdPolicyContext {
   path?: string;
   isPremium?: boolean;
   isToolLocked?: boolean;
   hasSubstantialContent?: boolean;
+  user?: UserLike | null;
+  subscription?: SubscriptionLike | null;
+}
+
+/**
+ * Checks if a user has an active paid subscription entitlement (Plus, Pro, or active paid trial).
+ * Uses authoritative plan and status values verified by the server.
+ */
+export function hasActivePaidSubscription(
+  subscription?: SubscriptionLike | null
+): boolean {
+  if (!subscription) return false;
+
+  const plan = (subscription.plan || '').toLowerCase();
+  const rawStatus = (subscription.status || subscription.subscriptionStatus || '').toUpperCase();
+
+  // If explicit hasActiveSubscription is present and false, deny
+  if (subscription.hasActiveSubscription === false && rawStatus !== 'ACTIVE' && rawStatus !== 'TRIAL_ACTIVE') {
+    return false;
+  }
+
+  // Active Plus, Pro, or 7-day Trial
+  const isPaidTier = plan === 'plus' || plan === 'pro' || plan === 'trial';
+  const isActiveStatus = rawStatus === 'ACTIVE' || rawStatus === 'TRIAL_ACTIVE';
+
+  return isPaidTier && isActiveStatus;
+}
+
+/**
+ * Centralized function: shouldShowAds(user, subscription, context)
+ * 
+ * Returns false when:
+ * - The user has an active Plus subscription.
+ * - The user has an active Pro subscription.
+ * - The user has another valid paid entitlement (e.g. trial) that includes ad-free access.
+ * - The route is non-content (login, signup, dashboard, settings, checkout, etc.)
+ * - The tool is locked or has thin/insubstantial content.
+ *
+ * May return true ONLY for eligible Free users on authorized public content pages.
+ */
+export function shouldShowAds(
+  user?: UserLike | null,
+  subscription?: SubscriptionLike | null,
+  context?: Omit<AdPolicyContext, 'user' | 'subscription' | 'isPremium'>
+): boolean {
+  // 1. Plus, Pro, and Trial paid subscribers receive a completely ad-free experience
+  if (hasActivePaidSubscription(subscription)) {
+    return false;
+  }
+
+  // 2. Evaluate route & publisher content policies
+  return isAdPlacementAllowed({
+    ...context,
+    isPremium: false,
+    user,
+    subscription
+  });
 }
 
 /**
@@ -87,8 +158,9 @@ export const ALLOWED_AD_HUB_ROUTES = new Set([
  * Checks whether a given route and context is authorized for Google AdSense placements
  */
 export function isAdPlacementAllowed(context: AdPolicyContext): boolean {
-  // 1. Paid subscribers receive 100% ad-free experience
+  // 1. Paid subscribers receive 100% ad-free experience across the entire website
   if (context.isPremium) return false;
+  if (hasActivePaidSubscription(context.subscription)) return false;
 
   // 2. Locked tools / paywall states have no active utility content for the user
   if (context.isToolLocked) return false;
@@ -139,7 +211,7 @@ export function isAdPlacementAllowed(context: AdPolicyContext): boolean {
 }
 
 /**
- * Updates Google AdSense SPA request state during route navigation
+ * Updates Google AdSense SPA request state during route navigation and subscription updates
  */
 export function syncAdSenseRoutePolicy(path: string, isPremium: boolean = false): void {
   if (typeof window === 'undefined') return;
@@ -149,8 +221,10 @@ export function syncAdSenseRoutePolicy(path: string, isPremium: boolean = false)
   try {
     const adsbygoogle = ((window as any).adsbygoogle = (window as any).adsbygoogle || []);
     // Signal AdSense to pause auto-ad injection on screens without publisher content
+    // or when the user is an active paid subscriber
     adsbygoogle.pauseAdRequests = allowed ? 0 : 1;
   } catch (e) {
     // Gracefully handle ad-blocker environments
   }
 }
+

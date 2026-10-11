@@ -27,14 +27,13 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   examples = []
 }) => {
   const { t } = useLanguage();
-  const { plan, subscriptionStatus, canAccess, checkQuota } = useSubscription();
+  const { plan, subscriptionStatus, isAdFree, canAccess, checkQuota } = useSubscription();
   const [, setShowUpgradeModal] = useState(false);
 
-  const isPremium =
-    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
-    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
+  const isPremium = isAdFree;
   const entitlement = TOOL_ENTITLEMENTS[tool.id];
   const quota = checkQuota(tool.id);
+
 
   const structuredData = getStructuredToolExplanation(tool);
   const activeExamples = (examples && examples.length > 0) ? examples : (tool.examples || structuredData.examples || []);
