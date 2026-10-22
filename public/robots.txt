@@ -16,6 +16,12 @@ Disallow: /dashboard/
 Disallow: /billing/
 Disallow: /settings/
 Disallow: /profile/
+Disallow: /login
+Disallow: /login/
+Disallow: /signup
+Disallow: /signup/
+Disallow: /forgot-password
+Disallow: /forgot-password/
 Disallow: /reset-password/
 
 # Google Ads & Media Crawlers

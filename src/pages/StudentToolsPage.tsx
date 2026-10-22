@@ -26,14 +26,6 @@ export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }
 
   const studentTools = TOOLS_DATA.filter((t) => t.studentHub);
 
-  const upcomingTools = [
-    { name: 'Pomodoro Study Timer', desc: 'Focus sessions with structured break intervals to maximize retention.' },
-    { name: 'Semester Exam Countdown', desc: 'Custom countdown timers for college finals and board exams.' },
-    { name: 'Marks to Percentage Converter', desc: 'Multi-subject exam total and grade rank calculator.' },
-    { name: 'Essay Citation Generator', desc: 'Format APA, MLA, and Harvard citations easily.' },
-    { name: 'Grade Curve Calculator', desc: 'Standard deviation and percentile-based bell curve calculator.' },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-50/50 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,32 +106,77 @@ export const StudentToolsPage: React.FC<StudentToolsPageProps> = ({ onNavigate }
         <DesktopAdSlot className="mb-14" />
         <MobileAdSlot className="mb-10" />
 
-        {/* Upcoming Student Tools Roadmap */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
-          <div className="max-w-2xl mb-6">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-600 mb-1">
-              <Sparkles className="w-3.5 h-3.5" /> Roadmap
+        {/* Academic Strategy & Best Practices Guide */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 shadow-xs space-y-8">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2">
+              <BookOpen className="w-3.5 h-3.5" /> Study Strategy &amp; Academic Framework
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-              Upcoming Tools in Development
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Mastering College Metrics: Attendance, CGPA, and Syllabus Pacing
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">
-              We are actively developing new study utilities. Have a tool request? Reach out via our contact page.
+            <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+              Academic success isn’t just about working harder—it’s about managing institutional requirements with strategic precision.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingTools.map((up, idx) => (
-              <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-slate-900">{up.name}</h3>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                    Coming Soon
-                  </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">
+                  01
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">{up.desc}</p>
+                <h3 className="text-sm font-bold text-slate-900">The 75% Attendance Rule</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Most colleges require a strict 75% attendance threshold to appear for end-semester exams. Never guess your numbers: calculate exact consecutive classes needed to cross the threshold or determine how many safe leaves you have remaining.
+                </p>
               </div>
-            ))}
+              <button
+                onClick={() => onNavigate('/tools/attendance-calculator')}
+                className="mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Launch Attendance Tracker</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-100 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                  02
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">CGPA to Percentage Multipliers</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Different universities use distinct conversion multipliers. CBSE and many technical institutions apply the 9.5 factor (Percentage = CGPA × 9.5), whereas others use 10.0 or credit-weighted scales. Ensure you use the exact standard recognized by your university board.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/tools/cgpa-calculator')}
+                className="mt-4 text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Launch CGPA Calculator</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-purple-50/50 border border-purple-100 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                  03
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Syllabus Completion &amp; Recovery</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Having arrears or backlogs can cause significant anxiety. Divide remaining chapters by days until your exam date, prioritize high-weightage topics, and verify whether your study schedule is mathematically achievable before exam week arrives.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate('/tools/can-i-finish-my-syllabus')}
+                className="mt-4 text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Launch Syllabus Calculator</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

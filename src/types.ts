@@ -47,6 +47,7 @@ export interface BlogPost {
   readTime: string;
   category: string;
   publishedDate: string;
+  relatedTools?: { name: string; path: string; desc: string }[];
   content: {
     heading: string;
     body: string[];

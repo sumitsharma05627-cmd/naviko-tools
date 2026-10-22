@@ -71,6 +71,21 @@
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
+  <url>
+    <loc>https://naviko.in/blog/guide-to-sip-vs-lump-sum-investing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/blog/how-to-recover-college-attendance-shortage</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://naviko.in/blog/client-side-file-privacy-pdf-image-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 
   <!-- PDF Tools -->
   <url>

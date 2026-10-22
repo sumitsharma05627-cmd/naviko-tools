@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BookOpen, Clock, Calendar, ArrowLeft, Lightbulb } from 'lucide-react';
+import { BookOpen, Clock, Calendar, ArrowLeft, Lightbulb, ArrowRight, Wrench } from 'lucide-react';
 import { BlogPost } from '../types';
 import { BLOG_POSTS } from '../data/blogData';
 import { DesktopAdSlot, MobileAdSlot } from '../components/AdSlot';
@@ -152,13 +152,49 @@ export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ slug, onNavigate
             ))}
           </div>
 
+          {/* Related Interactive Tools */}
+          {post.relatedTools && post.relatedTools.length > 0 && (
+            <div className="pt-8 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Related Interactive Tools
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {post.relatedTools.map((relTool, rIdx) => (
+                  <button
+                    key={rIdx}
+                    onClick={() => onNavigate(relTool.path)}
+                    className="p-4 text-left rounded-2xl bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/80 hover:border-indigo-300 transition-all flex flex-col justify-between group cursor-pointer"
+                  >
+                    <div>
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        {relTool.name}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        {relTool.desc}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-indigo-600">
+                      <span>Launch Tool</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
             <span className="text-xs text-slate-500">
               NAVIKO Educational Reference Suite
             </span>
             <button
               onClick={() => onNavigate('/tools')}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               Try Working Calculators →
             </button>

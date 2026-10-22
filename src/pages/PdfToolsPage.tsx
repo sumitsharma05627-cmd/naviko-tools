@@ -162,8 +162,29 @@ export const PdfToolsPage: React.FC<PdfToolsPageProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('/tools')}
             className="mt-5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
           >
-            Explore All 25+ Tools →
+            Explore All 46+ Tools →
           </button>
+        </div>
+
+        {/* Technical Specification Matrix */}
+        <div className="mt-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+            Technical Specifications &amp; Compatibility
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600 dark:text-slate-400">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="font-bold text-slate-900 dark:text-white block mb-1">Supported File Formats</span>
+              PDF (v1.3 to v1.7, PDF/A), JPEG, JPG, and PNG image conversions.
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="font-bold text-slate-900 dark:text-white block mb-1">Processing Engine</span>
+              100% Client-Side WebAssembly &amp; pdf-lib execution in device RAM.
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="font-bold text-slate-900 dark:text-white block mb-1">Security &amp; Retention</span>
+              Zero network upload, zero server disk caching, and zero data telemetry.
+            </div>
+          </div>
         </div>
       </div>
     </div>

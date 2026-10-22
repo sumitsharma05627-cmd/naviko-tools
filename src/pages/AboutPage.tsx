@@ -72,13 +72,29 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             Whether you are a student computing semester CGPA, a job candidate crafting an ATS-friendly resume, a developer optimizing raster images, or an everyday user converting measurement units, NAVIKO is designed to be your reliable digital toolbox.
           </p>
 
+          <h2 className="text-xl font-bold text-slate-900 pt-4">Editorial &amp; Calculation Standards</h2>
+          <p>
+            Every calculator and utility on NAVIKO is implemented against recognized international and statutory standards:
+          </p>
+          <ul className="list-disc list-inside space-y-1.5 text-xs sm:text-sm text-slate-600 pl-2">
+            <li><strong>Financial Utilities:</strong> Formulated using standard banking compound interest, reducing-balance EMI amortization, and Indian income tax slab revisions.</li>
+            <li><strong>Academic Tools:</strong> Calibrated against CBSE, AICTE, and UGC grade point conventions, including the standard 9.5 conversion multiplier and the 75% attendance criterion.</li>
+            <li><strong>Document &amp; Image Processing:</strong> Executed strictly in browser sandbox memory (HTML5 Canvas and WebAssembly), ensuring confidential documents and photos never touch a remote server.</li>
+            <li><strong>Health Metrics:</strong> Grounded in World Health Organization (WHO) adult anthropometric cutoffs and accompanied by prominent medical disclaimers.</li>
+          </ul>
+
+          <h2 className="text-xl font-bold text-slate-900 pt-4">Operations &amp; Contact</h2>
+          <p>
+            NAVIKO is operated independently as a free public utility platform. We are continuously adding new tools, improving mobile ergonomics, and refining our calculation engines based on user feedback. Have a suggestion or question? Reach out to our team anytime at <strong>support@naviko.in</strong>.
+          </p>
+
           <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
             <span className="text-xs text-slate-500 font-medium">
               Independent online platform • https://naviko.in
             </span>
             <button
               onClick={() => onNavigate('/tools')}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2"
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
             >
               <span>Explore All Tools</span>
               <ArrowRight className="w-3.5 h-3.5" />
