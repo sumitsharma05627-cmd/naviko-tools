@@ -54,8 +54,9 @@ interface SubscriptionContextType {
   canAccess: (id: string) => boolean;
   checkQuota: (id: string) => UsageQuotaInfo;
   recordUsage: (id: string) => boolean;
+  isFoundingMember: boolean;
   upgradeToTier: (
-    tier: 'plus' | 'pro',
+    tier: 'plus' | 'pro' | 'founding',
     interval: BillingInterval,
     email?: string
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
@@ -341,7 +342,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE';
       const effectivePlan: PlanType = isSubscriptionActive ? plan : 'free';
 
-      if (effectivePlan === 'pro' || effectivePlan === 'trial') return true;
+      if (effectivePlan === 'pro' || effectivePlan === 'founding' || effectivePlan === 'trial') return true;
 
       const tool = TOOL_ENTITLEMENTS[id];
       if (tool) {
@@ -377,21 +378,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       if (entitlement.accessLevel === 'PLUS') {
-        if (effectivePlan === 'plus' || effectivePlan === 'pro' || effectivePlan === 'trial') {
+        if (effectivePlan === 'plus' || effectivePlan === 'pro' || effectivePlan === 'founding' || effectivePlan === 'trial') {
           return { allowed: true, remaining: Infinity, limit: Infinity };
         }
         return { allowed: false, remaining: 0, limit: 0, isUpgradeRequired: true, requiredTier: 'plus' };
       }
 
       if (entitlement.accessLevel === 'PRO') {
-        if (effectivePlan === 'pro' || effectivePlan === 'trial') {
+        if (effectivePlan === 'pro' || effectivePlan === 'founding' || effectivePlan === 'trial') {
           return { allowed: true, remaining: Infinity, limit: Infinity };
         }
         return { allowed: false, remaining: 0, limit: 0, isUpgradeRequired: true, requiredTier: 'pro' };
       }
 
       let limit = 5;
-      if (effectivePlan === 'pro' || effectivePlan === 'trial') {
+      if (effectivePlan === 'founding') {
+        limit = PLAN_CAPABILITIES.founding.aiDailyLimit;
+      } else if (effectivePlan === 'pro' || effectivePlan === 'trial') {
         limit = (entitlement as any).proDailyLimit ?? PLAN_CAPABILITIES.pro.aiDailyLimit;
       } else if (effectivePlan === 'plus') {
         limit = (entitlement as any).plusDailyLimit ?? PLAN_CAPABILITIES.plus.aiDailyLimit;
@@ -445,7 +448,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
    */
   const upgradeToTier = useCallback(
     async (
-      tier: 'plus' | 'pro',
+      tier: 'plus' | 'pro' | 'founding',
       interval: BillingInterval,
       email?: string
     ): Promise<{ success: boolean; message?: string; error?: string }> => {
@@ -459,12 +462,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const uid = user.id;
         const customerEmailAddress = user.email || email;
+        const planId = tier === 'founding' ? 'founding_member' : `${tier}_${interval}`;
 
         // 1. Process payment via Razorpay + Backend verification
         const result = await paymentService.processPlanPayment({
           tier,
           interval,
-          planId: `${tier}_${interval}`,
+          planId: planId as PlanId,
           currency,
           customerEmail: customerEmailAddress,
           customerName: user.name,
@@ -683,6 +687,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         canAccess,
         checkQuota,
         recordUsage,
+        isFoundingMember: plan === 'founding',
         upgradeToTier,
         upgradeToPremium,
         startTrial,

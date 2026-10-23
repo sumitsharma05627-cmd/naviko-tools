@@ -10,6 +10,8 @@ import { useLanguage, LANGUAGES } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useAuth } from '../context/AuthContext';
+import { useVersion } from '../context/VersionContext';
+import { VersionSwitcher } from './VersionSwitcher';
 import { PremiumBadge } from './monetization/PremiumBadge';
 import { ThemePopover } from './ThemePopover';
 
@@ -129,15 +131,22 @@ const CATEGORIES_NAV_CONFIG: CategoryNav[] = [
   },
   {
     id: 'health',
-    name: 'Health & Wellness',
-    shortName: 'Health',
-    path: '/health-tools',
+    name: 'Nutrition & Wellness',
+    shortName: 'Nutrition',
+    path: '/food-explorer',
     icon: HeartPulse,
-    description: 'Meal scheduling, nutrition, daily calories & hydration goals.',
+    badge: 'Updated',
+    badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
+    description: 'Food nutrition explorer, comparison tool, label analyzer & recipes.',
     tools: [
-      { name: 'Diet Plan Manager', path: '/tools/diet-plan-manager', desc: 'Personalized meal schedule with dietary filters', badge: 'Popular', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+      { name: 'Indian Food Explorer', path: '/food-explorer', desc: '36+ staples with ICMR-NIN & USDA data', badge: 'Popular', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+      { name: 'Food Comparison Tool', path: '/food-compare', desc: 'Side-by-side macro & micronutrient matrix' },
+      { name: 'Healthy Indian Recipes', path: '/recipes', desc: 'Wholesome recipes with Ahara Vidhi notes', badge: 'New', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' },
+      { name: 'Packaged Label & INS Decoder', path: '/label-analyzer', desc: 'Scan food additives, allergens & hidden sugars' },
+      { name: 'Ayurveda & Dinacharya', path: '/ayurveda', desc: 'Evidence reviews & circadian routine builder' },
+      { name: 'Smart Meal Planner', path: '/meal-planner', desc: 'Calorie & macro targets with meal schedule' },
+      { name: 'Daily Habits & Water Log', path: '/habit-tracker', desc: 'Hydration tracker & 7-day progress' },
       { name: 'Health & BMI Calculator', path: '/tools/health-calculator', desc: 'Body mass index & daily calorie targets' },
-      { name: 'Water Intake Tracker', path: '/tools/water-intake-calculator', desc: 'Hydration goal based on weight & activity' },
     ],
   },
   {
@@ -165,6 +174,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
   const { theme, resolvedTheme, toggleTheme, setTheme } = useTheme();
   const { plan, subscriptionStatus, isTrial } = useSubscription();
   const { user, isAuthenticated } = useAuth();
+  const { version, switchVersion } = useVersion();
 
   const isPremiumUser =
     (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
@@ -221,41 +231,64 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
       <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-5 lg:px-7">
         <div className="flex items-center justify-between h-16 gap-2 lg:gap-4">
           
-          {/* 1. Brand Logo */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* 1. Brand Logo + Version Switcher */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
-              onClick={() => handleNav('/')}
-              className="flex items-center gap-2.5 text-left group focus:outline-none cursor-pointer"
-              aria-label="NAVIKO Smart Suite"
+              onClick={() => handleNav(version === 'v1' ? '/v1' : '/v2')}
+              className="flex items-center gap-2 sm:gap-2.5 text-left group focus:outline-none cursor-pointer"
+              aria-label="NAVIKO Platform"
             >
               {/* Emblem */}
               <div className="relative">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-[1.5px] shadow-sm shadow-indigo-500/20 group-hover:scale-105 group-hover:shadow-indigo-500/30 transition-all">
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl p-[1.5px] shadow-sm group-hover:scale-105 transition-all ${
+                  version === 'v1'
+                    ? 'bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 shadow-indigo-500/20 group-hover:shadow-indigo-500/30'
+                    : 'bg-gradient-to-tr from-emerald-700 via-emerald-600 to-amber-400 shadow-emerald-500/20 group-hover:shadow-emerald-500/30'
+                }`}>
                   <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/40 to-emerald-400/20 opacity-80 group-hover:opacity-100 transition-opacity" />
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-300 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                    <div className={`absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity ${
+                      version === 'v1'
+                        ? 'bg-gradient-to-tr from-indigo-600/40 to-sky-400/20'
+                        : 'bg-gradient-to-tr from-emerald-600/40 to-amber-400/20'
+                    }`} />
+                    <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:rotate-12 transition-transform duration-300 ${
+                      version === 'v1' ? 'text-indigo-300' : 'text-emerald-300'
+                    }`} />
                   </div>
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${version === 'v1' ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${version === 'v1' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
                 </span>
               </div>
 
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center">
+                  <span className="text-lg sm:text-xl font-serif font-black tracking-tight text-slate-900 dark:text-white flex items-center">
                     NAVIKO
                   </span>
-                  <span className="px-1.5 py-0.2 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold tracking-wider border border-indigo-200/60 dark:border-indigo-800 uppercase">
-                    v2.0
+                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-extrabold tracking-wider border uppercase ${
+                    version === 'v1'
+                      ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800'
+                      : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800'
+                  }`}>
+                    {version === 'v1' ? 'v1.0' : 'v2.0'}
                   </span>
                 </div>
-                <span className="hidden sm:block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest -mt-0.5">
-                  Smart Productivity Suite
+                <span className={`hidden sm:block text-[9px] font-semibold uppercase tracking-widest -mt-0.5 ${
+                  version === 'v1'
+                    ? 'text-indigo-600 dark:text-indigo-400'
+                    : 'text-emerald-700 dark:text-emerald-400'
+                }`}>
+                  {version === 'v1' ? 'Original Tools Suite' : 'Science Meets Tradition'}
                 </span>
               </div>
             </button>
+
+            {/* Compact, Accessible Version Switcher Near the Logo (Adaptive: Dropdown on Mobile, Segmented on Desktop) */}
+            <div className="ml-1 sm:ml-2">
+              <VersionSwitcher onNavigate={onNavigate} />
+            </div>
           </div>
 
           {/* 2. Full Menu Display in Navigation Bar */}
@@ -264,33 +297,174 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
             className="hidden lg:flex items-center gap-1 xl:gap-1.5 flex-1 justify-center px-1 overflow-visible"
             aria-label="Main Navigation"
           >
-            {/* Home Link */}
-            <button
-              onClick={() => handleNav('/')}
-              className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
-                currentPath === '/'
-                  ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
-              }`}
-            >
-              {t('nav.home', 'Home')}
-            </button>
+            {version === 'v1' ? (
+              <>
+                {/* NAVIKO 1.0 Original Navigation */}
+                <button
+                  onClick={() => handleNav('/v1')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/v1' || currentPath === '/'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  {t('nav.home', 'Home')}
+                </button>
 
-            {/* FULL MENU MEGA-BUTTON (Opens Complete 4-Column Directory) */}
+                <button
+                  onClick={() => handleNav('/calculators')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/calculators'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  Calculators
+                </button>
+
+                <button
+                  onClick={() => handleNav('/finance-tools')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/finance-tools'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  Finance &amp; Wealth
+                </button>
+
+                <button
+                  onClick={() => handleNav('/student-tools')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/student-tools'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  Student Tools
+                </button>
+
+                <button
+                  onClick={() => handleNav('/pdf-tools')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/pdf-tools'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  PDF Tools
+                </button>
+
+                <button
+                  onClick={() => handleNav('/image-tools')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/image-tools'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  Image Tools
+                </button>
+
+                <button
+                  onClick={() => handleNav('/career-tools')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/career-tools'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/60 font-bold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  Career
+                </button>
+              </>
+            ) : (
+              <>
+                {/* NAVIKO 2.0 Nutrition & Ayurveda Navigation */}
+                <button
+                  onClick={() => handleNav('/v2')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/v2' || currentPath === '/'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  {t('nav.home', 'Home')}
+                </button>
+
+                <button
+                  onClick={() => handleNav('/food-explorer')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/food-explorer'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  🥗 Nutrition
+                </button>
+
+                <button
+                  onClick={() => handleNav('/meal-planner')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/meal-planner'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  🍲 Meal Planner
+                </button>
+
+                <button
+                  onClick={() => handleNav('/ayurveda')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/ayurveda'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  🌿 Ayurveda
+                </button>
+
+                <button
+                  onClick={() => handleNav('/habit-tracker')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/habit-tracker'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  💧 Daily Habits
+                </button>
+
+                <button
+                  onClick={() => handleNav('/wellness-calculators')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/wellness-calculators'
+                      ? 'text-emerald-800 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 font-bold'
+                      : 'text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100/70 dark:hover:bg-stone-800/70'
+                  }`}
+                >
+                  ⚖️ Wellness Calcs
+                </button>
+              </>
+            )}
+
+            {/* FULL MENU MEGA-BUTTON (Shared by both versions) */}
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('full-menu')}
                 className={`px-3 py-1.5 text-xs xl:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
                   activeMenu === 'full-menu'
-                    ? 'bg-indigo-600 text-white shadow-indigo-500/20'
-                    : 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/70 dark:border-indigo-800/60'
+                    ? version === 'v1'
+                      ? 'bg-indigo-600 text-white shadow-indigo-900/20'
+                      : 'bg-emerald-800 text-white shadow-emerald-900/20'
+                    : 'bg-stone-100 dark:bg-stone-800/70 text-stone-800 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700/60 border border-stone-200 dark:border-stone-700'
                 }`}
                 aria-expanded={activeMenu === 'full-menu'}
                 aria-haspopup="dialog"
                 title="Open complete directory of all 46+ tools"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Full Menu</span>
+                <span>All 46+ Tools</span>
                 <ChevronDown className={`w-3 h-3 transition-transform ${activeMenu === 'full-menu' ? 'rotate-180' : ''}`} />
               </button>
 
@@ -724,8 +898,23 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
       {/* 4. Mobile Drawer Navigation with Full Menu Display */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-6 space-y-3 shadow-2xl animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
-          {/* Mobile Search */}
+          {/* Top Version Switcher in Mobile Drawer */}
           <div className="pt-2">
+            <div className="p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Switch Website Experience
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${version === 'v1' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}`}>
+                  {version === 'v1' ? 'v1.0 Original' : 'v2.0 Nutrition'}
+                </span>
+              </div>
+              <VersionSwitcher onNavigate={handleNav} mode="segmented" className="w-full justify-between" />
+            </div>
+          </div>
+
+          {/* Mobile Search */}
+          <div>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -822,6 +1011,97 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
               <ChevronRight className="w-4 h-4 text-amber-500" />
             </button>
           </div>
+
+          {/* Version-Specific Mobile Quick Shortcuts Grid */}
+          {version === 'v1' ? (
+            <div className="space-y-1.5 pt-1">
+              <div className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 px-1">
+                NAVIKO 1.0 Featured Tools
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleNav('/tools/scientific-calculator')}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🧮</span> <span>Scientific Calc</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Trig, Logs &amp; Deg/Rad</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/tools/sip-calculator')}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>📈</span> <span>SIP Compounding</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Returns &amp; Inflation</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/tools/resume-builder')}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>💼</span> <span>ATS Resume</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Clean Print &amp; PDF</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/tools/attendance-calculator')}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🎓</span> <span>75% Attendance</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Bunk/Class Buffer</div>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              <div className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 px-1">
+                Nutrition &amp; Ayurveda Pillars
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleNav('/food-explorer')}
+                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                    <span>🥗</span> <span>Food Explorer</span>
+                  </div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">36+ Indian Foods</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/meal-planner')}
+                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                    <span>🍲</span> <span>Meal Planner</span>
+                  </div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">Custom Diet Schedules</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/ayurveda')}
+                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                    <span>🌿</span> <span>Ayurveda Hub</span>
+                  </div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">12 Herbs &amp; Dinacharya</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/habit-tracker')}
+                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/60 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                    <span>💧</span> <span>Daily Habits</span>
+                  </div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">Hydration &amp; Food Log</div>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* FULL CATEGORY ACCORDION MENU ON MOBILE */}
           <div className="space-y-1 pt-1">

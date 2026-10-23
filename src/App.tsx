@@ -3,9 +3,12 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { VersionProvider } from './context/VersionContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
+import { HomePageV1 } from './pages/HomePageV1';
+import { HomePageV2 } from './pages/HomePageV2';
 import { getToolByPath } from './data/toolsData';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Ambient3DBackground } from './components/3d/Ambient3DBackground';
@@ -104,6 +107,17 @@ const BudgetCalculator = lazy(() => import('./components/tools/BudgetCalculator'
 const BmiCalculator = lazy(() => import('./components/tools/BmiCalculator').then(m => ({ default: m.BmiCalculator })));
 const DietPlanManager = lazy(() => import('./components/tools/DietPlanManager').then(m => ({ default: m.DietPlanManager })));
 const NutritionScience = lazy(() => import('./components/tools/NutritionScience').then(m => ({ default: m.NutritionScience })));
+
+// NAVIKO 2.0 Wellness & Nutrition Pages
+const FoodExplorerPage = lazy(() => import('./pages/FoodExplorerPage').then(m => ({ default: m.FoodExplorerPage })));
+const MealPlannerPage = lazy(() => import('./pages/MealPlannerPage').then(m => ({ default: m.MealPlannerPage })));
+const AyurvedaHubPage = lazy(() => import('./pages/AyurvedaHubPage').then(m => ({ default: m.AyurvedaHubPage })));
+const HabitTrackerPage = lazy(() => import('./pages/HabitTrackerPage').then(m => ({ default: m.HabitTrackerPage })));
+const WellnessCalculatorsPage = lazy(() => import('./pages/WellnessCalculatorsPage').then(m => ({ default: m.WellnessCalculatorsPage })));
+const FoodComparisonPage = lazy(() => import('./pages/FoodComparisonPage').then(m => ({ default: m.FoodComparisonPage })));
+const LabelAnalyzerPage = lazy(() => import('./pages/LabelAnalyzerPage').then(m => ({ default: m.LabelAnalyzerPage })));
+const RecipeExplorerPage = lazy(() => import('./pages/RecipeExplorerPage').then(m => ({ default: m.RecipeExplorerPage })));
+const SourcesPage = lazy(() => import('./pages/SourcesPage').then(m => ({ default: m.SourcesPage })));
 
 // Lazy Loaded Secondary Pages
 const AllToolsPage = lazy(() => import('./pages/AllToolsPage').then(m => ({ default: m.AllToolsPage })));
@@ -253,9 +267,44 @@ export default function App() {
     const rawPath = currentPath.toLowerCase().trim();
     const path = rawPath.replace(/\/$/, '') || '/';
 
-    // 1. Home Route (Instant Eager Render for fastest LCP)
+    // 1. Home Routes & Version Specific URLs
     if (path === '/' || path === '') {
       return <HomePage onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    }
+    if (path === '/v1' || path === '/original') {
+      return <HomePageV1 onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    }
+    if (path === '/v2' || path === '/nutrition') {
+      return <HomePageV2 onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    }
+
+    // 1.1 NAVIKO 2.0 Core Wellness & Nutrition Pillars
+    if (path === '/food-explorer' || path === '/nutrition-explorer' || path === '/foods') {
+      return <FoodExplorerPage onNavigate={navigate} />;
+    }
+    if (path === '/food-compare' || path === '/compare-foods' || path === '/nutrition-compare') {
+      return <FoodComparisonPage onNavigate={navigate} />;
+    }
+    if (path === '/label-analyzer' || path === '/food-label-analyzer' || path === '/ins-decoder') {
+      return <LabelAnalyzerPage onNavigate={navigate} />;
+    }
+    if (path === '/recipes' || path === '/healthy-recipes' || path === '/indian-recipes') {
+      return <RecipeExplorerPage onNavigate={navigate} />;
+    }
+    if (path === '/sources' || path === '/editorial-standards' || path === '/evidence-standards') {
+      return <SourcesPage onNavigate={navigate} />;
+    }
+    if (path === '/meal-planner' || path === '/diet-planner') {
+      return <MealPlannerPage onNavigate={navigate} />;
+    }
+    if (path === '/ayurveda' || path === '/ayurveda-hub' || path === '/herbs') {
+      return <AyurvedaHubPage onNavigate={navigate} />;
+    }
+    if (path === '/habit-tracker' || path === '/habits' || path === '/daily-habits') {
+      return <HabitTrackerPage />;
+    }
+    if (path === '/wellness-calculators' || path === '/health-calculators' || path === '/wellness') {
+      return <WellnessCalculatorsPage />;
     }
 
     // 2. Hub & Category Pages
@@ -387,45 +436,46 @@ export default function App() {
       <ThemeProvider>
         <LanguageProvider>
           <SubscriptionProvider>
-            <AdPolicyWatcher currentPath={currentPath} />
-            <div
-              className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
-              style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
-            >
-              <Ambient3DBackground />
-              <Header
-                onNavigate={navigate}
-                onOpenSearch={() => setIsSearchOpen(true)}
-                currentPath={currentPath}
-              />
+            <VersionProvider>
+              <AdPolicyWatcher currentPath={currentPath} />
+              <div
+                className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
+                style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+              >
+                <Ambient3DBackground />
+                <Header
+                  onNavigate={navigate}
+                  onOpenSearch={() => setIsSearchOpen(true)}
+                  currentPath={currentPath}
+                />
 
+                <main className="flex-1">
+                  <ErrorBoundary>
+                    <Suspense fallback={<PageLoadingFallback />}>
+                      {renderContent()}
+                    </Suspense>
+                  </ErrorBoundary>
+                </main>
 
-              <main className="flex-1">
-                <ErrorBoundary>
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    {renderContent()}
-                  </Suspense>
-                </ErrorBoundary>
-              </main>
+                <Footer onNavigate={navigate} />
 
-              <Footer onNavigate={navigate} />
-
-              <Suspense fallback={null}>
-                <ChatBot onNavigate={navigate} />
-              </Suspense>
-
-              {isSearchOpen && (
                 <Suspense fallback={null}>
-                  <SearchModal
-                    isOpen={isSearchOpen}
-                    onClose={() => setIsSearchOpen(false)}
-                    onNavigate={(path) => navigate(path)}
-                  />
+                  <ChatBot onNavigate={navigate} />
                 </Suspense>
-              )}
 
-              <CookieConsentBanner onNavigate={navigate} />
-            </div>
+                {isSearchOpen && (
+                  <Suspense fallback={null}>
+                    <SearchModal
+                      isOpen={isSearchOpen}
+                      onClose={() => setIsSearchOpen(false)}
+                      onNavigate={(path) => navigate(path)}
+                    />
+                  </Suspense>
+                )}
+
+                <CookieConsentBanner onNavigate={navigate} />
+              </div>
+            </VersionProvider>
           </SubscriptionProvider>
         </LanguageProvider>
       </ThemeProvider>

@@ -1,6 +1,6 @@
 {
   "name": "NAVIKO",
-  "description": "NAVIKO provides free online tools for students, professionals, and everyday users, including calculators, converters, QR code tools, image tools, typing tests, resume tools, and more.",
+  "description": "NAVIKO — Science Meets Tradition. Practical Indian nutrition science, responsible Ayurveda exploration, smart meal planning, and daily wellness tools.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

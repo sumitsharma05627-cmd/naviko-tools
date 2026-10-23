@@ -12,7 +12,7 @@ export type SubscriptionState =
   | 'EXPIRED';
 
 export interface PaymentPlanRequest {
-  tier: 'plus' | 'pro';
+  tier: 'plus' | 'pro' | 'founding';
   interval: BillingInterval;
   currency: CurrencyCode;
   planId?: PlanId;
@@ -164,25 +164,15 @@ class PaymentService {
       };
     }
 
-    if (request.tier !== 'plus' && request.tier !== 'pro') {
+    if (request.tier !== 'plus' && request.tier !== 'pro' && request.tier !== 'founding') {
       return {
         success: false,
-        error: 'Invalid plan selected. Only Plus and Pro tiers can be subscribed.',
+        error: 'Invalid plan selected. Only Plus, Pro, and Founding Member tiers can be subscribed.',
       };
     }
 
-    // 2. Load Razorpay Checkout SDK
-    const isLoaded = await this.ensureRazorpayLoaded();
-    if (!isLoaded || !(window as any).Razorpay) {
-      return {
-        success: false,
-        error:
-          'Unable to load Razorpay payment gateway script. Please check your internet connection and try again.',
-      };
-    }
-
-    // 3. Request server to create a verified Razorpay Order
-    const planId: PlanId = request.planId || `${request.tier}_${request.interval}`;
+    // 2. Request server to create a verified Razorpay Order
+    const planId: PlanId = request.planId || (request.tier === 'founding' ? 'founding_member' : `${request.tier}_${request.interval}` as PlanId);
     const res = await safeApiFetch<any>('/api/subscription/create-order', {
       method: 'POST',
       headers: this.getAuthHeaders(),
@@ -213,6 +203,48 @@ class PaymentService {
     const amount = orderData.order?.amount ?? orderData.amount;
     const currency = orderData.order?.currency || orderData.currency || 'INR';
     const keyId = orderData.keyId || (import.meta as any)?.env?.VITE_RAZORPAY_KEY_ID;
+
+    // Handle Sandbox Simulation Mode (when live keys are not configured in environment)
+    if (orderData.isSandbox || String(orderId).startsWith('order_sandbox_')) {
+      const verifyRes = await safeApiFetch<any>('/api/subscription/verify-payment', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({
+          razorpay_order_id: orderId,
+          razorpay_payment_id: `pay_sandbox_${Date.now()}`,
+          razorpay_signature: 'sig_sandbox_verified',
+          userId: request.userId,
+          tier: request.tier,
+          interval: request.interval,
+        }),
+      });
+
+      if (verifyRes.ok && verifyRes.data?.success) {
+        return {
+          success: true,
+          orderId,
+          transactionId: `pay_sandbox_${Date.now()}`,
+          plan: verifyRes.data.plan,
+          status: verifyRes.data.status,
+          message: orderData.sandboxNotice || 'Payment verified in Sandbox mode! Your plan is now active.',
+        };
+      } else {
+        return {
+          success: false,
+          error: verifyRes.error || verifyRes.data?.error || 'Failed to verify sandbox transaction.',
+        };
+      }
+    }
+
+    // 3. Load Razorpay Checkout SDK for live checkout
+    const isLoaded = await this.ensureRazorpayLoaded();
+    if (!isLoaded || !(window as any).Razorpay) {
+      return {
+        success: false,
+        error:
+          'Unable to load Razorpay payment gateway script. Please check your internet connection and try again.',
+      };
+    }
 
     if (!orderId || !amount || !keyId) {
       return {

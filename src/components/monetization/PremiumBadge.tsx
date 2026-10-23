@@ -42,7 +42,8 @@ export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
 
   let effectiveVariant = variant;
   if (!effectiveVariant) {
-    if (displayTier === 'pro') effectiveVariant = 'pro';
+    if (displayTier === 'founding') effectiveVariant = 'pro';
+    else if (displayTier === 'pro') effectiveVariant = 'pro';
     else if (displayTier === 'plus') effectiveVariant = 'indigo';
     else effectiveVariant = 'amber';
   }
@@ -52,10 +53,10 @@ export const PremiumBadge: React.FC<PremiumBadgeProps> = ({
     indigo: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
     emerald: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
     gradient: 'bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 text-amber-700 dark:text-amber-300 border-amber-300/40 dark:border-amber-600/40',
-    pro: 'bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 text-purple-900 dark:text-purple-200 border-purple-300/50 dark:border-purple-600/50',
+    pro: 'bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-purple-500/20 text-purple-900 dark:text-purple-200 border-purple-300/50 dark:border-purple-600/50 font-black',
   };
 
-  const badgeText = label || (displayTier === 'pro' ? 'PRO' : displayTier === 'plus' ? 'PLUS' : 'FREE');
+  const badgeText = label || (displayTier === 'founding' ? 'FOUNDING MEMBER' : displayTier === 'pro' ? 'PRO' : displayTier === 'plus' ? 'PLUS' : 'FREE');
 
   return (
     <span

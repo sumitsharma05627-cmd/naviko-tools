@@ -1,7 +1,7 @@
 import { ToolCategory } from '../types';
 
-export type PlanType = 'free' | 'plus' | 'pro' | 'trial';
-export type BillingInterval = 'monthly' | 'yearly';
+export type PlanType = 'free' | 'plus' | 'pro' | 'founding' | 'trial';
+export type BillingInterval = 'monthly' | 'yearly' | 'lifetime';
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'SGD' | 'AED' | 'SAR' | 'JPY';
 
 export type PlanId =
@@ -9,11 +9,15 @@ export type PlanId =
   | 'plus_monthly'
   | 'plus_yearly'
   | 'pro_monthly'
-  | 'pro_yearly';
+  | 'pro_yearly'
+  | 'premium_monthly'
+  | 'premium_yearly'
+  | 'founding_member';
 
 export interface TierPrice {
   monthly: number;
   yearly: number;
+  founding?: number;
 }
 
 export interface CurrencyPricing {
@@ -37,7 +41,7 @@ export interface PlanFeature {
 
 /**
  * Centralized Variable Pricing Configuration for NAVIKO
- * All 3 tiers (Free, Plus, Pro) across 10 localized currencies.
+ * Supports Free, Monthly Premium (₹499), Annual Premium (₹4,999), and Founding Member (₹7,999).
  */
 export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
   INR: {
@@ -46,12 +50,14 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '₹',
     flag: '🇮🇳',
     plus: {
-      monthly: 99,
-      yearly: 799,
+      monthly: 499,
+      yearly: 4999,
+      founding: 7999,
     },
     pro: {
-      monthly: 199,
-      yearly: 1499,
+      monthly: 499,
+      yearly: 4999,
+      founding: 7999,
     },
     formatString: '₹{price}',
     isPopular: true,
@@ -258,10 +264,19 @@ export function getPlanId(tier: 'plus' | 'pro' | 'trial', interval: BillingInter
 /**
  * Parses PlanId into tier and interval
  */
-export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'trial'; interval: BillingInterval | 'trial' } {
+export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'founding' | 'trial'; interval: BillingInterval | 'trial' } {
   const normalized = String(planId || '').toLowerCase().trim();
   if (normalized === 'trial' || normalized === 'pro_trial') {
     return { tier: 'trial', interval: 'trial' };
+  }
+  if (normalized === 'founding_member' || normalized === 'founding' || normalized === 'lifetime') {
+    return { tier: 'founding', interval: 'lifetime' };
+  }
+  if (normalized === 'premium_yearly' || normalized === 'pro_yearly' || normalized === 'pro_annual') {
+    return { tier: 'pro', interval: 'yearly' };
+  }
+  if (normalized === 'premium_monthly' || normalized === 'pro_monthly' || normalized === 'pro') {
+    return { tier: 'pro', interval: 'monthly' };
   }
   if (normalized === 'plus_yearly' || normalized === 'plus_annual') {
     return { tier: 'plus', interval: 'yearly' };
@@ -269,18 +284,12 @@ export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'trial'; i
   if (normalized === 'plus_monthly' || normalized === 'plus') {
     return { tier: 'plus', interval: 'monthly' };
   }
-  if (normalized === 'pro_yearly' || normalized === 'pro_annual') {
-    return { tier: 'pro', interval: 'yearly' };
-  }
-  if (normalized === 'pro_monthly' || normalized === 'pro') {
-    return { tier: 'pro', interval: 'monthly' };
-  }
-  return { tier: 'plus', interval: 'monthly' };
+  return { tier: 'pro', interval: 'monthly' };
 }
 
 export interface ResolvedPlanPricing {
   planId: PlanId;
-  tier: 'plus' | 'pro' | 'trial';
+  tier: 'plus' | 'pro' | 'founding' | 'trial';
   interval: BillingInterval | 'trial';
   currency: CurrencyCode;
   currencySymbol: string;
@@ -312,18 +321,18 @@ export function resolveOfficialPricing(params: {
 
   if (rawPlanId === 'trial' || params.tier === 'trial' || params.interval === 'trial') {
     planId = 'trial';
+  } else if (rawPlanId === 'founding_member' || rawPlanId === 'founding' || params.tier === 'founding' || params.interval === 'lifetime') {
+    planId = 'founding_member';
+  } else if (rawPlanId === 'premium_yearly' || rawPlanId === 'pro_yearly' || (params.tier === 'pro' && params.interval === 'yearly')) {
+    planId = 'premium_yearly';
+  } else if (rawPlanId === 'premium_monthly' || rawPlanId === 'pro_monthly' || (params.tier === 'pro' && params.interval === 'monthly')) {
+    planId = 'premium_monthly';
   } else if (rawPlanId === 'plus_yearly' || (params.tier === 'plus' && params.interval === 'yearly')) {
     planId = 'plus_yearly';
   } else if (rawPlanId === 'plus_monthly' || (params.tier === 'plus' && params.interval === 'monthly')) {
     planId = 'plus_monthly';
-  } else if (rawPlanId === 'pro_yearly' || (params.tier === 'pro' && params.interval === 'yearly')) {
-    planId = 'pro_yearly';
-  } else if (rawPlanId === 'pro_monthly' || (params.tier === 'pro' && params.interval === 'monthly')) {
-    planId = 'pro_monthly';
-  } else if (params.tier === 'pro') {
-    planId = params.interval === 'yearly' ? 'pro_yearly' : 'pro_monthly';
   } else {
-    planId = params.interval === 'yearly' ? 'plus_yearly' : 'plus_monthly';
+    planId = params.interval === 'yearly' ? 'premium_yearly' : 'premium_monthly';
   }
 
   // 1. ₹1 Trial is always ₹1 (100 paise)
@@ -342,8 +351,26 @@ export function resolveOfficialPricing(params: {
     };
   }
 
+  // 2. Founding Member Offer (One-Time Lifetime Access)
+  if (planId === 'founding_member') {
+    const amount = currencyConfig.pro.founding || (currencyConfig.code === 'INR' ? 7999 : 99);
+    const subunitAmount = getSubunitAmount(amount, currencyConfig.code);
+    return {
+      planId: 'founding_member',
+      tier: 'founding',
+      interval: 'lifetime',
+      currency: currencyConfig.code,
+      currencySymbol: currencyConfig.symbol,
+      name: 'NAVIKO Founding Member Pass (Lifetime Access)',
+      amount,
+      subunitAmount,
+      formattedPrice: formatCurrencyPrice(amount, currencyConfig.code),
+      savingsPercent: 0,
+    };
+  }
+
   const { tier, interval } = parsePlanId(planId);
-  const tierConfig = tier === 'pro' ? currencyConfig.pro : currencyConfig.plus;
+  const tierConfig = tier === 'plus' ? currencyConfig.plus : currencyConfig.pro;
   const amount = interval === 'yearly' ? tierConfig.yearly : tierConfig.monthly;
   const subunitAmount = getSubunitAmount(amount, currencyConfig.code);
   const formattedPrice = formatCurrencyPrice(amount, currencyConfig.code);
@@ -351,12 +378,12 @@ export function resolveOfficialPricing(params: {
     interval === 'yearly'
       ? getYearlySavingsPercentage(tierConfig.monthly, tierConfig.yearly)
       : 0;
-  const name = `NAVIKO ${tier.toUpperCase()} (${interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`;
+  const name = `NAVIKO Premium (${interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`;
 
   return {
     planId,
-    tier,
-    interval,
+    tier: tier as 'plus' | 'pro' | 'founding' | 'trial',
+    interval: interval as BillingInterval | 'trial',
     currency: currencyConfig.code,
     currencySymbol: currencyConfig.symbol,
     name,
@@ -372,10 +399,9 @@ export function resolveOfficialPricing(params: {
  */
 export function getOfficialPlansCatalog(currency: CurrencyCode = 'INR'): ResolvedPlanPricing[] {
   return [
-    resolveOfficialPricing({ planId: 'plus_monthly', currency }),
-    resolveOfficialPricing({ planId: 'plus_yearly', currency }),
-    resolveOfficialPricing({ planId: 'pro_monthly', currency }),
-    resolveOfficialPricing({ planId: 'pro_yearly', currency }),
+    resolveOfficialPricing({ planId: 'premium_monthly', currency }),
+    resolveOfficialPricing({ planId: 'premium_yearly', currency }),
+    resolveOfficialPricing({ planId: 'founding_member', currency }),
     resolveOfficialPricing({ planId: 'trial', currency }),
   ];
 }

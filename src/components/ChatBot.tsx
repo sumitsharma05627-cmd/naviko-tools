@@ -54,20 +54,20 @@ interface Message {
 }
 
 const PRESET_PROMPTS = [
-  '📄 Make ATS Resume',
+  '🥗 Indian Food Calories',
+  '🍲 Plan Weekly Meals',
+  '🌿 Ayurvedic Herbs & Dosha',
+  '💧 Water & Habit Tracker',
   '📈 Calculate SIP Growth',
-  '🎓 Attendance & Bunk Calc',
-  '🗜️ Compress PDF File',
-  '💼 Salary & Tax In-Hand',
-  '🏦 Loan EMI Calculator',
+  '📄 Make ATS Resume',
 ];
 
 const WELCOME_TEXT = `Hi! I'm Navi 👋
-Your private NAVIKO assistant.
+Your private NAVIKO assistant. "Science Meets Tradition."
 
-I can help you find the right NAVIKO tool, calculate investments and EMIs, check college attendance, or format ATS resumes — 100% free with no external API keys.
+I can help you explore Indian food nutrition (ICMR-NIN), evidence-reviewed Ayurvedic herbs & Dinacharya routines, customize your meal plan, or find any of NAVIKO's 46+ privacy-first utility tools.
 
-What would you like to accomplish today?`;
+What would you like to explore today?`;
 
 export const ChatBot: React.FC<ChatBotProps> = ({ onNavigate }) => {
   const { user } = useAuth();

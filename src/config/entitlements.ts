@@ -48,6 +48,17 @@ export const PLAN_CAPABILITIES: Record<PlanType, PlanCapabilities> = {
     adExperience: 'ad_free',
     maxFileSizeMb: 200,
   },
+  founding: {
+    aiDailyLimit: 500,
+    savedHistory: true,
+    advancedAnalytics: true,
+    advancedExports: true,
+    customDashboard: true,
+    batchProcessing: true,
+    priorityFeatures: true,
+    adExperience: 'ad_free',
+    maxFileSizeMb: 500,
+  },
   trial: {
     aiDailyLimit: 200,
     savedHistory: true,

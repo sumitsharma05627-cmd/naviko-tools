@@ -20,6 +20,8 @@ import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { TOOLS_DATA } from '../data/toolsData';
 import { PremiumBadge } from '../components/monetization/PremiumBadge';
+import { DailyWaterTracker } from '../components/DailyWaterTracker';
+import { WaterConsumptionChart } from '../components/WaterConsumptionChart';
 
 interface DashboardPageProps {
   onNavigate: (path: string) => void;
@@ -273,6 +275,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Daily Water Intake & Hydration Suite */}
+      <div className="space-y-6">
+        <DailyWaterTracker onNavigate={onNavigate} />
+        <WaterConsumptionChart />
       </div>
 
       {/* Recent Tools section */}

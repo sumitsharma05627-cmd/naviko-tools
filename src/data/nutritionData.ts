@@ -801,6 +801,342 @@ export const FOODS_DATABASE: FoodItem[] = [
     vitaminC: 0,
     highlights: ['100% plant-based complete protein with all essential amino acids', 'Calcium-set tofu is extremely rich in calcium', 'Low in saturated fat with zero cholesterol'],
     dietaryType: 'vegan'
+  },
+  {
+    id: 'plain-dosa',
+    name: 'Plain Dosa (Crispy)',
+    hindiName: 'प्लेन डोसा',
+    category: 'grain',
+    servingDesc: '1 medium dosa (~35cm diameter)',
+    servingG: 90,
+    calories: 168,
+    protein: 3.9,
+    carbs: 29.4,
+    fat: 3.8,
+    fiber: 1.6,
+    sugar: 0.2,
+    sodium: 185,
+    calcium: 18,
+    iron: 1.2,
+    potassium: 75,
+    vitaminC: 0,
+    highlights: ['Fermented rice and black gram batter', 'Natural prebiotic fiber and B-vitamins', 'Low in saturated fat'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'moong-khichdi',
+    name: 'Moong Dal Khichdi (Mildly Spiced)',
+    hindiName: 'मूंग दाल खिचड़ी',
+    category: 'prepared',
+    servingDesc: '1 medium bowl (cooked with ghee)',
+    servingG: 220,
+    calories: 235,
+    protein: 8.5,
+    carbs: 38.0,
+    fat: 5.2,
+    fiber: 4.8,
+    sugar: 0.8,
+    sodium: 280,
+    calcium: 45,
+    iron: 2.4,
+    potassium: 240,
+    vitaminC: 1.5,
+    highlights: ['Gold standard of easy digestibility in Indian households', 'Complete protein profile (rice + moong dal)', 'Gentle on gut and convalescence'],
+    dietaryType: 'veg'
+  },
+  {
+    id: 'sambar',
+    name: 'Vegetable Sambar',
+    hindiName: 'सांभर',
+    category: 'prepared',
+    servingDesc: '1 katori / bowl (cooked)',
+    servingG: 180,
+    calories: 115,
+    protein: 5.2,
+    carbs: 18.0,
+    fat: 2.5,
+    fiber: 4.2,
+    sugar: 3.2,
+    sodium: 380,
+    calcium: 48,
+    iron: 1.8,
+    potassium: 310,
+    vitaminC: 9.0,
+    highlights: ['Toor dal base with mixed vegetables (drumstick, pumpkin, tomato)', 'Rich in tamarind polyphenols and turmeric', 'High dietary fiber'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'upma',
+    name: 'Vegetable Rava Upma',
+    hindiName: 'रवा उपमा',
+    category: 'prepared',
+    servingDesc: '1 medium bowl',
+    servingG: 160,
+    calories: 210,
+    protein: 5.4,
+    carbs: 34.0,
+    fat: 6.0,
+    fiber: 3.2,
+    sugar: 1.5,
+    sodium: 320,
+    calcium: 28,
+    iron: 1.6,
+    potassium: 145,
+    vitaminC: 6.5,
+    highlights: ['Semolina cooked with mustard seeds, curry leaves, ginger & veggies', 'Provides sustained morning satiety', 'Quick tiffin breakfast'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'besan-chilla',
+    name: 'Besan Chilla (Gram Flour Pancake)',
+    hindiName: 'बेसन का चीला',
+    category: 'prepared',
+    servingDesc: '1 medium chilla with onion & coriander',
+    servingG: 85,
+    calories: 145,
+    protein: 7.2,
+    carbs: 18.5,
+    fat: 4.8,
+    fiber: 3.8,
+    sugar: 1.8,
+    sodium: 220,
+    calcium: 38,
+    iron: 2.2,
+    potassium: 290,
+    vitaminC: 5.0,
+    highlights: ['Naturally gluten-free high-protein breakfast', 'Low glycemic index', 'Rich in folate and magnesium'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'dal-tadka',
+    name: 'Toor Dal Tadka (Yellow Pigeon Pea)',
+    hindiName: 'तूर दाल तड़का',
+    category: 'prepared',
+    servingDesc: '1 medium bowl cooked',
+    servingG: 180,
+    calories: 175,
+    protein: 8.8,
+    carbs: 26.5,
+    fat: 3.8,
+    fiber: 6.5,
+    sugar: 0.9,
+    sodium: 310,
+    calcium: 42,
+    iron: 2.1,
+    potassium: 380,
+    vitaminC: 2.5,
+    highlights: ['Traditional pan-Indian lentil staple', 'Excellent dietary fiber and folate', 'Tempered with cumin, garlic, and hing for anti-flatulent digestion'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'ragi-roti',
+    name: 'Ragi Roti (Finger Millet)',
+    hindiName: 'रागी की रोटी',
+    category: 'grain',
+    servingDesc: '1 medium roti',
+    servingG: 45,
+    calories: 125,
+    protein: 3.2,
+    carbs: 26.0,
+    fat: 0.8,
+    fiber: 4.2,
+    sugar: 0.3,
+    sodium: 6,
+    calcium: 155,
+    iron: 1.8,
+    potassium: 160,
+    vitaminC: 0,
+    highlights: ['Super-grain with 10x the calcium of polished rice', 'High dietary fiber and slow starch hydrolysis', 'Supports bone density and satiety'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'jowar-bhakri',
+    name: 'Jowar Bhakri (Sorghum Flatbread)',
+    hindiName: 'ज्वार की भाकरी',
+    category: 'grain',
+    servingDesc: '1 traditional bhakri',
+    servingG: 55,
+    calories: 155,
+    protein: 4.4,
+    carbs: 32.0,
+    fat: 1.1,
+    fiber: 4.5,
+    sugar: 0.4,
+    sodium: 5,
+    calcium: 22,
+    iron: 1.9,
+    potassium: 180,
+    vitaminC: 0,
+    highlights: ['Naturally gluten-free ancient grain staple of Maharashtra & Karnataka', 'Rich in anthocyanin polyphenols', 'Low glycemic response'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'kala-chana',
+    name: 'Kala Chana Curry (Black Chickpeas)',
+    hindiName: 'काला चना तरी',
+    category: 'protein',
+    servingDesc: '1 medium bowl cooked',
+    servingG: 180,
+    calories: 195,
+    protein: 10.2,
+    carbs: 30.5,
+    fat: 3.5,
+    fiber: 8.5,
+    sugar: 1.2,
+    sodium: 290,
+    calcium: 65,
+    iron: 3.8,
+    potassium: 420,
+    vitaminC: 3.0,
+    highlights: ['One of the highest fiber legumes in Indian dietetics', 'Rich in bioavailable plant iron and zinc', 'Sustains energy for hours without dips'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'sprouted-moong-salad',
+    name: 'Sprouted Moong Salad with Lemon',
+    hindiName: 'अंकुरित मूंग सलाद',
+    category: 'protein',
+    servingDesc: '1 bowl raw sprouts with tomato & lemon',
+    servingG: 120,
+    calories: 110,
+    protein: 8.8,
+    carbs: 18.0,
+    fat: 0.6,
+    fiber: 6.2,
+    sugar: 2.1,
+    sodium: 15,
+    calcium: 38,
+    iron: 2.6,
+    potassium: 310,
+    vitaminC: 18.0,
+    highlights: ['Sprouting unlocks bound micronutrients and deactivates phytates', 'High Vitamin C combined with iron boosts absorption', 'Living plant enzymes support gut motility'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'chaas-buttermilk',
+    name: 'Spiced Buttermilk (Chaas / Mattha)',
+    hindiName: 'मसाला छाछ',
+    category: 'dairy',
+    servingDesc: '1 tall glass (250 ml churned with water)',
+    servingG: 250,
+    calories: 62,
+    protein: 3.8,
+    carbs: 5.5,
+    fat: 2.4,
+    fiber: 0.2,
+    sugar: 4.8,
+    sodium: 190,
+    calcium: 130,
+    iron: 0.2,
+    potassium: 220,
+    vitaminC: 1.0,
+    highlights: ['Natural probiotic hydration beverage', 'Low calorie refreshing post-lunch digestive', 'Contains roasted cumin, ginger and rock salt'],
+    dietaryType: 'veg'
+  },
+  {
+    id: 'desi-ghee',
+    name: 'Desi Cow Ghee (Clarified Butter)',
+    hindiName: 'देसी घी',
+    category: 'dairy',
+    servingDesc: '1 teaspoon (~5g)',
+    servingG: 5,
+    calories: 45,
+    protein: 0,
+    carbs: 0,
+    fat: 5.0,
+    fiber: 0,
+    sugar: 0,
+    sodium: 0,
+    calcium: 1,
+    iron: 0,
+    potassium: 2,
+    vitaminC: 0,
+    highlights: ['Contains butyric acid supporting intestinal epithelial lining', 'High smoke point (250°C) ideal for Indian tempering', 'Enhances absorption of fat-soluble vitamins (A, D, E, K)'],
+    dietaryType: 'veg'
+  },
+  {
+    id: 'roasted-makhana',
+    name: 'Roasted Makhana (Foxnuts)',
+    hindiName: 'रोस्टेड मखाना',
+    category: 'nuts_seeds',
+    servingDesc: '1 medium bowl (~30g dry roasted)',
+    servingG: 30,
+    calories: 105,
+    protein: 3.0,
+    carbs: 20.0,
+    fat: 0.5,
+    fiber: 2.8,
+    sugar: 0.1,
+    sodium: 25,
+    calcium: 32,
+    iron: 0.9,
+    potassium: 110,
+    vitaminC: 0,
+    highlights: ['Traditional fasting (Vrat) and daily snack staple', 'Low in calories, high in magnesium and plant protein', 'Virtually zero cholesterol'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'sattu-drink',
+    name: 'Chana Sattu Drink (Savory)',
+    hindiName: 'सत्तू का नमकीन घोल',
+    category: 'protein',
+    servingDesc: '1 large glass (30g sattu in 250ml water)',
+    servingG: 280,
+    calories: 125,
+    protein: 7.5,
+    carbs: 18.0,
+    fat: 1.8,
+    fiber: 5.5,
+    sugar: 0.5,
+    sodium: 180,
+    calcium: 45,
+    iron: 2.8,
+    potassium: 260,
+    vitaminC: 4.5,
+    highlights: ['Traditional regional superfood of Bihar & Eastern India', 'Roasted gram flour drink rich in cooling soluble fiber', 'High natural plant protein for sustained stamina'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'fresh-amla',
+    name: 'Fresh Amla (Indian Gooseberry)',
+    hindiName: 'ताज़ा आंवला',
+    category: 'fruit',
+    servingDesc: '1 whole fruit (~40g)',
+    servingG: 40,
+    calories: 18,
+    protein: 0.3,
+    carbs: 4.1,
+    fat: 0.1,
+    fiber: 1.8,
+    sugar: 1.2,
+    sodium: 1,
+    calcium: 16,
+    iron: 0.5,
+    potassium: 80,
+    vitaminC: 220.0,
+    highlights: ['Single fruit delivers ~300% of daily adult Vitamin C requirement', 'Tannin-bound ascorbic acid resists degradation', 'Potent antioxidant profile'],
+    dietaryType: 'vegan'
+  },
+  {
+    id: 'guava',
+    name: 'Fresh Guava (Amrood)',
+    hindiName: 'अमरूद',
+    category: 'fruit',
+    servingDesc: '1 medium guava with peel',
+    servingG: 120,
+    calories: 82,
+    protein: 3.1,
+    carbs: 17.2,
+    fat: 1.2,
+    fiber: 6.5,
+    sugar: 10.5,
+    sodium: 3,
+    calcium: 22,
+    iron: 0.4,
+    potassium: 490,
+    vitaminC: 260.0,
+    highlights: ['Higher Vitamin C than oranges (over 200mg per fruit)', 'Very high dietary fiber supporting healthy bowel transit', 'Rich in lycopene and potassium'],
+    dietaryType: 'vegan'
   }
 ];
 
@@ -1077,5 +1413,397 @@ export const NUTRITION_ARTICLES: NutritionArticle[] = [
         ]
       }
     ]
+  }
+];
+
+// ==========================================
+// 4. INDIAN HEALTHY RECIPES DATASET
+// ==========================================
+export interface RecipeIngredient {
+  name: string;
+  amount: string;
+  substitute?: string;
+  notes?: string;
+}
+
+export interface IndianRecipe {
+  id: string;
+  name: string;
+  hindiName?: string;
+  category: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'beverage';
+  dietType: 'veg' | 'vegan' | 'jain-friendly';
+  prepTimeMins: number;
+  cookTimeMins: number;
+  servings: number;
+  difficulty: 'Easy' | 'Moderate';
+  regionalCuisine: 'Pan-Indian' | 'North Indian' | 'South Indian' | 'Maharashtra' | 'Bihar / East';
+  estimatedCostPerServingInr: number;
+  nutritionPerServing: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+  };
+  ayurvedicDigestiveQuality: {
+    guna: string;
+    doshaEffect: string;
+    seasonalSuitability: string;
+  };
+  ingredients: RecipeIngredient[];
+  instructions: string[];
+  tips: string;
+}
+
+export const INDIAN_RECIPES_DATABASE: IndianRecipe[] = [
+  {
+    id: 'moong-palak-khichdi',
+    name: 'Moong Dal & Palak Khichdi',
+    hindiName: 'मूंग दाल पालक खिचड़ी',
+    category: 'dinner',
+    dietType: 'veg',
+    prepTimeMins: 10,
+    cookTimeMins: 20,
+    servings: 2,
+    difficulty: 'Easy',
+    regionalCuisine: 'Pan-Indian',
+    estimatedCostPerServingInr: 35,
+    nutritionPerServing: {
+      calories: 310,
+      protein: 13.5,
+      carbs: 49.0,
+      fat: 6.0,
+      fiber: 6.5
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu (Light & easy to digest)',
+      doshaEffect: 'Tridoshic (Balances Vata, Pitta, and Kapha); the gold standard convalescent food in Charaka Samhita.',
+      seasonalSuitability: 'All year round; especially restorative during seasonal transitions and monsoon.'
+    },
+    ingredients: [
+      { name: 'Yellow Split Moong Dal', amount: '1/2 cup (100g)', substitute: 'Whole green moong' },
+      { name: 'Short Grain Rice or Millets', amount: '1/2 cup (100g)', substitute: 'Kodo millet, Foxtail millet, or brown rice' },
+      { name: 'Fresh Spinach (Palak)', amount: '1.5 cups chopped (75g)', substitute: 'Methi (fenugreek leaves)' },
+      { name: 'Desi Cow Ghee', amount: '1 tsp (5g)', substitute: 'Cold-pressed sesame or mustard oil for vegan' },
+      { name: 'Cumin Seeds (Jeera)', amount: '1 tsp', notes: 'Stimulates digestive Agni' },
+      { name: 'Fresh Grated Ginger', amount: '1 tsp', notes: 'Carminative digestive aid' },
+      { name: 'Turmeric Powder (Haldi)', amount: '1/2 tsp' },
+      { name: 'Asafoetida (Hing)', amount: '1 pinch', substitute: 'Omit for Jain-friendly' },
+      { name: 'Rock Salt (Sendha Namak)', amount: 'To taste' },
+      { name: 'Water', amount: '3.5 cups' }
+    ],
+    instructions: [
+      'Wash rice and yellow split moong dal together thoroughly and soak in warm water for 15 minutes.',
+      'Heat 1 tsp ghee in a pressure cooker or heavy-bottomed pot. Add cumin seeds and let them splutter.',
+      'Add grated ginger and a pinch of hing. Sauté for 30 seconds until fragrant.',
+      'Add chopped spinach and turmeric powder. Stir for 1 minute until spinach wilts gently.',
+      'Drain and add the soaked rice and moong dal. Pour 3.5 cups of water and add rock salt.',
+      'Pressure cook for 3 whistles on medium heat (or simmer covered for 20 minutes in a pot until creamy).',
+      'Stir gently to combine into a porridge-like consistency and serve warm with a squeeze of fresh lemon.'
+    ],
+    tips: 'Pairing rice with yellow moong dal creates a complete amino acid profile (lysine in dal compensates for methionine in rice).'
+  },
+  {
+    id: 'besan-methi-chilla',
+    name: 'Spiced Besan & Methi Chilla',
+    hindiName: 'बेसन मेथी चीला',
+    category: 'breakfast',
+    dietType: 'vegan',
+    prepTimeMins: 10,
+    cookTimeMins: 10,
+    servings: 2,
+    difficulty: 'Easy',
+    regionalCuisine: 'North Indian',
+    estimatedCostPerServingInr: 25,
+    nutritionPerServing: {
+      calories: 240,
+      protein: 11.0,
+      carbs: 32.0,
+      fat: 7.0,
+      fiber: 6.0
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu (Light & easy to digest)',
+      doshaEffect: 'Balances Kapha and Pitta; mildly dry for high Vata, best balanced with a drop of cold-pressed oil.',
+      seasonalSuitability: 'Excellent for Spring and Winter breakfasts; natural low-glycemic satiety.'
+    },
+    ingredients: [
+      { name: 'Bengal Gram Flour (Besan)', amount: '1 cup (120g)', substitute: 'Sattu or oat flour' },
+      { name: 'Fresh Fenugreek (Methi) leaves', amount: '1/2 cup finely chopped', substitute: 'Coriander leaves or grated zucchini' },
+      { name: 'Ajwain (Carom Seeds)', amount: '1/2 tsp', notes: 'Essential for counteracting chickpea gas & bloating' },
+      { name: 'Turmeric & Kashmiri Red Chili', amount: '1/4 tsp each' },
+      { name: 'Finely Chopped Green Chili & Ginger', amount: '1 tsp', notes: 'Adjust spice to preference' },
+      { name: 'Cold-Pressed Mustard or Peanut Oil', amount: '1 tsp for shallow cooking' },
+      { name: 'Water', amount: '3/4 cup (to make a pourable batter)' },
+      { name: 'Salt', amount: 'To taste' }
+    ],
+    instructions: [
+      'In a mixing bowl, combine besan, ajwain (crushed between palms), turmeric, salt, and chili powder.',
+      'Gradually whisk in water until a smooth, lump-free pouring batter forms (similar to crepe batter).',
+      'Fold in chopped fresh methi leaves and ginger.',
+      'Heat a seasoned cast-iron tawa on medium flame and lightly smear a few drops of oil.',
+      'Pour a ladle of batter in the center and spread outward in a circular motion into a thin pancake.',
+      'Cook for 2 minutes until the edges lift and the underside is golden. Flip and cook for 1 more minute.',
+      'Serve warm with mint-coriander chutney or homemade tomato relish.'
+    ],
+    tips: 'Ajwain contains thymol which stimulates gastric digestive secretions, making chickpea flour effortlessly digestible.'
+  },
+  {
+    id: 'south-indian-sambar',
+    name: 'Vegetable Moringa Sambar',
+    hindiName: 'मोरिंगा सांभर',
+    category: 'lunch',
+    dietType: 'vegan',
+    prepTimeMins: 15,
+    cookTimeMins: 25,
+    servings: 4,
+    difficulty: 'Moderate',
+    regionalCuisine: 'South Indian',
+    estimatedCostPerServingInr: 30,
+    nutritionPerServing: {
+      calories: 165,
+      protein: 7.8,
+      carbs: 26.5,
+      fat: 3.2,
+      fiber: 5.5
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu (Light & easy to digest)',
+      doshaEffect: 'Balances Kapha; Pitta-friendly when tamarind and chilies are used moderately.',
+      seasonalSuitability: 'Nutritious year-round accompaniment for idlis, dosas, and steamed rice.'
+    },
+    ingredients: [
+      { name: 'Toor Dal (Split Pigeon Pea)', amount: '3/4 cup (150g)', substitute: 'Masoor dal for faster cooking' },
+      { name: 'Drumstick (Moringa pods)', amount: '1 cut into 2-inch pieces', notes: 'Rich in polyphenols and calcium' },
+      { name: 'Mixed Veggies (Carrot, Tomato, Ash Gourd)', amount: '1.5 cups chopped' },
+      { name: 'Tamarind Pulp', amount: '1 tbsp dissolved in 1/2 cup warm water' },
+      { name: 'Freshly Ground Sambar Powder', amount: '1.5 tbsp (Coriander, Fenugreek, Cumin, Pepper)' },
+      { name: 'Sesame or Coconut Oil', amount: '1 tsp for tadka' },
+      { name: 'Mustard Seeds & Curry Leaves', amount: '1 tsp seeds, 10 leaves' },
+      { name: 'Turmeric & Rock Salt', amount: '1/2 tsp turmeric, salt to taste' }
+    ],
+    instructions: [
+      'Pressure cook toor dal with 2.5 cups water and turmeric for 4 whistles until completely soft, then mash smoothly.',
+      'In a pot, boil drumstick, carrots, and ash gourd in 1.5 cups of water with salt until tender (about 7 minutes).',
+      'Add the tamarind extract, chopped tomatoes, and sambar powder. Simmer for 5 minutes to cook out raw tamarind flavor.',
+      'Pour in the mashed cooked toor dal and adjust consistency with warm water. Simmer gently for 4 minutes.',
+      'For tadka: Heat 1 tsp oil in a small pan, crackle mustard seeds, add curry leaves and a pinch of hing. Pour sizzling tadka into the sambar.',
+      'Garnish with fresh coriander and serve piping hot with idli or steamed unpolished rice.'
+    ],
+    tips: 'Moringa pods supply bioavailable dietary fiber and vitamin C, while the spices in authentic sambar powder support metabolism.'
+  },
+  {
+    id: 'sprouted-chana-chaat',
+    name: 'Sprouted Kala Chana Chaat',
+    hindiName: 'अंकुरित चना चाट',
+    category: 'snack',
+    dietType: 'vegan',
+    prepTimeMins: 10,
+    cookTimeMins: 5,
+    servings: 2,
+    difficulty: 'Easy',
+    regionalCuisine: 'Pan-Indian',
+    estimatedCostPerServingInr: 20,
+    nutritionPerServing: {
+      calories: 195,
+      protein: 9.5,
+      carbs: 31.0,
+      fat: 3.5,
+      fiber: 7.8
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu when steamed/sprouted (Raw unsprouted is Guru)',
+      doshaEffect: 'Sprouting reduces raw legume dryness (Vata) and deactivates phytic acid anti-nutrients.',
+      seasonalSuitability: 'Ideal post-workout snack or 4 PM energy recharge.'
+    },
+    ingredients: [
+      { name: 'Sprouted Brown Chickpeas (Kala Chana)', amount: '1.5 cups (lightly steamed 4 mins)', notes: 'Steaming improves digestion' },
+      { name: 'Cucumber & Tomato', amount: '1/2 cup finely diced' },
+      { name: 'Fresh Pomegranate Seeds', amount: '2 tbsp', notes: 'Adds natural sweetness & polyphenols' },
+      { name: 'Roasted Cumin Powder (Bhuna Jeera)', amount: '1/2 tsp' },
+      { name: 'Chaat Masala & Black Salt', amount: '1/2 tsp each' },
+      { name: 'Fresh Lemon Juice', amount: '1 tbsp', notes: 'Vitamin C boosts plant-iron absorption' },
+      { name: 'Chopped Mint & Coriander Leaves', amount: '2 tbsp' }
+    ],
+    instructions: [
+      'Steam sprouted kala chana for 4–5 minutes until tender-crisp. Let cool to room temperature.',
+      'In a wide bowl, combine the steamed sprouts, diced cucumber, tomatoes, and pomegranate seeds.',
+      'Sprinkle roasted cumin powder, chaat masala, and black salt.',
+      'Squeeze fresh lemon juice over the mixture and toss well.',
+      'Garnish generously with chopped mint and fresh coriander leaves. Enjoy immediately.'
+    ],
+    tips: 'Sprouting increases enzymatic activity, multiplies vitamin C and B-complex levels, and breaks down hard oligosaccharides that cause gas.'
+  },
+  {
+    id: 'ragi-vegetable-porridge',
+    name: 'Savory Ragi Vegetable Porridge',
+    hindiName: 'रागी वेजीटेबल दलिया',
+    category: 'breakfast',
+    dietType: 'vegan',
+    prepTimeMins: 5,
+    cookTimeMins: 12,
+    servings: 2,
+    difficulty: 'Easy',
+    regionalCuisine: 'South Indian',
+    estimatedCostPerServingInr: 20,
+    nutritionPerServing: {
+      calories: 180,
+      protein: 4.8,
+      carbs: 34.0,
+      fat: 2.8,
+      fiber: 6.2
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu (Light & nourishing)',
+      doshaEffect: 'Balances Kapha and Pitta; rich in calcium and low glycemic index.',
+      seasonalSuitability: 'Outstanding for warm weather mornings; cooling and deeply replenishing.'
+    },
+    ingredients: [
+      { name: 'Finger Millet Flour (Ragi)', amount: '1/3 cup (40g)', notes: 'Supplies ~140mg calcium per serving' },
+      { name: 'Water', amount: '2 cups' },
+      { name: 'Thin Buttermilk or Warm Water', amount: '1/2 cup (vegan: use water + lemon)' },
+      { name: 'Finely Chopped Carrot & Beans', amount: '1/3 cup' },
+      { name: 'Mustard Seeds & Curry Leaves', amount: '1/2 tsp seeds, 6 leaves' },
+      { name: 'Cold-Pressed Oil', amount: '1/2 tsp' },
+      { name: 'Rock Salt', amount: 'To taste' }
+    ],
+    instructions: [
+      'Whisk ragi flour into 1 cup of cold water until completely smooth with no lumps.',
+      'In a saucepan, bring the remaining 1 cup of water with diced carrots, beans, and salt to a boil.',
+      'Lower flame and slowly pour the ragi slurry while stirring continuously to prevent lumps.',
+      'Simmer on low flame for 6–8 minutes until the porridge turns glossy and thickens.',
+      'In a tiny pan, prepare a quick tadka with 1/2 tsp oil, mustard seeds, and curry leaves. Pour over porridge.',
+      'Allow to cool slightly, stir in buttermilk or lemon juice, and serve warm.'
+    ],
+    tips: 'Finger millet (Ragi) contains the highest calcium concentration among all whole grains (up to 344mg per 100g).'
+  },
+  {
+    id: 'sattu-hydration-cooler',
+    name: 'Spiced Bihar Sattu Sharbat',
+    hindiName: 'सत्तू शरबत (नमकीन)',
+    category: 'beverage',
+    dietType: 'vegan',
+    prepTimeMins: 5,
+    cookTimeMins: 0,
+    servings: 1,
+    difficulty: 'Easy',
+    regionalCuisine: 'Bihar / East',
+    estimatedCostPerServingInr: 15,
+    nutritionPerServing: {
+      calories: 165,
+      protein: 9.0,
+      carbs: 26.0,
+      fat: 2.2,
+      fiber: 5.5
+    },
+    ayurvedicDigestiveQuality: {
+      guna: 'Laghu (Light, cooling, instant energy)',
+      doshaEffect: 'Pacifies Pitta and Kapha; traditional summer elixir against heat exhaustion (Loo).',
+      seasonalSuitability: 'Spring and Summer; excellent post-workout plant protein rehydration.'
+    },
+    ingredients: [
+      { name: 'Roasted Chana Sattu Flour', amount: '3 tbsp (35g)', notes: 'Pre-roasted Bengal gram' },
+      { name: 'Chilled or Room Temp Water', amount: '1.25 cups (300ml)' },
+      { name: 'Roasted Cumin Powder (Bhuna Jeera)', amount: '1/2 tsp' },
+      { name: 'Black Salt (Kala Namak)', amount: '1/3 tsp' },
+      { name: 'Fresh Lemon Juice', amount: '1 tbsp' },
+      { name: 'Finely Chopped Mint Leaves', amount: '1 tbsp' },
+      { name: 'Green Chili & Onion (Optional)', amount: '1 tsp finely minced' }
+    ],
+    instructions: [
+      'Add 3 tablespoons of sattu flour into a tall glass.',
+      'Add a splash of water and stir into a smooth paste to ensure zero lumps.',
+      'Pour in the remaining water while whisking with a spoon or madhani.',
+      'Add roasted cumin powder, black salt, and freshly squeezed lemon juice.',
+      'Stir in fresh mint leaves. Serve immediately as a refreshing nutrient-dense beverage.'
+    ],
+    tips: 'Sattu is pre-cooked through sand-roasting, making its proteins instantly digestible without requiring any stovetop cooking.'
+  }
+];
+
+// ==========================================
+// 5. FOOD ADDITIVES & INS DECODER DATABASE
+// ==========================================
+export interface InsAdditive {
+  insNumber: string;
+  commonName: string;
+  functionalClass: 'Preservative' | 'Flavor Enhancer' | 'Color' | 'Acidity Regulator' | 'Emulsifier' | 'Sweetener' | 'Antioxidant' | 'Thickener';
+  description: string;
+  fssaiStatus: 'Approved & Safe within limits' | 'Permitted with specific quantity limits' | 'Natural origin';
+  healthContext: string;
+  foundIn: string[];
+  consumerAdvice: string;
+}
+
+export const INS_ADDITIVES_DATABASE: InsAdditive[] = [
+  {
+    insNumber: 'INS 621',
+    commonName: 'Monosodium Glutamate (MSG)',
+    functionalClass: 'Flavor Enhancer',
+    description: 'The sodium salt of glutamic acid, an amino acid naturally found in tomatoes, aged cheeses, and mushrooms that imparts savory "umami" taste.',
+    fssaiStatus: 'Approved & Safe within limits',
+    healthContext: 'Extensive scientific reviews by WHO/FAO and the US FDA confirm MSG is safe for general consumption. The myth of "Chinese Restaurant Syndrome" has been clinically debunked in double-blind placebo trials.',
+    foundIn: ['Instant noodles', 'Savory seasoning packets', 'Restaurant soups', 'Processed savory snacks'],
+    consumerAdvice: 'Safe for the vast majority of people; individuals with rare transient sensitivities should check labels.'
+  },
+  {
+    insNumber: 'INS 150d',
+    commonName: 'Caramel IV (Sulphite Ammonia Caramel)',
+    functionalClass: 'Color',
+    description: 'A dark brown colorant prepared by heat treatment of carbohydrates in the presence of sulphite and ammonium compounds.',
+    fssaiStatus: 'Permitted with specific quantity limits',
+    healthContext: 'Safe at permitted regulatory concentrations. High-dose industrial byproduct (4-MEI) is monitored under strict toxicological ceiling thresholds by food authorities.',
+    foundIn: ['Colas & carbonated soft drinks', 'Dark gravies', 'Soy sauces', 'Bakery mixes'],
+    consumerAdvice: 'Common in commercial colas; limiting sugary sodas is advisable primarily for metabolic sugar reasons.'
+  },
+  {
+    insNumber: 'INS 211',
+    commonName: 'Sodium Benzoate',
+    functionalClass: 'Preservative',
+    description: 'A bacteriostatic and fungistatic preservative effective in acidic conditions against yeast, bacteria, and mold.',
+    fssaiStatus: 'Permitted with specific quantity limits',
+    healthContext: 'Generally recognized as safe at levels below 0.1%. When combined with ascorbic acid (Vitamin C) in prolonged heat, trace benzene can form, leading manufacturers to minimize simultaneous pairing.',
+    foundIn: ['Packaged fruit squashes', 'Pickles', 'Carbonated beverages', 'Salad dressings'],
+    consumerAdvice: 'Check labels on acidic juices; prefer freshly squeezed juices without chemical preservatives where feasible.'
+  },
+  {
+    insNumber: 'INS 330',
+    commonName: 'Citric Acid',
+    functionalClass: 'Acidity Regulator',
+    description: 'A natural organic acid that occurs in citrus fruits (lemons, limes). Produced industrially via fermentation for shelf-life stabilization and tartness.',
+    fssaiStatus: 'Natural origin',
+    healthContext: 'Completely safe, naturally metabolized in the body through the Krebs cellular energy cycle with zero toxicological concerns.',
+    foundIn: ['Jams & jellies', 'Beverages', 'Canned tomatoes', 'Confectionery', 'Snack seasonings'],
+    consumerAdvice: 'A benign, natural acidity regulator with an impeccable safety profile.'
+  },
+  {
+    insNumber: 'INS 322',
+    commonName: 'Lecithin (Soy or Sunflower)',
+    functionalClass: 'Emulsifier',
+    description: 'Naturally occurring phospholipid mixture that keeps fats and water uniformly blended without separating.',
+    fssaiStatus: 'Natural origin',
+    healthContext: 'Supplies essential dietary choline. Highly safe and non-toxic. Soy-derived lecithin contains trace soy proteins which must be declared for individuals with severe soy allergies.',
+    foundIn: ['Chocolates & confectionery', 'Bakery doughs', 'Margarine', 'Instant drink powders'],
+    consumerAdvice: 'Safe natural food component; individuals with severe soy allergies should verify if sunflower lecithin is used.'
+  },
+  {
+    insNumber: 'INS 955',
+    commonName: 'Sucralose',
+    functionalClass: 'Sweetener',
+    description: 'A zero-calorie artificial sweetener made by chlorinated substitution of sucrose; approximately 600 times sweeter than regular table sugar.',
+    fssaiStatus: 'Approved & Safe within limits',
+    healthContext: 'Does not spike acute blood glucose or insulin. Does not cause tooth decay. Current scientific research evaluates subtle chronic microbiome shifts with high daily intakes.',
+    foundIn: ['Sugar-free beverages', 'Diet drinks', 'Protein powders', 'Sugar-free sweets and candies'],
+    consumerAdvice: 'A functional tool for diabetic management to reduce high sucrose intake; moderation remains good practice.'
+  },
+  {
+    insNumber: 'INS 412',
+    commonName: 'Guar Gum',
+    functionalClass: 'Thickener',
+    description: 'A natural dietary fiber extracted from the seeds of the guar plant (Cyamopsis tetragonoloba), widely cultivated across Rajasthan and Haryana.',
+    fssaiStatus: 'Natural origin',
+    healthContext: 'A soluble prebiotic fiber that supports healthy gut fermentation and lowers postprandial glucose spikes when consumed in whole foods.',
+    foundIn: ['Ice creams', 'Dairy desserts', 'Gluten-free flours', 'Sauces'],
+    consumerAdvice: 'A beneficial plant-based soluble fiber with natural Indian origin.'
   }
 ];

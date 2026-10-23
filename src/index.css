@@ -3,28 +3,28 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root, html.theme-default {
-  --naviko-engine-revision: "2026.09.26";
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+  --naviko-engine-revision: "2026.10.23";
+  --background: #FBF9F5;
+  --foreground: #16231C;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --primary: #4F46E5;
+  --card-foreground: #16231C;
+  --primary: #1B4332;
   --primary-foreground: #FFFFFF;
-  --secondary: #EEF2FF;
-  --secondary-foreground: #3730A3;
-  --accent: #10B981;
+  --secondary: #E9F1EC;
+  --secondary-foreground: #1A4231;
+  --accent: #C26347;
   --accent-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --input: #F8FAFC;
-  --input-border: #CBD5E1;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07);
-  --header-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(226, 232, 240, 0.8);
+  --border: #E8E2D9;
+  --muted: #F2ECE4;
+  --muted-foreground: #586A60;
+  --input: #FAF7F2;
+  --input-border: #D5CCC0;
+  --success: #2D6A4F;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --shadow: 0 4px 10px -2px rgba(27, 67, 50, 0.06);
+  --header-bg: rgba(251, 249, 245, 0.92);
+  --glass-border: rgba(232, 226, 217, 0.85);
 }
 
 html.theme-light {

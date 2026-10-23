@@ -93,17 +93,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </div>
               </div>
               <div>
-                <span className="text-xl font-black tracking-tight text-white flex items-center gap-1">
+                <span className="text-xl font-serif font-black tracking-tight text-white flex items-center gap-1">
                   NAVIKO
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block -mt-1">
-                  Smart Productivity
+                <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase block -mt-1">
+                  Science Meets Tradition
                 </span>
               </div>
             </button>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              NAVIKO is a comprehensive online utility suite built for students, professionals, investors, and creators. Engineered for instantaneous calculation, mathematical precision, and absolute user privacy.
+              NAVIKO unites evidence-informed Indian nutrition science, classical Ayurvedic wisdom (Dravyaguna &amp; Dinacharya), smart meal planning, and 46+ privacy-first utility tools. Engineered for transparency and 100% browser-native data privacy.
             </p>
 
             {/* Newsletter / Feature updates */}
@@ -230,45 +230,50 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Column 5: Student, Health & Career */}
+          {/* Column 5: Nutrition, Ayurveda & Wellness */}
           <div>
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-white mb-3.5 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-sky-400" /> Academic &amp; Health
+              <span className="text-emerald-400">🌿</span> Nutrition &amp; Ayurveda
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
               <li>
-                <button onClick={() => handleNav('/tools/bmi')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ BMI &amp; Body Metrics
+                <button onClick={() => handleNav('/food-explorer')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Indian Food Explorer
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/diet-plan-manager')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ Diet Plan Manager
+                <button onClick={() => handleNav('/food-compare')} className="hover:text-white transition-colors cursor-pointer">
+                  Food Comparison Tool
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/nutrition')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ Nutrition Science
+                <button onClick={() => handleNav('/label-analyzer')} className="hover:text-white transition-colors cursor-pointer">
+                  Packaged Label &amp; INS Decoder
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/cgpa-calculator')} className="hover:text-white transition-colors cursor-pointer">
-                  CGPA to Percentage (CBSE)
+                <button onClick={() => handleNav('/recipes')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Healthy Indian Recipes
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/resume-builder')} className="hover:text-white transition-colors cursor-pointer">
-                  ATS Resume Builder
+                <button onClick={() => handleNav('/meal-planner')} className="hover:text-white transition-colors cursor-pointer">
+                  Smart Meal Planner
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/typing-speed-test')} className="hover:text-white transition-colors cursor-pointer">
-                  Typing Speed Assessment
+                <button onClick={() => handleNav('/ayurveda')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Ayurveda &amp; Dinacharya
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('/tools/image-compressor')} className="hover:text-white transition-colors cursor-pointer">
-                  Image Compressor (KB)
+                <button onClick={() => handleNav('/habit-tracker')} className="hover:text-white transition-colors cursor-pointer">
+                  Daily Habit &amp; Hydration Log
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNav('/wellness-calculators')} className="hover:text-white transition-colors cursor-pointer">
+                  Asian Indian BMI &amp; TDEE
                 </button>
               </li>
             </ul>
@@ -286,6 +291,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li>
+                <button onClick={() => handleNav('/sources')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                  ★ Editorial Standards &amp; Sources
+                </button>
+              </li>
+              <li>
                 <button onClick={() => handleNav('/login')} className="hover:text-white transition-colors cursor-pointer">
                   Sign In / Register
                 </button>
@@ -298,11 +308,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button onClick={() => handleNav('/about')} className="hover:text-white transition-colors cursor-pointer">
                   About NAVIKO
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/blog')} className="hover:text-white transition-colors cursor-pointer">
-                  Guides &amp; Articles
                 </button>
               </li>
               <li>
@@ -322,17 +327,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button onClick={() => handleNav('/disclaimer')} className="hover:text-white transition-colors cursor-pointer">
-                  Financial Disclaimer
+                  Disclaimers (Health &amp; Financial)
                 </button>
               </li>
             </ul>
           </div>
         </div>
 
+        {/* Responsible Health & Medical Notice */}
+        <div className="mt-8 pt-4 border-t border-slate-900 text-[11px] text-slate-500 leading-relaxed max-w-4xl mx-auto text-center">
+          <strong className="text-slate-400">Health &amp; Wellness Notice:</strong> Information on NAVIKO is provided for educational and lifestyle guidance only. Nutritional values are derived from ICMR-NIN &amp; USDA datasets; botanical profiles cite classical Ayurvedic pharmacopoeias and clinical literature. NAVIKO does not provide medical diagnoses or prescribe treatment. Always consult a licensed healthcare professional for clinical health concerns.
+        </div>
+
         {/* Bottom Bar */}
-        <div className="mt-14 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        <div className="mt-6 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <div>
-            © 2026 NAVIKO Smart Productivity Suite. All rights reserved.
+            © 2026 NAVIKO (naviko.in) — Science Meets Tradition. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-400">
             <span className="flex items-center gap-1">
@@ -340,7 +350,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              Engineered with <Heart className="w-3 h-3 text-rose-500 inline fill-rose-500" /> for simplicity
+              Engineered with <Heart className="w-3 h-3 text-emerald-500 inline fill-emerald-500" /> for conscious wellness
             </span>
           </div>
         </div>
