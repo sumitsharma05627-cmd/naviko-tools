@@ -48,6 +48,17 @@ export const PLAN_CAPABILITIES: Record<PlanType, PlanCapabilities> = {
     adExperience: 'ad_free',
     maxFileSizeMb: 200,
   },
+  business: {
+    aiDailyLimit: 1000,
+    savedHistory: true,
+    advancedAnalytics: true,
+    advancedExports: true,
+    customDashboard: true,
+    batchProcessing: true,
+    priorityFeatures: true,
+    adExperience: 'ad_free',
+    maxFileSizeMb: 1000,
+  },
   founding: {
     aiDailyLimit: 500,
     savedHistory: true,
@@ -80,8 +91,10 @@ export interface ToolEntitlement {
   freeDailyLimit?: number;
   plusDailyLimit?: number;
   proDailyLimit?: number;
+  businessDailyLimit?: number;
+  policyType?: 'unlimited' | 'quota-based' | 'metered';
   description: string;
-  requiredTier?: 'plus' | 'pro';
+  requiredTier?: 'plus' | 'pro' | 'business';
   premiumFeatureSummary?: string;
 }
 

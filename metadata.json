@@ -1,6 +1,6 @@
 {
   "name": "NAVIKO",
-  "description": "NAVIKO — Science Meets Tradition. Practical Indian nutrition science, responsible Ayurveda exploration, smart meal planning, and daily wellness tools.",
+  "description": "NAVIKO — Intelligent Indian digital ecosystem combining Vedic Astrology & Vastu Shastra, Nutrition Science & Ayurveda, and 46+ privacy utilities.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

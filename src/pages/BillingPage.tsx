@@ -60,7 +60,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onNavigate, onOpenPric
     setIsRefreshing(false);
   };
 
-  const isPremiumActive = plan === 'pro' || plan === 'plus' || plan === 'trial';
+  const isPremiumActive = plan === 'pro' || plan === 'plus' || plan === 'founding' || plan === 'trial';
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -99,7 +99,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onNavigate, onOpenPric
               className="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/20 cursor-pointer transition-all self-start sm:self-auto"
             >
               <Crown className="w-4 h-4" />
-              <span>{isPremiumActive ? 'Change Plan' : 'Upgrade Plan'}</span>
+              <span>{isPremiumActive ? 'View Plan Details' : 'Upgrade Plan'}</span>
             </button>
           )}
         </div>
@@ -113,11 +113,19 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onNavigate, onOpenPric
               </span>
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl font-black text-slate-900 dark:text-white capitalize">
-                  {plan === 'trial' ? '₹1 Premium Trial' : `${plan} Plan`}
+                  {plan === 'trial'
+                    ? '₹1 Premium Trial'
+                    : plan === 'founding'
+                    ? 'Founding Member Pass'
+                    : `${plan} Plan`}
                 </span>
                 {isTrial ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     TRIAL ACTIVE
+                  </span>
+                ) : plan === 'founding' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/40">
+                    LIFETIME ACTIVE
                   </span>
                 ) : isPremiumActive ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
@@ -144,7 +152,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onNavigate, onOpenPric
             <div>
               <span className="text-slate-400 block mb-0.5">Billing Cadence</span>
               <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">
-                {isTrial ? '7-Day One-Time Trial' : `${billingInterval} billing`}
+                {isTrial
+                  ? '7-Day One-Time Trial'
+                  : plan === 'founding'
+                  ? 'One-Time Lifetime Entitlement'
+                  : `${billingInterval} billing`}
               </span>
             </div>
 
@@ -157,10 +169,14 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onNavigate, onOpenPric
 
             <div>
               <span className="text-slate-400 block mb-0.5">
-                {isTrial ? 'Trial Expiration' : 'Renewal / Expiry'}
+                {isTrial ? 'Trial Expiration' : plan === 'founding' ? 'Expiration Status' : 'Renewal / Expiry'}
               </span>
               <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {renewalDate ? new Date(renewalDate).toLocaleDateString() : '—'}
+                {plan === 'founding'
+                  ? 'Permanent (Never Expires)'
+                  : renewalDate
+                  ? new Date(renewalDate).toLocaleDateString()
+                  : '—'}
               </span>
             </div>
           </div>

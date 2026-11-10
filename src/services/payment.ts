@@ -1,4 +1,5 @@
 import { CurrencyCode, BillingInterval, PlanType, PlanId } from '../config/pricing';
+import { NavikoVersionId } from '../config/pricingEngine';
 import { getApiUrl } from '../config/api';
 import { safeApiFetch } from './apiClient';
 
@@ -12,10 +13,12 @@ export type SubscriptionState =
   | 'EXPIRED';
 
 export interface PaymentPlanRequest {
-  tier: 'plus' | 'pro' | 'founding';
-  interval: BillingInterval;
-  currency: CurrencyCode;
-  planId?: PlanId;
+  version?: NavikoVersionId;
+  tier: string;
+  interval: string;
+  currency: string;
+  planId?: string;
+  customSelections?: any;
   customerEmail?: string;
   customerName?: string;
   userId: string;
@@ -32,6 +35,7 @@ export interface PaymentResult {
 }
 
 export interface SubscriptionStatusResponse {
+  version?: NavikoVersionId;
   status: SubscriptionState;
   plan: PlanType;
   hasActiveSubscription: boolean;
@@ -45,6 +49,27 @@ export interface SubscriptionStatusResponse {
   renewalDate: string | null;
   billingInterval: BillingInterval;
   currency?: string;
+  allVersions?: Record<NavikoVersionId, {
+    status: SubscriptionState;
+    plan: string;
+    hasActiveSubscription: boolean;
+    startDate: string | null;
+    renewalDate: string | null;
+    billingInterval?: string;
+    currency?: string;
+  }>;
+  billingHistory?: Array<{
+    id: string;
+    version: NavikoVersionId;
+    tier: string;
+    interval: string;
+    amount: number;
+    currency: string;
+    status: string;
+    date: string;
+    paymentId?: string;
+    invoiceNumber?: string;
+  }>;
 }
 
 class PaymentService {
@@ -115,18 +140,20 @@ class PaymentService {
   /**
    * Authoritative subscription status query to the trusted backend.
    */
-  public async getSubscriptionStatus(userId: string): Promise<SubscriptionStatusResponse> {
+  public async getSubscriptionStatus(userId: string, version?: NavikoVersionId): Promise<SubscriptionStatusResponse> {
     try {
       const headers = this.getAuthHeaders();
       headers['x-user-id'] = userId;
 
-      const res = await safeApiFetch<SubscriptionStatusResponse>(
-        `/api/subscription/status?userId=${encodeURIComponent(userId)}`,
-        { headers }
-      );
+      const url = version
+        ? `/api/subscription/status?userId=${encodeURIComponent(userId)}&version=${encodeURIComponent(version)}`
+        : `/api/subscription/status?userId=${encodeURIComponent(userId)}`;
+
+      const res = await safeApiFetch<SubscriptionStatusResponse>(url, { headers });
 
       if (!res.ok || !res.data) {
         return {
+          version: version || 'v1',
           status: 'FREE',
           plan: 'free',
           hasActiveSubscription: false,
@@ -140,6 +167,7 @@ class PaymentService {
     } catch (err) {
       console.warn('Failed to query subscription status from backend:', err);
       return {
+        version: version || 'v1',
         status: 'FREE',
         plan: 'free',
         hasActiveSubscription: false,
@@ -164,23 +192,25 @@ class PaymentService {
       };
     }
 
-    if (request.tier !== 'plus' && request.tier !== 'pro' && request.tier !== 'founding') {
-      return {
-        success: false,
-        error: 'Invalid plan selected. Only Plus, Pro, and Founding Member tiers can be subscribed.',
-      };
-    }
+    const version = request.version || 'v1';
 
     // 2. Request server to create a verified Razorpay Order
-    const planId: PlanId = request.planId || (request.tier === 'founding' ? 'founding_member' : `${request.tier}_${request.interval}` as PlanId);
+    const planId =
+      request.planId ||
+      (request.tier === 'founding'
+        ? 'founding_member'
+        : `${request.tier}_${request.interval}`);
+
     const res = await safeApiFetch<any>('/api/subscription/create-order', {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({
+        version,
         planId,
         tier: request.tier,
         interval: request.interval,
         currency: request.currency,
+        customSelections: request.customSelections,
         customerEmail: request.customerEmail,
         customerName: request.customerName,
         userId: request.userId,
@@ -210,6 +240,7 @@ class PaymentService {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({
+          version,
           razorpay_order_id: orderId,
           razorpay_payment_id: `pay_sandbox_${Date.now()}`,
           razorpay_signature: 'sig_sandbox_verified',
@@ -289,6 +320,7 @@ class PaymentService {
               method: 'POST',
               headers: this.getAuthHeaders(),
               body: JSON.stringify({
+                version,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
@@ -536,12 +568,12 @@ class PaymentService {
   /**
    * Request subscription cancellation on backend
    */
-  public async cancelSubscription(userId: string): Promise<{ success: boolean; error?: string }> {
+  public async cancelSubscription(userId: string, version: NavikoVersionId = 'v1'): Promise<{ success: boolean; error?: string }> {
     try {
       const res = await safeApiFetch<{ success: boolean; error?: string }>('/api/subscription/cancel', {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, version }),
       });
       return { success: !!res.data?.success, error: res.error || res.data?.error };
     } catch (err: any) {
@@ -574,6 +606,134 @@ class PaymentService {
         authorized: false,
         plan: 'free',
         message: err?.message || 'Feature authorization request failed.',
+      };
+    }
+  }
+
+  /**
+   * Check server-authoritative tool access & remaining daily fair-use quota
+   */
+  public async checkToolAccess(toolId: string): Promise<{
+    allowed: boolean;
+    tierEligible?: boolean;
+    quotaEligible?: boolean;
+    tier: string;
+    dailyLimit: number;
+    usedToday: number;
+    remaining: number;
+    requiredTier?: string;
+    isTrial?: boolean;
+    error?: string;
+  }> {
+    try {
+      const res = await safeApiFetch<any>('/api/subscription/check-tool-access', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ toolId }),
+      });
+
+      if (!res.ok || !res.data) {
+        return {
+          allowed: false,
+          tier: 'free',
+          dailyLimit: 5,
+          usedToday: 0,
+          remaining: 0,
+          error: res.error || 'Failed to verify tool access',
+        };
+      }
+
+      return {
+        allowed: !!res.data.allowed,
+        tierEligible: !!res.data.tierEligible,
+        quotaEligible: !!res.data.quotaEligible,
+        tier: res.data.tier || 'free',
+        dailyLimit: res.data.dailyLimit ?? 5,
+        usedToday: res.data.usedToday ?? 0,
+        remaining: res.data.remaining ?? 0,
+        requiredTier: res.data.requiredTier,
+        isTrial: res.data.isTrial,
+      };
+    } catch (err: any) {
+      return {
+        allowed: false,
+        tier: 'free',
+        dailyLimit: 5,
+        usedToday: 0,
+        remaining: 0,
+        error: err?.message || 'Tool access verification failed.',
+      };
+    }
+  }
+
+  /**
+   * Record tool usage on server to accurately synchronize fair-use quotas
+   */
+  public async recordToolUsage(toolId: string): Promise<{
+    success: boolean;
+    usedToday: number;
+    remaining: number;
+    dailyLimit: number;
+    allowed: boolean;
+  }> {
+    try {
+      const res = await safeApiFetch<any>('/api/subscription/record-tool-usage', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ toolId }),
+      });
+
+      return {
+        success: !!res.data?.success,
+        usedToday: res.data?.usedToday ?? 1,
+        remaining: res.data?.remaining ?? 0,
+        dailyLimit: res.data?.dailyLimit ?? 5,
+        allowed: !!res.data?.allowed,
+      };
+    } catch (err) {
+      return { success: false, usedToday: 1, remaining: 0, dailyLimit: 5, allowed: true };
+    }
+  }
+
+  /**
+   * Safely execute a server-side protected tool with tier & quota middleware enforcement
+   */
+  public async executeTool<T = any>(
+    toolId: string,
+    payload?: any
+  ): Promise<{
+    success: boolean;
+    result?: T;
+    quota?: { dailyLimit: number; usedToday: number; remaining: number };
+    error?: string;
+    code?: string;
+    requiredTier?: string;
+  }> {
+    try {
+      const res = await safeApiFetch<any>('/api/tools/execute', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ toolId, payload }),
+      });
+
+      if (!res.ok || !res.data?.success) {
+        return {
+          success: false,
+          error: res.error || res.data?.error || 'Tool execution rejected by server',
+          code: res.data?.code,
+          requiredTier: res.data?.requiredTier,
+        };
+      }
+
+      return {
+        success: true,
+        result: res.data.result,
+        quota: res.data.quota,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Server tool execution failed',
       };
     }
   }

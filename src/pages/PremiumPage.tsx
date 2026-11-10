@@ -19,6 +19,7 @@ import {
   Info,
   CheckCircle,
   Calendar,
+  Users,
 } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +37,8 @@ import { PremiumBadge } from '../components/monetization/PremiumBadge';
 import { useSEO, CANONICAL_DOMAIN } from '../utils/seo';
 import { Premium3DVisual } from '../components/3d/Premium3DVisual';
 import { Interactive3DCard } from '../components/3d/Interactive3DCard';
+import { CustomPlanBuilder } from '../components/monetization/CustomPlanBuilder';
+import { ToolPolicyBadge } from '../components/monetization/ToolPolicyBadge';
 
 interface PremiumPageProps {
   onNavigate: (path: string) => void;
@@ -65,7 +68,21 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
   const [emailInput, setEmailInput] = useState('');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [activeViewTab, setActiveViewTab] = useState<'all' | 'monthly_only' | 'side_by_side'>('all');
+  const [activeViewTab, setActiveViewTab] = useState<'all' | 'monthly_only' | 'side_by_side' | 'custom_builder'>('all');
+
+  const [earlyAccessStatus, setEarlyAccessStatus] = useState<{
+    capacity: number;
+    enrolled: number;
+    remaining: number;
+    percentFilled: number;
+    isWaitlistActive: boolean;
+  }>({
+    capacity: 500,
+    enrolled: 4,
+    remaining: 496,
+    percentFilled: 1,
+    isWaitlistActive: false,
+  });
 
   const activePricing = PRICING_CONFIG[currency] || PRICING_CONFIG.INR;
   const isYearly = billingInterval === 'yearly';
@@ -94,7 +111,20 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
   const proAnnualSavingsFormatted = formatCurrencyPrice(proAnnualSavings, currency);
   const proSavingsPct = getYearlySavingsPercentage(proMonthlyPrice, proYearlyPrice);
 
-  const maxSavingsPct = Math.max(plusSavingsPct, proSavingsPct);
+  // Business tier pricing calculations
+  const businessMonthlyPrice = activePricing.business?.monthly || (currency === 'INR' ? 1499 : 19.99);
+  const businessYearlyPrice = activePricing.business?.yearly || (currency === 'INR' ? 14990 : 199.00);
+  const businessMonthlyFormatted = formatCurrencyPrice(businessMonthlyPrice, currency);
+  const businessYearlyFormatted = formatCurrencyPrice(businessYearlyPrice, currency);
+  const businessEffectiveMonthly = getEffectiveMonthlyPrice(businessYearlyPrice);
+  const businessEffectiveMonthlyFormatted = formatCurrencyPrice(businessEffectiveMonthly, currency);
+  const businessSavingsPct = getYearlySavingsPercentage(businessMonthlyPrice, businessYearlyPrice);
+
+  // Founding Member pricing
+  const foundingPrice = activePricing.pro.founding || (currency === 'INR' ? 7999 : 99);
+  const foundingFormatted = formatCurrencyPrice(foundingPrice, currency);
+
+  const maxSavingsPct = Math.max(plusSavingsPct, proSavingsPct, businessSavingsPct);
 
   useSEO({
     title: 'NAVIKO Plans & Pricing — Free Forever & Optional Plus & Pro',
@@ -147,6 +177,26 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
+    // Fetch live early access status
+    fetch('/api/early-access/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          const capacity = data.totalCapacity || data.capacity || 500;
+          const enrolled = typeof data.enrolledCount === 'number' ? data.enrolledCount : (data.enrolled || 0);
+          const remaining = typeof data.remainingSpots === 'number' ? data.remainingSpots : Math.max(0, capacity - enrolled);
+          const percentFilled = capacity > 0 ? Math.round((enrolled / capacity) * 100) : 0;
+          setEarlyAccessStatus({
+            capacity,
+            enrolled,
+            remaining,
+            percentFilled,
+            isWaitlistActive: Boolean(data.isWaitlistOpen || data.isFull || remaining <= 0),
+          });
+        }
+      })
+      .catch(() => {});
+
     // Restore intended plan selection from query or session
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -167,8 +217,8 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
     }
   }, [setBillingInterval]);
 
-  const handleUpgrade = async (tier: 'plus' | 'pro', overrideInterval?: BillingInterval) => {
-    const targetInterval = overrideInterval || billingInterval;
+  const handleUpgrade = async (tier: 'plus' | 'pro' | 'founding', overrideInterval?: BillingInterval) => {
+    const targetInterval = tier === 'founding' ? 'lifetime' : (overrideInterval || billingInterval);
 
     // Strict requirement: User MUST be authenticated before purchasing any paid plan
     if (!isAuthenticated) {
@@ -260,6 +310,11 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
       category: 'plans',
       q: 'Which plan is right for me: Free, Plus, or Pro?',
       a: 'The Free Plan is permanently free for all 46+ essential tools including standard calculators, age, percentage, unit converters, and basic student utilities with zero account requirement. Choose Plus (50 ops/day) if you need automated meal planning, study timetable generation, and mock test score projections. Choose Pro (200 ops/day) if you need high-volume batch processing, deep predictive analytics, priority queue processing, and a 100% ad-free experience across all tools.',
+    },
+    {
+      category: 'plans',
+      q: 'What is the Founding Member Offer and is it permanent?',
+      a: 'The Founding Member pass is an exclusive one-time payment of ₹7,999 strictly limited to the first 500 members. It grants permanent Lifetime Access with zero renewal fees, a high fair-use quota of 500 daily operations, an exclusive Gold Founding Member badge, priority feature requests, and early beta access to all upcoming tools. It is backed by a sustainable cost model and enforced on our secure server.',
     },
     {
       category: 'plans',
@@ -405,6 +460,18 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
                 }`}
               >
                 Side-by-Side View
+              </button>
+              <button
+                onClick={() => {
+                  setActiveViewTab('custom_builder');
+                }}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeViewTab === 'custom_builder'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>🛠️ Custom Plan Builder</span>
               </button>
             </div>
 
@@ -690,9 +757,68 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
           )}
         </div>
 
+        {/* EXCLUSIVE EARLY-ACCESS CAPACITY TRACKER */}
+        <div className="max-w-5xl mx-auto mb-10 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-2 border-amber-500/40 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[11px] font-black uppercase tracking-wider">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span>Genuinely Limited Early Access Program</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Founding Member Capacity: {earlyAccessStatus.remaining} of {earlyAccessStatus.capacity} Places Remaining
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Live verified capacity from active member records. Once all {earlyAccessStatus.capacity} places are filled, enrollment automatically shifts to the priority waitlist.
+              </p>
+
+              {/* Live Real Capacity Progress Bar */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+                  <span>{earlyAccessStatus.enrolled} Enrolled</span>
+                  <span className="text-amber-400">{earlyAccessStatus.remaining} Spots Remaining</span>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min(100, Math.max(3, earlyAccessStatus.percentFilled))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 w-full md:w-auto shrink-0">
+              {earlyAccessStatus.isWaitlistActive || earlyAccessStatus.remaining <= 0 ? (
+                <button
+                  onClick={() => onNavigate('/waitlist')}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs sm:text-sm shadow-md hover:scale-105 transition-all text-center cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>Join Priority Waitlist</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => onNavigate('/checkout?plan=founding_member')}
+                  className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 hover:scale-105 transition-all text-center cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Crown className="w-4 h-4 text-slate-950" />
+                  <span>Claim Founding Membership ({foundingFormatted})</span>
+                </button>
+              )}
+              <button
+                onClick={() => onNavigate('/waitlist')}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-bold text-center transition-all cursor-pointer"
+              >
+                View Early Access Waitlist
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 3. PRICING CARDS DISPLAY (STANDARD & MONTHLY-ONLY MODES) */}
-        {activeViewTab !== 'side_by_side' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto items-stretch">
+        {activeViewTab !== 'side_by_side' && activeViewTab !== 'custom_builder' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
             {/* 1. FREE PLAN CARD */}
             <Interactive3DCard className="h-full" elevation={6} maxTilt={4}>
               <div className="h-full rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between transition-colors relative">
@@ -764,295 +890,382 @@ export const PremiumPage: React.FC<PremiumPageProps> = ({ onNavigate }) => {
               </div>
             </Interactive3DCard>
 
-            {/* 2. PLUS PLAN CARD */}
+            {/* 2. PLUS / MONTHLY PLAN CARD */}
             <Interactive3DCard className="h-full" elevation={8} maxTilt={5}>
               <div className="h-full rounded-3xl bg-white dark:bg-slate-900 border-2 border-indigo-500/80 p-6 sm:p-7 shadow-lg flex flex-col justify-between relative transition-colors">
-              {/* Badge */}
-              <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-black text-[10px] tracking-wider uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                <span>POPULAR FOR STUDENTS</span>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold tracking-wider uppercase border border-indigo-200 dark:border-indigo-800">
-                    NAVIKO PLUS
-                  </span>
-                  <span className="text-xs font-semibold text-slate-400">
-                    {isYearly && activeViewTab !== 'monthly_only' ? 'Annual Pass' : 'Monthly Flex Pass'}
-                  </span>
+                <div className="absolute -top-3.5 right-6 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-black text-[10px] tracking-wider uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>MONTHLY FLEX</span>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-                      {isYearly && activeViewTab !== 'monthly_only' ? plusYearlyFormatted : plusMonthlyFormatted}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 text-xs font-extrabold tracking-wider uppercase border border-indigo-200 dark:border-indigo-800">
+                      NAVIKO PLUS
                     </span>
-                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                      {isYearly && activeViewTab !== 'monthly_only' ? '/ year' : '/ month'}
+                    <span className="text-xs font-semibold text-slate-400">
+                      {isYearly && activeViewTab !== 'monthly_only' ? 'Annual Pass' : 'Monthly Pass'}
                     </span>
                   </div>
 
-                  {isYearly && activeViewTab !== 'monthly_only' ? (
-                    <div className="mt-2.5 space-y-1.5">
-                      <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                        <span>Effective: <strong>{plusEffectiveMonthlyFormatted}</strong> / month</span>
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+                        {isYearly && activeViewTab !== 'monthly_only' ? plusYearlyFormatted : plusMonthlyFormatted}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                        {isYearly && activeViewTab !== 'monthly_only' ? '/ year' : '/ month'}
+                      </span>
+                    </div>
+
+                    {isYearly && activeViewTab !== 'monthly_only' ? (
+                      <div className="mt-2.5 space-y-1.5">
+                        <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                          <span>Effective: <strong>{plusEffectiveMonthlyFormatted}</strong> / month</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
+                          <span>Save {plusAnnualSavingsFormatted}/year ({plusSavingsPct}% off)</span>
+                        </div>
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
-                        <span>Save {plusAnnualSavingsFormatted}/year ({plusSavingsPct}% off)</span>
+                    ) : (
+                      <div className="mt-2.5 space-y-1">
+                        <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>30-Day Cycle • Cancel Anytime</span>
+                        </div>
                       </div>
+                    )}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                      Higher limits, saved nutrition plans, and mock test analytics.
+                    </p>
+                  </div>
+
+                  {/* Plus Features List */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                    <div className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-indigo-500" />
+                      <span>Everything in Free, plus:</span>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span className="font-semibold text-slate-900 dark:text-white">50 daily operations on AI &amp; smart utilities</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span>Weekly 7-Day Nutrition Planner &amp; Auto Grocery List</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span>Saved Custom Meal Plates &amp; Meal History</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span>Mock Test Trend Analytics &amp; Score Projections</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span>Saved Tool History &amp; Workspace Persistence</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                      <span>Ad-Free experience across all tools</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  {plan === 'plus' && subscriptionStatus === 'ACTIVE' ? (
+                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold text-center">
+                      ✓ Current Plan (Plus)
                     </div>
                   ) : (
-                    <div className="mt-2.5 space-y-1">
-                      <div className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>Monthly 30-Day Pass • Cancel Anytime</span>
-                      </div>
+                    <>
                       <button
-                        onClick={() => {
-                          setActiveViewTab('all');
-                          setBillingInterval('yearly');
-                        }}
-                        className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        onClick={() => onNavigate(`/checkout?plan=${isYearly && activeViewTab !== 'monthly_only' ? 'premium_yearly' : 'premium_monthly'}`)}
+                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
                       >
-                        <span>Or Yearly: Save {plusAnnualSavingsFormatted}/yr ({plusSavingsPct}%)</span>
+                        <span>
+                          Get Plus ({activeViewTab === 'monthly_only' || !isYearly ? plusMonthlyFormatted : plusYearlyFormatted})
+                        </span>
+                        <ArrowRight className="w-4 h-4" />
                       </button>
-                    </div>
+
+                      <button
+                        onClick={() => handleUpgrade('plus', activeViewTab === 'monthly_only' ? 'monthly' : billingInterval)}
+                        disabled={processingAction !== null}
+                        className="w-full py-2 px-3 rounded-lg border border-indigo-200 dark:border-indigo-800 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors cursor-pointer text-center"
+                      >
+                        {processingAction === `plus_${activeViewTab === 'monthly_only' ? 'monthly' : billingInterval}` ? 'Activating...' : '1-Click Quick Upgrade'}
+                      </button>
+                    </>
                   )}
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Higher limits, saved nutrition plans, and mock test analytics.
-                  </p>
-                </div>
-
-                {/* Plus Features List */}
-                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-                  <div className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-indigo-500" />
-                    <span>Everything in Free, plus:</span>
-                  </div>
-
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span className="font-semibold text-slate-900 dark:text-white">50 daily operations on AI &amp; smart utilities (10x Free)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Weekly 7-Day Nutrition Planner &amp; Auto Grocery List</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Saved Custom Meal Plates &amp; Meal History</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Mock Test Trend Analytics &amp; Score Projections</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Saved Tool History &amp; Workspace Persistence</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Customizable Tool Dashboard &amp; Quick Pins</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                    <span>Reduced advertising &amp; early access features</span>
-                  </div>
                 </div>
               </div>
-
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                {plan === 'plus' && subscriptionStatus === 'ACTIVE' ? (
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold text-center">
-                    ✓ Current Plan (Plus)
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleUpgrade('plus', activeViewTab === 'monthly_only' ? 'monthly' : billingInterval)}
-                      disabled={processingAction !== null}
-                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] disabled:opacity-50"
-                    >
-                      {processingAction === `plus_${activeViewTab === 'monthly_only' ? 'monthly' : billingInterval}` ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Activating Plus...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>
-                            Upgrade to Plus ({activeViewTab === 'monthly_only' || !isYearly ? 'Monthly' : 'Yearly'})
-                          </span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-
-                    {/* Quick Direct Alternative Choice */}
-                    {isYearly && activeViewTab !== 'monthly_only' && (
-                      <button
-                        onClick={() => handleUpgrade('plus', 'monthly')}
-                        disabled={processingAction !== null}
-                        className="w-full py-2 px-3 rounded-lg border border-indigo-200 dark:border-indigo-800/80 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors cursor-pointer text-center"
-                      >
-                        Or Subscribe Monthly ({plusMonthlyFormatted}/mo)
-                      </button>
-                    )}
-
-                    {!trialUsed && !isTrial && (
-                      <button
-                        onClick={handleStartTrial}
-                        disabled={processingAction !== null}
-                        className="w-full py-2 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-[11px] font-bold text-amber-700 dark:text-amber-300 transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
-                      >
-                        <Zap className="w-3 h-3 text-amber-500" />
-                        <span>Or Start ₹1 Trial (7 Days)</span>
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
             </Interactive3DCard>
 
-            {/* 3. PRO PLAN CARD */}
+            {/* 3. PRO / ANNUAL PLAN CARD */}
             <Interactive3DCard className="h-full" elevation={8} maxTilt={5}>
               <div className="h-full rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white border-2 border-purple-500/80 p-6 sm:p-7 shadow-2xl flex flex-col justify-between relative overflow-hidden">
-              {/* Best Value Badge */}
-              <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-amber-500 text-slate-950 font-black text-[10px] tracking-wider uppercase px-4 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
-                <Crown className="w-3 h-3 text-slate-950" />
-                <span>POWER USERS • FULL UNLOCK</span>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-extrabold tracking-wider uppercase border border-purple-500/30">
-                    NAVIKO PRO
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    {isYearly && activeViewTab !== 'monthly_only' ? 'Annual Pass' : 'Monthly Flex Pass'}
-                  </span>
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-amber-500 text-slate-950 font-black text-[10px] tracking-wider uppercase px-4 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
+                  <Crown className="w-3 h-3 text-slate-950" />
+                  <span>BEST VALUE • FULL UNLOCK</span>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl sm:text-4xl font-black text-white">
-                      {isYearly && activeViewTab !== 'monthly_only' ? proYearlyFormatted : proMonthlyFormatted}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-extrabold tracking-wider uppercase border border-purple-500/30">
+                      NAVIKO PRO
                     </span>
-                    <span className="text-sm font-semibold text-slate-300">
-                      {isYearly && activeViewTab !== 'monthly_only' ? '/ year' : '/ month'}
+                    <span className="text-xs text-slate-400">
+                      {isYearly && activeViewTab !== 'monthly_only' ? 'Annual Pass' : 'Monthly Pass'}
                     </span>
                   </div>
 
-                  {isYearly && activeViewTab !== 'monthly_only' ? (
-                    <div className="mt-2.5 space-y-1.5">
-                      <div className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
-                        <span>Effective: <strong>{proEffectiveMonthlyFormatted}</strong> / month</span>
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl font-black text-white">
+                        {isYearly && activeViewTab !== 'monthly_only' ? proYearlyFormatted : proMonthlyFormatted}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-300">
+                        {isYearly && activeViewTab !== 'monthly_only' ? '/ year' : '/ month'}
+                      </span>
+                    </div>
+
+                    {isYearly && activeViewTab !== 'monthly_only' ? (
+                      <div className="mt-2.5 space-y-1.5">
+                        <div className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                          <span>Effective: <strong>{proEffectiveMonthlyFormatted}</strong> / month</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
+                          <span>Save {proAnnualSavingsFormatted}/year ({proSavingsPct}% off)</span>
+                        </div>
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
-                        <span>Save {proAnnualSavingsFormatted}/year ({proSavingsPct}% off)</span>
+                    ) : (
+                      <div className="mt-2.5 space-y-1">
+                        <div className="text-xs font-semibold text-purple-300 flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Monthly Pass • Cancel Anytime</span>
+                        </div>
                       </div>
+                    )}
+                    <p className="text-xs text-slate-400 mt-2">
+                      Highest daily limits, batch document processing, and 100% ad-free focus.
+                    </p>
+                  </div>
+
+                  {/* Pro Features List */}
+                  <div className="space-y-3 pt-4 border-t border-slate-800 text-xs sm:text-sm text-slate-300">
+                    <div className="font-bold text-white mb-2 flex items-center gap-1.5">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span>Everything in Plus, plus:</span>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span className="text-white font-semibold">200 daily operations across AI &amp; smart utilities</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Batch document conversion &amp; High-res PDF compression</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Advanced Predictive Score Analytics &amp; Study Reports</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Export reports in PDF, CSV, and JSON formats</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>100% Ad-Free distractionless workspace</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Priority compute queue &amp; customer assistance</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-800 space-y-2">
+                  {plan === 'pro' && subscriptionStatus === 'ACTIVE' ? (
+                    <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold text-center">
+                      ✓ Current Plan (Pro)
                     </div>
                   ) : (
-                    <div className="mt-2.5 space-y-1">
-                      <div className="text-xs font-semibold text-purple-300 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>Monthly 30-Day Pass • Cancel Anytime</span>
-                      </div>
+                    <>
                       <button
-                        onClick={() => {
-                          setActiveViewTab('all');
-                          setBillingInterval('yearly');
-                        }}
-                        className="text-[11px] font-semibold text-purple-300 hover:underline flex items-center gap-1 cursor-pointer"
+                        onClick={() => onNavigate('/checkout?plan=premium_yearly')}
+                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
                       >
-                        <span>Or Yearly: Save {proAnnualSavingsFormatted}/yr ({proSavingsPct}%)</span>
+                        <Crown className="w-4 h-4 text-amber-300" />
+                        <span>
+                          Get Pro ({isYearly && activeViewTab !== 'monthly_only' ? proYearlyFormatted : proMonthlyFormatted})
+                        </span>
+                        <ArrowRight className="w-4 h-4" />
                       </button>
-                    </div>
-                  )}
-                  <p className="text-xs text-slate-400 mt-2">
-                    Highest daily limits, batch document processing, and 100% ad-free focus.
-                  </p>
-                </div>
 
-                {/* Pro Features List */}
-                <div className="space-y-3 pt-4 border-t border-slate-800 text-xs sm:text-sm text-slate-300">
-                  <div className="font-bold text-white mb-2 flex items-center gap-1.5">
-                    <Crown className="w-4 h-4 text-amber-400" />
-                    <span>Everything in Plus, plus:</span>
-                  </div>
-
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span className="text-white font-semibold">200 daily operations across AI &amp; smart utilities</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Batch document conversion &amp; High-res PDF compression</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Advanced Predictive Score Analytics &amp; Full Study Reports</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Export reports in PDF, CSV, and JSON formats</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span>100% Ad-Free distractionless workspace</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <span>Priority compute queue &amp; customer assistance</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-slate-800 space-y-2">
-                {plan === 'pro' && subscriptionStatus === 'ACTIVE' ? (
-                  <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-bold text-center">
-                    ✓ Current Plan (Pro)
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleUpgrade('pro', activeViewTab === 'monthly_only' ? 'monthly' : billingInterval)}
-                      disabled={processingAction !== null}
-                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02] disabled:opacity-50"
-                    >
-                      {processingAction === `pro_${activeViewTab === 'monthly_only' ? 'monthly' : billingInterval}` ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Activating Pro...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Crown className="w-4 h-4 text-amber-300" />
-                          <span>
-                            Upgrade to NAVIKO Pro ({activeViewTab === 'monthly_only' || !isYearly ? 'Monthly' : 'Yearly'})
-                          </span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-
-                    {/* Quick Direct Alternative Choice */}
-                    {isYearly && activeViewTab !== 'monthly_only' && (
                       <button
-                        onClick={() => handleUpgrade('pro', 'monthly')}
+                        onClick={() => handleUpgrade('pro', activeViewTab === 'monthly_only' ? 'monthly' : billingInterval)}
                         disabled={processingAction !== null}
                         className="w-full py-2 px-3 rounded-lg border border-purple-500/40 text-[11px] font-semibold text-purple-200 hover:bg-purple-900/40 transition-colors cursor-pointer text-center"
                       >
-                        Or Subscribe Monthly ({proMonthlyFormatted}/mo)
+                        {processingAction === `pro_${activeViewTab === 'monthly_only' ? 'monthly' : billingInterval}` ? 'Activating...' : '1-Click Quick Upgrade'}
                       </button>
-                    )}
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
             </Interactive3DCard>
+
+            {/* 4. FOUNDING MEMBER LIFETIME CARD */}
+            <Interactive3DCard className="h-full" elevation={10} maxTilt={6}>
+              <div className="h-full rounded-3xl bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-950 text-white border-2 border-amber-500/90 p-6 sm:p-7 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 font-black text-[10px] tracking-wider uppercase px-4 py-1.5 rounded-bl-2xl shadow-sm flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5 text-slate-950" />
+                  <span>FOUNDING • LIFETIME</span>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-extrabold tracking-wider uppercase border border-amber-500/40">
+                      FOUNDING MEMBER
+                    </span>
+                    <span className="text-xs text-amber-200/80">
+                      Strictly Limited
+                    </span>
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl font-black text-amber-300">
+                        {foundingFormatted}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-300">
+                        one-time
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5 space-y-1">
+                      <div className="text-xs font-bold text-amber-400 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Permanent Lifetime Entitlement • Never Expires</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        Only {earlyAccessStatus.remaining} of {earlyAccessStatus.capacity} places remaining
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-2">
+                      Full permanent access to all existing and future NAVIKO tools with zero renewal charges.
+                    </p>
+                  </div>
+
+                  {/* Founding Features List */}
+                  <div className="space-y-3 pt-4 border-t border-amber-900/60 text-xs sm:text-sm text-slate-300">
+                    <div className="font-bold text-amber-300 mb-2 flex items-center gap-1.5">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span>Founding Member Privileges:</span>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span className="text-white font-semibold">500 daily operations across AI &amp; smart tools</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Permanent lifetime entitlement — zero renewal fees ever</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Exclusive Gold Founding Member profile badge</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Full access to upcoming tools, apps &amp; beta features</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>100% Ad-Free experience across all platforms</span>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>Direct input into NAVIKO product roadmap &amp; voting</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-amber-900/60 space-y-2">
+                  {plan === 'founding' && subscriptionStatus === 'ACTIVE' ? (
+                    <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold text-center">
+                      👑 You are a Founding Member!
+                    </div>
+                  ) : earlyAccessStatus.isWaitlistActive || earlyAccessStatus.remaining <= 0 ? (
+                    <button
+                      onClick={() => onNavigate('/waitlist')}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
+                    >
+                      <span>Join Priority Waitlist</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => onNavigate('/checkout?plan=founding_member')}
+                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
+                      >
+                        <Crown className="w-4 h-4 text-slate-950" />
+                        <span>Claim Founding Membership</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleUpgrade('founding')}
+                        disabled={processingAction !== null}
+                        className="w-full py-2 px-3 rounded-lg border border-amber-500/30 text-[11px] font-semibold text-amber-300 hover:bg-amber-950/40 transition-colors cursor-pointer text-center"
+                      >
+                        {processingAction === 'founding_lifetime' ? 'Activating...' : `Quick 1-Click Upgrade (${foundingFormatted})`}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Interactive3DCard>
+          </div>
+        )}
+
+        {/* Custom Plan Teaser Banner (when viewing standard or side-by-side) */}
+        {activeViewTab !== 'custom_builder' && (
+          <div className="max-w-7xl mx-auto mt-8 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-800/80 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-1 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
+                <span>🛠️ Tailored Subscriptions</span>
+                <span className="w-1 h-1 rounded-full bg-indigo-400" />
+                <span>Business &amp; Team Ready</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Need a Custom Plan for Your Workflow or Team?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
+                Choose only the tool suites, AI capacity (up to 2,000 ops/day), storage tiers, and team member seats you need. Guaranteed server-calculated pricing.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveViewTab('custom_builder')}
+              className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 cursor-pointer shrink-0 hover:scale-[1.02]"
+            >
+              <span>Open Custom Plan Builder</span>
+              <span>→</span>
+            </button>
+          </div>
+        )}
+
+        {/* Custom Plan Builder View */}
+        {activeViewTab === 'custom_builder' && (
+          <div className="max-w-7xl mx-auto my-4 animate-fadeIn">
+            <CustomPlanBuilder
+              currency={currency}
+              onProceedToCheckout={(_selections, _quote) => onNavigate('/checkout?plan=custom_plan')}
+            />
           </div>
         )}
 

@@ -4,7 +4,7 @@ import {
   Calculator, PieChart, Landmark, TrendingUp, Sun, Moon,
   Globe, Check, Zap, Layers, Crown, User, LayoutGrid,
   HeartPulse, GraduationCap, Image as ImageIcon, Briefcase, FileSpreadsheet,
-  BookOpen, Palette
+  BookOpen, Palette, Compass, Calendar, Hash, Bot, FileText
 } from 'lucide-react';
 import { useLanguage, LANGUAGES } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -14,6 +14,7 @@ import { useVersion } from '../context/VersionContext';
 import { VersionSwitcher } from './VersionSwitcher';
 import { PremiumBadge } from './monetization/PremiumBadge';
 import { ThemePopover } from './ThemePopover';
+import { CurrencySelector } from './ui/CurrencySelector';
 
 interface HeaderProps {
   currentPath: string;
@@ -234,7 +235,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
           {/* 1. Brand Logo + Version Switcher */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
-              onClick={() => handleNav(version === 'v1' ? '/v1' : '/v2')}
+              onClick={() => handleNav(version === 'v1' ? '/v1' : version === 'v2' ? '/v2' : '/v3')}
               className="flex items-center gap-2 sm:gap-2.5 text-left group focus:outline-none cursor-pointer"
               aria-label="NAVIKO Platform"
             >
@@ -243,22 +244,30 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl p-[1.5px] shadow-sm group-hover:scale-105 transition-all ${
                   version === 'v1'
                     ? 'bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 shadow-indigo-500/20 group-hover:shadow-indigo-500/30'
-                    : 'bg-gradient-to-tr from-emerald-700 via-emerald-600 to-amber-400 shadow-emerald-500/20 group-hover:shadow-emerald-500/30'
+                    : version === 'v2'
+                    ? 'bg-gradient-to-tr from-emerald-700 via-emerald-600 to-amber-400 shadow-emerald-500/20 group-hover:shadow-emerald-500/30'
+                    : 'bg-gradient-to-tr from-amber-500 via-amber-400 to-indigo-500 shadow-amber-500/20 group-hover:shadow-amber-500/30'
                 }`}>
                   <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center relative overflow-hidden">
                     <div className={`absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity ${
                       version === 'v1'
                         ? 'bg-gradient-to-tr from-indigo-600/40 to-sky-400/20'
-                        : 'bg-gradient-to-tr from-emerald-600/40 to-amber-400/20'
+                        : version === 'v2'
+                        ? 'bg-gradient-to-tr from-emerald-600/40 to-amber-400/20'
+                        : 'bg-gradient-to-tr from-amber-600/40 to-indigo-500/30'
                     }`} />
                     <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 relative z-10 group-hover:rotate-12 transition-transform duration-300 ${
-                      version === 'v1' ? 'text-indigo-300' : 'text-emerald-300'
+                      version === 'v1' ? 'text-indigo-300' : version === 'v2' ? 'text-emerald-300' : 'text-amber-300'
                     }`} />
                   </div>
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${version === 'v1' ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${version === 'v1' ? 'bg-indigo-500' : 'bg-emerald-500'}`} />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    version === 'v1' ? 'bg-indigo-400' : version === 'v2' ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                    version === 'v1' ? 'bg-indigo-500' : version === 'v2' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`} />
                 </span>
               </div>
 
@@ -270,17 +279,21 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-extrabold tracking-wider border uppercase ${
                     version === 'v1'
                       ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800'
-                      : 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800'
+                      : version === 'v2'
+                      ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800'
+                      : 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300/60 dark:border-amber-700'
                   }`}>
-                    {version === 'v1' ? 'v1.0' : 'v2.0'}
+                    {version === 'v1' ? 'v1.0' : version === 'v2' ? 'v2.0' : 'v3.0'}
                   </span>
                 </div>
                 <span className={`hidden sm:block text-[9px] font-semibold uppercase tracking-widest -mt-0.5 ${
                   version === 'v1'
                     ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-emerald-700 dark:text-emerald-400'
+                    : version === 'v2'
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-amber-600 dark:text-amber-400'
                 }`}>
-                  {version === 'v1' ? 'Original Tools Suite' : 'Science Meets Tradition'}
+                  {version === 'v1' ? 'Original Tools Suite' : version === 'v2' ? 'Science Meets Tradition' : 'Vedic Astrology & Vastu'}
                 </span>
               </div>
             </button>
@@ -377,7 +390,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   Career
                 </button>
               </>
-            ) : (
+            ) : version === 'v2' ? (
               <>
                 {/* NAVIKO 2.0 Nutrition & Ayurveda Navigation */}
                 <button
@@ -446,9 +459,100 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   ⚖️ Wellness Calcs
                 </button>
               </>
+            ) : (
+              <>
+                {/* NAVIKO 3.0 Vedic Astrology & Vastu Navigation */}
+                <button
+                  onClick={() => handleNav('/v3')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/v3' || currentPath === '/'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  {t('nav.home', 'Home')}
+                </button>
+
+                <button
+                  onClick={() => handleNav('/kundli')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/kundli' || currentPath === '/my-kundli'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  🕉️ My Kundli
+                </button>
+
+                <button
+                  onClick={() => handleNav('/astrology')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/astrology'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  🪐 Astrology
+                </button>
+
+                <button
+                  onClick={() => handleNav('/vastu')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/vastu'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  🧭 Vastu
+                </button>
+
+                <button
+                  onClick={() => handleNav('/panchang')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/panchang'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  📅 Panchang
+                </button>
+
+                <button
+                  onClick={() => handleNav('/numerology')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/numerology'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  🔢 Numerology
+                </button>
+
+                <button
+                  onClick={() => handleNav('/navi-ai')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/navi-ai'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  ✨ NAVI AI
+                </button>
+
+                <button
+                  onClick={() => handleNav('/reports')}
+                  className={`px-2.5 py-1.5 text-xs xl:text-sm font-semibold rounded-xl transition-all cursor-pointer ${
+                    currentPath === '/reports'
+                      ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10 font-bold border border-amber-500/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                  }`}
+                >
+                  📜 Reports
+                </button>
+              </>
             )}
 
-            {/* FULL MENU MEGA-BUTTON (Shared by both versions) */}
+            {/* FULL MENU MEGA-BUTTON (Shared across all versions) */}
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('full-menu')}
@@ -456,7 +560,9 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   activeMenu === 'full-menu'
                     ? version === 'v1'
                       ? 'bg-indigo-600 text-white shadow-indigo-900/20'
-                      : 'bg-emerald-800 text-white shadow-emerald-900/20'
+                      : version === 'v2'
+                      ? 'bg-emerald-800 text-white shadow-emerald-900/20'
+                      : 'bg-amber-600 text-white shadow-amber-900/20'
                     : 'bg-stone-100 dark:bg-stone-800/70 text-stone-800 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-700/60 border border-stone-200 dark:border-stone-700'
                 }`}
                 aria-expanded={activeMenu === 'full-menu'}
@@ -736,6 +842,16 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
 
           {/* 3. Header Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* NAVIKO 3.0 CTA: Create Your Kundli */}
+            {version === 'v3' && (
+              <button
+                onClick={() => handleNav('/kundli')}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>Create Your Kundli</span>
+              </button>
+            )}
             {/* NAVIKO Premium / Account Button */}
             {isPremiumUser ? (
               <button
@@ -779,6 +895,11 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 <span className="hidden sm:inline">Sign In</span>
               </button>
             )}
+
+            {/* Global Multi-Currency Dropdown Selector */}
+            <div className="hidden sm:block">
+              <CurrencySelector />
+            </div>
 
             {/* Multi-Language Dropdown Selector */}
             <div className="relative" ref={langRef}>
@@ -905,8 +1026,14 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Switch Website Experience
                 </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${version === 'v1' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}`}>
-                  {version === 'v1' ? 'v1.0 Original' : 'v2.0 Nutrition'}
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  version === 'v1'
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+                    : version === 'v2'
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                }`}>
+                  {version === 'v1' ? 'v1.0 Original' : version === 'v2' ? 'v2.0 Nutrition' : 'v3.0 Astrology & Vastu'}
                 </span>
               </div>
               <VersionSwitcher onNavigate={handleNav} mode="segmented" className="w-full justify-between" />
@@ -1057,7 +1184,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                 </button>
               </div>
             </div>
-          ) : (
+          ) : version === 'v2' ? (
             <div className="space-y-1.5 pt-1">
               <div className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 px-1">
                 Nutrition &amp; Ayurveda Pillars
@@ -1100,6 +1227,64 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   <div className="text-[10px] text-stone-500 mt-0.5">Hydration &amp; Food Log</div>
                 </button>
               </div>
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  Vedic Jyotish &amp; Vastu Suites
+                </span>
+                <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                  Lahiri Ephemeris
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleNav('/kundli')}
+                  className="p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🕉️</span> <span>My Kundli</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">D1, D9 &amp; Vimshottari</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/vastu')}
+                  className="p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>🧭</span> <span>Vastu Shastra</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">16-Zone Blueprint &amp; Score</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/panchang')}
+                  className="p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>📅</span> <span>Daily Panchang</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Tithi &amp; Choghadiya</div>
+                </button>
+                <button
+                  onClick={() => handleNav('/navi-ai')}
+                  className="p-2.5 rounded-xl border border-amber-200/60 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/30 text-left cursor-pointer"
+                >
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>✨</span> <span>NAVI AI Guide</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Bilingual Vedic Consult</div>
+                </button>
+              </div>
+
+              {/* Mobile CTA: Create Your Kundli */}
+              <button
+                onClick={() => handleNav('/kundli')}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider text-center shadow-md shadow-amber-500/20 cursor-pointer flex items-center justify-center gap-2 mt-2"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>Create Your Kundli Free</span>
+              </button>
             </div>
           )}
 
@@ -1185,8 +1370,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
             </div>
           </div>
 
-          {/* Theme Quick Selector & Footer on Mobile */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+          {/* Theme & Currency Quick Selectors on Mobile */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Billing Currency
+              </span>
+              <CurrencySelector />
+            </div>
+
             <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Appearance

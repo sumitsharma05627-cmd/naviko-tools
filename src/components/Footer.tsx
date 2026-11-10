@@ -15,6 +15,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useVersion } from '../context/VersionContext';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -24,6 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const { t } = useLanguage();
+  const { version, switchVersion } = useVersion();
 
   const handleNav = (path: string) => {
     onNavigate(path);
@@ -84,26 +86,43 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Column 1 & 2: Brand Identity & Newsletter */}
           <div className="lg:col-span-2 space-y-5">
             <button
-              onClick={() => handleNav('/')}
+              onClick={() => handleNav(version === 'v1' ? '/v1' : version === 'v2' ? '/v2' : '/v3')}
               className="flex items-center gap-3 text-left group cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-500 to-emerald-400 p-[1.5px]">
+              <div className={`w-9 h-9 rounded-2xl p-[1.5px] ${
+                version === 'v3'
+                  ? 'bg-gradient-to-tr from-amber-500 via-amber-400 to-indigo-500'
+                  : version === 'v2'
+                  ? 'bg-gradient-to-tr from-emerald-500 to-amber-400'
+                  : 'bg-gradient-to-tr from-indigo-500 to-sky-400'
+              }`}>
                 <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-indigo-300" />
+                  <Sparkles className={`w-4 h-4 ${
+                    version === 'v3' ? 'text-amber-300' : version === 'v2' ? 'text-emerald-300' : 'text-indigo-300'
+                  }`} />
                 </div>
               </div>
               <div>
-                <span className="text-xl font-serif font-black tracking-tight text-white flex items-center gap-1">
+                <span className="text-xl font-serif font-black tracking-tight text-white flex items-center gap-1.5">
                   NAVIKO
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                    version === 'v3' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {version === 'v3' ? 'v3.0' : version === 'v2' ? 'v2.0' : 'v1.0'}
+                  </span>
                 </span>
-                <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase block -mt-1">
-                  Science Meets Tradition
+                <span className={`text-[10px] font-bold tracking-wider uppercase block -mt-1 ${
+                  version === 'v3' ? 'text-amber-400' : version === 'v2' ? 'text-emerald-400' : 'text-indigo-400'
+                }`}>
+                  {version === 'v3' ? 'Vedic Astrology & Vastu' : version === 'v2' ? 'Science Meets Tradition' : 'Utility Suite'}
                 </span>
               </div>
             </button>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              NAVIKO unites evidence-informed Indian nutrition science, classical Ayurvedic wisdom (Dravyaguna &amp; Dinacharya), smart meal planning, and 46+ privacy-first utility tools. Engineered for transparency and 100% browser-native data privacy.
+              {version === 'v3'
+                ? 'NAVIKO 3.0 unites authentic Lahiri sidereal ephemeris calculations, classical Parashara Jyotish, 16-zone Vastu Purusha Mandala mapping, daily Panchang, and grounded AI guidance. Zero fatalism, 100% clarity.'
+                : 'NAVIKO unites evidence-informed Indian nutrition science, classical Ayurvedic wisdom (Dravyaguna & Dinacharya), smart meal planning, and 46+ privacy-first utility tools. Engineered for transparency.'}
             </p>
 
             {/* Newsletter / Feature updates */}
@@ -230,52 +249,97 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Column 5: Nutrition, Ayurveda & Wellness */}
+          {/* Column 5: Vedic Astrology & Vastu or Nutrition & Ayurveda */}
           <div>
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-white mb-3.5 flex items-center gap-1.5">
-              <span className="text-emerald-400">🌿</span> Nutrition &amp; Ayurveda
+              {version === 'v3' ? (
+                <>
+                  <span className="text-amber-400">🕉️</span> Vedic &amp; Vastu
+                </>
+              ) : (
+                <>
+                  <span className="text-emerald-400">🌿</span> Nutrition &amp; Ayurveda
+                </>
+              )}
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
-              <li>
-                <button onClick={() => handleNav('/food-explorer')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ Indian Food Explorer
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/food-compare')} className="hover:text-white transition-colors cursor-pointer">
-                  Food Comparison Tool
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/label-analyzer')} className="hover:text-white transition-colors cursor-pointer">
-                  Packaged Label &amp; INS Decoder
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/recipes')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ Healthy Indian Recipes
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/meal-planner')} className="hover:text-white transition-colors cursor-pointer">
-                  Smart Meal Planner
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/ayurveda')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
-                  ★ Ayurveda &amp; Dinacharya
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/habit-tracker')} className="hover:text-white transition-colors cursor-pointer">
-                  Daily Habit &amp; Hydration Log
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('/wellness-calculators')} className="hover:text-white transition-colors cursor-pointer">
-                  Asian Indian BMI &amp; TDEE
-                </button>
-              </li>
+              {version === 'v3' ? (
+                <>
+                  <li>
+                    <button onClick={() => handleNav('/kundli')} className="hover:text-white transition-colors cursor-pointer text-amber-300 font-semibold">
+                      ★ Free Kundli / Birth Chart
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/astrology')} className="hover:text-white transition-colors cursor-pointer">
+                      Planetary Ephemeris &amp; D9
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/vastu')} className="hover:text-white transition-colors cursor-pointer text-amber-300 font-semibold">
+                      ★ 16-Zone Vastu Diagnostic
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/panchang')} className="hover:text-white transition-colors cursor-pointer">
+                      Daily Panchang &amp; Choghadiya
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/numerology')} className="hover:text-white transition-colors cursor-pointer">
+                      Numerology Matrix (Chaldean)
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/navi-ai')} className="hover:text-white transition-colors cursor-pointer text-amber-300 font-semibold">
+                      ★ NAVI AI Vedic Assistant
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/reports')} className="hover:text-white transition-colors cursor-pointer">
+                      PDF Kundli &amp; Vastu Dossier
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <button onClick={() => handleNav('/food-explorer')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                      ★ Indian Food Explorer
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/food-compare')} className="hover:text-white transition-colors cursor-pointer">
+                      Food Comparison Tool
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/label-analyzer')} className="hover:text-white transition-colors cursor-pointer">
+                      Packaged Label &amp; INS Decoder
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/recipes')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                      ★ Healthy Indian Recipes
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/meal-planner')} className="hover:text-white transition-colors cursor-pointer">
+                      Smart Meal Planner
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/ayurveda')} className="hover:text-white transition-colors cursor-pointer text-emerald-300 font-semibold">
+                      ★ Ayurveda &amp; Dinacharya
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleNav('/habit-tracker')} className="hover:text-white transition-colors cursor-pointer">
+                      Daily Habit &amp; Hydration Log
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -327,30 +391,38 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button onClick={() => handleNav('/disclaimer')} className="hover:text-white transition-colors cursor-pointer">
-                  Disclaimers (Health &amp; Financial)
+                  Disclaimers
                 </button>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Responsible Health & Medical Notice */}
+        {/* Responsible Guidance Notice */}
         <div className="mt-8 pt-4 border-t border-slate-900 text-[11px] text-slate-500 leading-relaxed max-w-4xl mx-auto text-center">
-          <strong className="text-slate-400">Health &amp; Wellness Notice:</strong> Information on NAVIKO is provided for educational and lifestyle guidance only. Nutritional values are derived from ICMR-NIN &amp; USDA datasets; botanical profiles cite classical Ayurvedic pharmacopoeias and clinical literature. NAVIKO does not provide medical diagnoses or prescribe treatment. Always consult a licensed healthcare professional for clinical health concerns.
+          {version === 'v3' ? (
+            <>
+              <strong className="text-slate-400">Vedic &amp; Vastu Guidance Notice:</strong> Astrological and Vastu calculations on NAVIKO are based on mathematical planetary algorithms (Lahiri Ayanamsha) and classical texts (Brihat Parashara Hora Shastra, Manasara). NAVIKO strictly rejects fatalism and superstition. All insights are intended for self-awareness, cosmic harmony, and constructive personal empowerment.
+            </>
+          ) : (
+            <>
+              <strong className="text-slate-400">Health &amp; Wellness Notice:</strong> Information on NAVIKO is provided for educational and lifestyle guidance only. Nutritional values are derived from ICMR-NIN &amp; USDA datasets; botanical profiles cite classical Ayurvedic pharmacopoeias and clinical literature. NAVIKO does not provide medical diagnoses or prescribe treatment.
+            </>
+          )}
         </div>
 
         {/* Bottom Bar */}
         <div className="mt-6 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <div>
-            © 2026 NAVIKO (naviko.in) — Science Meets Tradition. All rights reserved.
+            © 2026 NAVIKO (naviko.in) — {version === 'v3' ? 'Vedic Astrology & Vastu Shastra' : 'Science Meets Tradition'}. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-400">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 inline" /> Zero-Telemetry Certified
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400 inline" /> Astronomical Ephemeris Verified
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              Engineered with <Heart className="w-3 h-3 text-emerald-500 inline fill-emerald-500" /> for conscious wellness
+              Engineered with <Heart className="w-3 h-3 text-amber-500 inline fill-amber-500" /> for conscious empowerment
             </span>
           </div>
         </div>

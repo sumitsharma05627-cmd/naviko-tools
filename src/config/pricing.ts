@@ -1,6 +1,6 @@
 import { ToolCategory } from '../types';
 
-export type PlanType = 'free' | 'plus' | 'pro' | 'founding' | 'trial';
+export type PlanType = 'free' | 'plus' | 'pro' | 'business' | 'founding' | 'trial';
 export type BillingInterval = 'monthly' | 'yearly' | 'lifetime';
 export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'SGD' | 'AED' | 'SAR' | 'JPY';
 
@@ -10,9 +10,12 @@ export type PlanId =
   | 'plus_yearly'
   | 'pro_monthly'
   | 'pro_yearly'
+  | 'business_monthly'
+  | 'business_yearly'
   | 'premium_monthly'
   | 'premium_yearly'
-  | 'founding_member';
+  | 'founding_member'
+  | 'custom_plan';
 
 export interface TierPrice {
   monthly: number;
@@ -27,6 +30,7 @@ export interface CurrencyPricing {
   flag: string;
   plus: TierPrice;
   pro: TierPrice;
+  business: TierPrice;
   formatString: string;
   isPopular?: boolean;
 }
@@ -36,12 +40,13 @@ export interface PlanFeature {
   free: boolean | string;
   plus: boolean | string;
   pro: boolean | string;
+  business?: boolean | string;
   category: 'core' | 'limits' | 'student' | 'health' | 'productivity' | 'experience';
 }
 
 /**
  * Centralized Variable Pricing Configuration for NAVIKO
- * Supports Free, Monthly Premium (₹499), Annual Premium (₹4,999), and Founding Member (₹7,999).
+ * Supports Free, Plus (₹299/mo), Pro (₹699/mo), Business (₹1,499/mo), and Founding Member (₹7,999).
  */
 export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
   INR: {
@@ -50,14 +55,18 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '₹',
     flag: '🇮🇳',
     plus: {
-      monthly: 499,
-      yearly: 4999,
+      monthly: 299,
+      yearly: 2999,
       founding: 7999,
     },
     pro: {
-      monthly: 499,
-      yearly: 4999,
+      monthly: 699,
+      yearly: 6999,
       founding: 7999,
+    },
+    business: {
+      monthly: 1499,
+      yearly: 14990,
     },
     formatString: '₹{price}',
     isPopular: true,
@@ -68,12 +77,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '$',
     flag: '🇺🇸',
     plus: {
-      monthly: 0.99,
-      yearly: 7.99,
+      monthly: 3.99,
+      yearly: 39.00,
     },
     pro: {
-      monthly: 2.49,
-      yearly: 19.99,
+      monthly: 8.99,
+      yearly: 89.00,
+    },
+    business: {
+      monthly: 19.99,
+      yearly: 199.00,
     },
     formatString: '${price}',
     isPopular: true,
@@ -84,12 +97,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '€',
     flag: '🇪🇺',
     plus: {
-      monthly: 0.99,
-      yearly: 7.99,
+      monthly: 3.99,
+      yearly: 39.00,
     },
     pro: {
-      monthly: 2.49,
-      yearly: 19.99,
+      monthly: 8.99,
+      yearly: 89.00,
+    },
+    business: {
+      monthly: 19.99,
+      yearly: 199.00,
     },
     formatString: '€{price}',
     isPopular: true,
@@ -100,12 +117,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '£',
     flag: '🇬🇧',
     plus: {
-      monthly: 0.89,
-      yearly: 6.99,
+      monthly: 3.49,
+      yearly: 34.00,
     },
     pro: {
-      monthly: 2.19,
-      yearly: 17.99,
+      monthly: 7.99,
+      yearly: 79.00,
+    },
+    business: {
+      monthly: 17.99,
+      yearly: 179.00,
     },
     formatString: '£{price}',
   },
@@ -115,12 +136,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: 'C$',
     flag: '🇨🇦',
     plus: {
-      monthly: 1.49,
-      yearly: 11.99,
+      monthly: 4.99,
+      yearly: 49.00,
     },
     pro: {
-      monthly: 3.49,
-      yearly: 27.99,
+      monthly: 11.99,
+      yearly: 119.00,
+    },
+    business: {
+      monthly: 24.99,
+      yearly: 249.00,
     },
     formatString: 'C${price}',
   },
@@ -130,12 +155,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: 'A$',
     flag: '🇦🇺',
     plus: {
-      monthly: 1.49,
-      yearly: 11.99,
+      monthly: 5.99,
+      yearly: 59.00,
     },
     pro: {
-      monthly: 3.49,
-      yearly: 27.99,
+      monthly: 12.99,
+      yearly: 129.00,
+    },
+    business: {
+      monthly: 27.99,
+      yearly: 279.00,
     },
     formatString: 'A${price}',
   },
@@ -145,12 +174,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: 'S$',
     flag: '🇸🇬',
     plus: {
-      monthly: 1.49,
-      yearly: 11.99,
+      monthly: 4.99,
+      yearly: 49.00,
     },
     pro: {
-      monthly: 3.49,
-      yearly: 27.99,
+      monthly: 11.99,
+      yearly: 119.00,
+    },
+    business: {
+      monthly: 24.99,
+      yearly: 249.00,
     },
     formatString: 'S${price}',
   },
@@ -160,12 +193,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: 'AED ',
     flag: '🇦🇪',
     plus: {
-      monthly: 3.99,
-      yearly: 29.99,
+      monthly: 14.99,
+      yearly: 149.00,
     },
     pro: {
-      monthly: 9.99,
-      yearly: 74.99,
+      monthly: 34.99,
+      yearly: 349.00,
+    },
+    business: {
+      monthly: 79.99,
+      yearly: 799.00,
     },
     formatString: 'AED {price}',
   },
@@ -175,12 +212,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: 'SAR ',
     flag: '🇸🇦',
     plus: {
-      monthly: 3.99,
-      yearly: 29.99,
+      monthly: 14.99,
+      yearly: 149.00,
     },
     pro: {
-      monthly: 9.99,
-      yearly: 74.99,
+      monthly: 34.99,
+      yearly: 349.00,
+    },
+    business: {
+      monthly: 79.99,
+      yearly: 799.00,
     },
     formatString: 'SAR {price}',
   },
@@ -190,12 +231,16 @@ export const PRICING_CONFIG: Record<CurrencyCode, CurrencyPricing> = {
     symbol: '¥',
     flag: '🇯🇵',
     plus: {
-      monthly: 149,
-      yearly: 1199,
+      monthly: 499,
+      yearly: 4990,
     },
     pro: {
-      monthly: 399,
-      yearly: 2999,
+      monthly: 1199,
+      yearly: 11990,
+    },
+    business: {
+      monthly: 2499,
+      yearly: 24990,
     },
     formatString: '¥{price}',
   },
@@ -256,7 +301,7 @@ export function getSubunitAmount(amount: number, currency: CurrencyCode | string
 /**
  * Maps tier and interval to official PlanId
  */
-export function getPlanId(tier: 'plus' | 'pro' | 'trial', interval: BillingInterval | 'trial' = 'monthly'): PlanId {
+export function getPlanId(tier: 'plus' | 'pro' | 'business' | 'trial', interval: BillingInterval | 'trial' = 'monthly'): PlanId {
   if (tier === 'trial' || interval === 'trial') return 'trial';
   return `${tier}_${interval === 'yearly' ? 'yearly' : 'monthly'}` as PlanId;
 }
@@ -264,13 +309,19 @@ export function getPlanId(tier: 'plus' | 'pro' | 'trial', interval: BillingInter
 /**
  * Parses PlanId into tier and interval
  */
-export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'founding' | 'trial'; interval: BillingInterval | 'trial' } {
+export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'business' | 'founding' | 'trial'; interval: BillingInterval | 'trial' } {
   const normalized = String(planId || '').toLowerCase().trim();
   if (normalized === 'trial' || normalized === 'pro_trial') {
     return { tier: 'trial', interval: 'trial' };
   }
   if (normalized === 'founding_member' || normalized === 'founding' || normalized === 'lifetime') {
     return { tier: 'founding', interval: 'lifetime' };
+  }
+  if (normalized === 'business_yearly' || (normalized.startsWith('business') && normalized.includes('year'))) {
+    return { tier: 'business', interval: 'yearly' };
+  }
+  if (normalized === 'business_monthly' || normalized === 'business' || normalized === 'custom_plan') {
+    return { tier: 'business', interval: 'monthly' };
   }
   if (normalized === 'premium_yearly' || normalized === 'pro_yearly' || normalized === 'pro_annual') {
     return { tier: 'pro', interval: 'yearly' };
@@ -287,9 +338,122 @@ export function parsePlanId(planId: string): { tier: 'plus' | 'pro' | 'founding'
   return { tier: 'pro', interval: 'monthly' };
 }
 
+export interface CustomPlanSelections {
+  toolCategories: string[];
+  aiTier: 'starter' | 'pro' | 'unlimited' | 'enterprise';
+  storageTier: 'basic' | 'standard' | 'power' | 'enterprise';
+  seats: number;
+  supportLevel: 'standard' | 'priority' | 'dedicated';
+  billingInterval: 'monthly' | 'yearly';
+}
+
+export const DEFAULT_CUSTOM_SELECTIONS: CustomPlanSelections = {
+  toolCategories: ['nutrition', 'student', 'finance'],
+  aiTier: 'pro',
+  storageTier: 'standard',
+  seats: 1,
+  supportLevel: 'standard',
+  billingInterval: 'monthly',
+};
+
+export interface CustomPlanQuote {
+  baseMonthly: number;
+  categoryAddon: number;
+  aiAddon: number;
+  storageAddon: number;
+  seatCost: number;
+  supportAddon: number;
+  monthlySubtotal: number;
+  billingInterval: 'monthly' | 'yearly';
+  billingCycleSubtotal: number;
+  discountPercent: number;
+  discountAmount: number;
+  subtotalAfterDiscount: number;
+  taxPercent: number;
+  taxAmount: number;
+  finalPayable: number;
+  currency: CurrencyCode;
+  currencySymbol: string;
+  formattedFinalPayable: string;
+  formattedSubtotal: string;
+  formattedDiscount: string;
+  formattedTax: string;
+}
+
+export function calculateCustomPlanQuote(
+  selections: CustomPlanSelections,
+  currency: CurrencyCode = 'INR'
+): CustomPlanQuote {
+  const isINR = currency === 'INR';
+  const baseMonthly = isINR ? 199 : 2.99;
+
+  const premiumCategories = (selections.toolCategories || []).filter(
+    (c) => c !== 'calculators' && c !== 'finance'
+  );
+  const categoryAddonRate = isINR ? 50 : 0.8;
+  const categoryAddon = premiumCategories.length * categoryAddonRate;
+
+  const aiRates: Record<string, number> = isINR
+    ? { starter: 0, pro: 150, unlimited: 450, enterprise: 1200 }
+    : { starter: 0, pro: 2.0, unlimited: 6.0, enterprise: 16.0 };
+  const aiAddon = aiRates[selections.aiTier] || 0;
+
+  const storageRates: Record<string, number> = isINR
+    ? { basic: 0, standard: 100, power: 300, enterprise: 750 }
+    : { basic: 0, standard: 1.5, power: 4.0, enterprise: 10.0 };
+  const storageAddon = storageRates[selections.storageTier] || 0;
+
+  const supportRates: Record<string, number> = isINR
+    ? { standard: 0, priority: 250, dedicated: 999 }
+    : { standard: 0, priority: 3.5, dedicated: 14.0 };
+  const supportAddon = supportRates[selections.supportLevel] || 0;
+
+  const seats = Math.max(1, selections.seats || 1);
+  const seatAddonPerExtra = isINR ? 180 : 2.5;
+  const seatCost = (seats - 1) * seatAddonPerExtra;
+
+  const monthlySubtotal = baseMonthly + categoryAddon + aiAddon + storageAddon + seatCost + supportAddon;
+
+  const isYearly = selections.billingInterval === 'yearly';
+  const billingCycleSubtotal = isYearly ? monthlySubtotal * 12 : monthlySubtotal;
+  const discountPercent = isYearly ? 20 : 0;
+  const discountAmount = isYearly ? Number((billingCycleSubtotal * 0.2).toFixed(2)) : 0;
+  const subtotalAfterDiscount = billingCycleSubtotal - discountAmount;
+
+  const taxPercent = isINR ? 18 : 0;
+  const taxAmount = Number(((subtotalAfterDiscount * taxPercent) / 100).toFixed(2));
+  const finalPayable = Math.round(subtotalAfterDiscount + taxAmount);
+
+  const sym = PRICING_CONFIG[currency]?.symbol || '₹';
+
+  return {
+    baseMonthly,
+    categoryAddon,
+    aiAddon,
+    storageAddon,
+    seatCost,
+    supportAddon,
+    monthlySubtotal: Math.round(monthlySubtotal),
+    billingInterval: selections.billingInterval,
+    billingCycleSubtotal: Math.round(billingCycleSubtotal),
+    discountPercent,
+    discountAmount: Math.round(discountAmount),
+    subtotalAfterDiscount: Math.round(subtotalAfterDiscount),
+    taxPercent,
+    taxAmount,
+    finalPayable,
+    currency,
+    currencySymbol: sym,
+    formattedFinalPayable: formatCurrencyPrice(finalPayable, currency),
+    formattedSubtotal: formatCurrencyPrice(Math.round(billingCycleSubtotal), currency),
+    formattedDiscount: formatCurrencyPrice(Math.round(discountAmount), currency),
+    formattedTax: formatCurrencyPrice(taxAmount, currency),
+  };
+}
+
 export interface ResolvedPlanPricing {
   planId: PlanId;
-  tier: 'plus' | 'pro' | 'founding' | 'trial';
+  tier: 'plus' | 'pro' | 'business' | 'founding' | 'trial';
   interval: BillingInterval | 'trial';
   currency: CurrencyCode;
   currencySymbol: string;
@@ -298,11 +462,11 @@ export interface ResolvedPlanPricing {
   subunitAmount: number;
   formattedPrice: string;
   savingsPercent: number;
+  customQuote?: CustomPlanQuote;
 }
 
 /**
- * SINGLE SOURCE OF TRUTH RESOLVER
- * Given a planId or { tier, interval, currency }, resolves the authoritative official price
+ * Given a planId or { tier, interval, currency, customSelections }, resolves the authoritative official price
  * and subunit amount (e.g. paise). No client-provided prices are ever used or trusted.
  */
 export function resolveOfficialPricing(params: {
@@ -310,6 +474,7 @@ export function resolveOfficialPricing(params: {
   tier?: string;
   interval?: string;
   currency?: string;
+  customSelections?: CustomPlanSelections;
 }): ResolvedPlanPricing {
   const rawCurrency = (params.currency || 'INR').toUpperCase() as CurrencyCode;
   const currencyKey: CurrencyCode = PRICING_CONFIG[rawCurrency] ? rawCurrency : 'INR';
@@ -319,10 +484,31 @@ export function resolveOfficialPricing(params: {
   let planId: PlanId;
   const rawPlanId = params.planId ? String(params.planId).toLowerCase().trim() : '';
 
+  if (rawPlanId === 'custom_plan' || params.customSelections) {
+    const quote = calculateCustomPlanQuote(params.customSelections || DEFAULT_CUSTOM_SELECTIONS, currencyKey);
+    return {
+      planId: 'custom_plan',
+      tier: 'business',
+      interval: quote.billingInterval,
+      currency: currencyConfig.code,
+      currencySymbol: currencyConfig.symbol,
+      name: `NAVIKO Custom Plan (${quote.billingInterval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`,
+      amount: quote.finalPayable,
+      subunitAmount: getSubunitAmount(quote.finalPayable, currencyConfig.code),
+      formattedPrice: quote.formattedFinalPayable,
+      savingsPercent: quote.discountPercent,
+      customQuote: quote,
+    };
+  }
+
   if (rawPlanId === 'trial' || params.tier === 'trial' || params.interval === 'trial') {
     planId = 'trial';
   } else if (rawPlanId === 'founding_member' || rawPlanId === 'founding' || params.tier === 'founding' || params.interval === 'lifetime') {
     planId = 'founding_member';
+  } else if (rawPlanId === 'business_yearly' || (params.tier === 'business' && params.interval === 'yearly')) {
+    planId = 'business_yearly';
+  } else if (rawPlanId === 'business_monthly' || rawPlanId === 'business' || params.tier === 'business') {
+    planId = 'business_monthly';
   } else if (rawPlanId === 'premium_yearly' || rawPlanId === 'pro_yearly' || (params.tier === 'pro' && params.interval === 'yearly')) {
     planId = 'premium_yearly';
   } else if (rawPlanId === 'premium_monthly' || rawPlanId === 'pro_monthly' || (params.tier === 'pro' && params.interval === 'monthly')) {
@@ -370,7 +556,7 @@ export function resolveOfficialPricing(params: {
   }
 
   const { tier, interval } = parsePlanId(planId);
-  const tierConfig = tier === 'plus' ? currencyConfig.plus : currencyConfig.pro;
+  const tierConfig = tier === 'plus' ? currencyConfig.plus : tier === 'business' ? currencyConfig.business : currencyConfig.pro;
   const amount = interval === 'yearly' ? tierConfig.yearly : tierConfig.monthly;
   const subunitAmount = getSubunitAmount(amount, currencyConfig.code);
   const formattedPrice = formatCurrencyPrice(amount, currencyConfig.code);
@@ -378,11 +564,11 @@ export function resolveOfficialPricing(params: {
     interval === 'yearly'
       ? getYearlySavingsPercentage(tierConfig.monthly, tierConfig.yearly)
       : 0;
-  const name = `NAVIKO Premium (${interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`;
+  const name = `NAVIKO ${tier.toUpperCase()} (${interval === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`;
 
   return {
     planId,
-    tier: tier as 'plus' | 'pro' | 'founding' | 'trial',
+    tier: tier as 'plus' | 'pro' | 'business' | 'founding' | 'trial',
     interval: interval as BillingInterval | 'trial',
     currency: currencyConfig.code,
     currencySymbol: currencyConfig.symbol,
@@ -399,8 +585,12 @@ export function resolveOfficialPricing(params: {
  */
 export function getOfficialPlansCatalog(currency: CurrencyCode = 'INR'): ResolvedPlanPricing[] {
   return [
+    resolveOfficialPricing({ planId: 'plus_monthly', currency }),
+    resolveOfficialPricing({ planId: 'plus_yearly', currency }),
     resolveOfficialPricing({ planId: 'premium_monthly', currency }),
     resolveOfficialPricing({ planId: 'premium_yearly', currency }),
+    resolveOfficialPricing({ planId: 'business_monthly', currency }),
+    resolveOfficialPricing({ planId: 'business_yearly', currency }),
     resolveOfficialPricing({ planId: 'founding_member', currency }),
     resolveOfficialPricing({ planId: 'trial', currency }),
   ];

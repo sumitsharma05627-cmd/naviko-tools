@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type NavikoVersion = 'v1' | 'v2';
+export type NavikoVersion = 'v1' | 'v2' | 'v3';
 
 interface VersionContextType {
   version: NavikoVersion;
@@ -9,6 +9,24 @@ interface VersionContextType {
 }
 
 const VersionContext = createContext<VersionContextType | undefined>(undefined);
+
+const V3_EXCLUSIVE_PATHS = [
+  '/kundli',
+  '/my-kundli',
+  '/astrology',
+  '/vastu',
+  '/panchang',
+  '/numerology',
+  '/navi-ai',
+  '/reports',
+  '/compatibility',
+  '/guna-milan',
+  '/dasha',
+  '/gochar',
+  '/transits',
+  '/muhurat',
+  '/v3'
+];
 
 const V2_EXCLUSIVE_PATHS = [
   '/food-explorer',
@@ -40,6 +58,13 @@ export const VersionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (path === '/v2' || path.startsWith('/v2/')) {
         return 'v2';
       }
+      if (path === '/v3' || path.startsWith('/v3/')) {
+        return 'v3';
+      }
+      // If path is a v3-exclusive route, default to v3
+      if (V3_EXCLUSIVE_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) {
+        return 'v3';
+      }
       // If path is a v2-exclusive route, default to v2
       if (V2_EXCLUSIVE_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) {
         return 'v2';
@@ -47,15 +72,15 @@ export const VersionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // 2. Read stored preference from localStorage
       try {
         const saved = localStorage.getItem('naviko_site_version');
-        if (saved === 'v1' || saved === 'v2') {
-          return saved;
+        if (saved === 'v1' || saved === 'v2' || saved === 'v3') {
+          return saved as NavikoVersion;
         }
       } catch {
         // ignore
       }
     }
-    // Default to v1 if user specifically requested original restoration, or default to stored
-    return 'v1';
+    // NAVIKO 3.0 is the new default experience as requested
+    return 'v3';
   });
 
   // Sync state whenever URL changes (e.g. popstate or pushState)
@@ -66,6 +91,10 @@ export const VersionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setVersionState('v1');
       } else if (path === '/v2' || path.startsWith('/v2/')) {
         setVersionState('v2');
+      } else if (path === '/v3' || path.startsWith('/v3/')) {
+        setVersionState('v3');
+      } else if (V3_EXCLUSIVE_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) {
+        setVersionState('v3');
       } else if (V2_EXCLUSIVE_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) {
         setVersionState('v2');
       }
@@ -96,21 +125,37 @@ export const VersionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
 
       if (newVersion === 'v1') {
-        // If user is switching to v1 and currently on v2 homepage or v2 exclusive route:
         if (
+          currentPath === '/v2' ||
+          currentPath === '/v3' ||
+          currentPath === '/' ||
+          V2_EXCLUSIVE_PATHS.some((p) => currentPath === p || currentPath.startsWith(`${p}/`)) ||
+          V3_EXCLUSIVE_PATHS.some((p) => currentPath === p || currentPath.startsWith(`${p}/`))
+        ) {
+          navigate('/v1');
+        } else {
+          window.dispatchEvent(new Event('naviko_version_sync'));
+        }
+      } else if (newVersion === 'v2') {
+        if (
+          currentPath === '/v1' ||
+          currentPath === '/v3' ||
+          currentPath === '/' ||
+          V3_EXCLUSIVE_PATHS.some((p) => currentPath === p || currentPath.startsWith(`${p}/`))
+        ) {
+          navigate('/v2');
+        } else {
+          window.dispatchEvent(new Event('naviko_version_sync'));
+        }
+      } else {
+        // Switching to v3 (NAVIKO 3.0 — Astrology & Vastu)
+        if (
+          currentPath === '/v1' ||
           currentPath === '/v2' ||
           currentPath === '/' ||
           V2_EXCLUSIVE_PATHS.some((p) => currentPath === p || currentPath.startsWith(`${p}/`))
         ) {
-          navigate('/v1');
-        } else {
-          // Stay on current common tool page (e.g. /tools/sip-calculator)
-          window.dispatchEvent(new Event('naviko_version_sync'));
-        }
-      } else {
-        // Switching to v2:
-        if (currentPath === '/v1' || currentPath === '/') {
-          navigate('/v2');
+          navigate('/v3');
         } else {
           window.dispatchEvent(new Event('naviko_version_sync'));
         }

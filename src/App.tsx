@@ -1,11 +1,13 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VersionProvider } from './context/VersionContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { CurrencyBanner } from './components/ui/CurrencyBanner';
 import { HomePage } from './pages/HomePage';
 import { HomePageV1 } from './pages/HomePageV1';
 import { HomePageV2 } from './pages/HomePageV2';
@@ -42,6 +44,7 @@ const SearchModal = lazy(() => import('./components/SearchModal').then(m => ({ d
 
 // Lazy Loaded Secondary & Monetization Pages
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })));
+const PricingPage = lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
 
 // Lazy Loaded Auth & User Dashboard Pages
@@ -119,6 +122,15 @@ const LabelAnalyzerPage = lazy(() => import('./pages/LabelAnalyzerPage').then(m 
 const RecipeExplorerPage = lazy(() => import('./pages/RecipeExplorerPage').then(m => ({ default: m.RecipeExplorerPage })));
 const SourcesPage = lazy(() => import('./pages/SourcesPage').then(m => ({ default: m.SourcesPage })));
 
+// NAVIKO 3.0 Vedic Astrology & Vastu Pages
+const HomePageV3 = lazy(() => import('./pages/HomePageV3').then(m => ({ default: m.HomePageV3 })));
+const KundliPage = lazy(() => import('./pages/KundliPage').then(m => ({ default: m.KundliPage })));
+const VastuPage = lazy(() => import('./pages/VastuPage').then(m => ({ default: m.VastuPage })));
+const PanchangPage = lazy(() => import('./pages/PanchangPage').then(m => ({ default: m.PanchangPage })));
+const NumerologyPage = lazy(() => import('./pages/NumerologyPage').then(m => ({ default: m.NumerologyPage })));
+const NaviAiPage = lazy(() => import('./pages/NaviAiPage').then(m => ({ default: m.NaviAiPage })));
+const ReportsPage = lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+
 // Lazy Loaded Secondary Pages
 const AllToolsPage = lazy(() => import('./pages/AllToolsPage').then(m => ({ default: m.AllToolsPage })));
 const StudentToolsPage = lazy(() => import('./pages/StudentToolsPage').then(m => ({ default: m.StudentToolsPage })));
@@ -132,6 +144,9 @@ const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then(m 
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const DisclaimerPage = lazy(() => import('./pages/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const WaitlistPage = lazy(() => import('./pages/WaitlistPage').then(m => ({ default: m.WaitlistPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
 
 // Central Tool Component Registry for dynamic routing
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -277,6 +292,32 @@ export default function App() {
     if (path === '/v2' || path === '/nutrition') {
       return <HomePageV2 onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
     }
+    if (path === '/v3' || path === '/astrology-hub') {
+      return <HomePageV3 onNavigate={navigate} onOpenSearch={() => setIsSearchOpen(true)} />;
+    }
+
+    // 1.0 NAVIKO 3.0 Vedic Astrology & Vastu Routes
+    if (path === '/kundli' || path === '/my-kundli' || path === '/birth-chart') {
+      return <KundliPage onNavigate={navigate} />;
+    }
+    if (path === '/astrology' || path === '/jyotish') {
+      return <KundliPage onNavigate={navigate} />;
+    }
+    if (path === '/vastu' || path === '/vastu-shastra' || path === '/floor-plan') {
+      return <VastuPage onNavigate={navigate} />;
+    }
+    if (path === '/panchang' || path === '/muhurat' || path === '/choghadiya') {
+      return <PanchangPage onNavigate={navigate} />;
+    }
+    if (path === '/numerology' || path === '/life-path') {
+      return <NumerologyPage onNavigate={navigate} />;
+    }
+    if (path === '/navi-ai' || path === '/ai-astrologer' || path === '/navi-astrology') {
+      return <NaviAiPage onNavigate={navigate} />;
+    }
+    if (path === '/reports' || path === '/kundli-report' || path === '/vastu-report') {
+      return <ReportsPage onNavigate={navigate} />;
+    }
 
     // 1.1 NAVIKO 2.0 Core Wellness & Nutrition Pillars
     if (path === '/food-explorer' || path === '/nutrition-explorer' || path === '/foods') {
@@ -334,8 +375,29 @@ export default function App() {
     }
 
     // 2.1 Monetization & Account Routes
-    if (path === '/premium' || path === '/pricing' || path === '/pro' || path === '/upgrade') {
-      return <PremiumPage onNavigate={navigate} />;
+    if (path === '/pricing' || path === '/plans' || path === '/upgrade') {
+      return <PricingPage onNavigate={navigate} />;
+    }
+    if (path === '/v1/pricing' || path === '/pricing/v1' || path === '/original/pricing') {
+      return <PricingPage onNavigate={navigate} defaultVersion="v1" />;
+    }
+    if (path === '/v2/pricing' || path === '/pricing/v2' || path === '/nutrition/pricing') {
+      return <PricingPage onNavigate={navigate} defaultVersion="v2" />;
+    }
+    if (path === '/v3/pricing' || path === '/pricing/v3' || path === '/astrology/pricing') {
+      return <PricingPage onNavigate={navigate} defaultVersion="v3" />;
+    }
+    if (path === '/premium' || path === '/pro') {
+      return <PricingPage onNavigate={navigate} />;
+    }
+    if (path === '/checkout') {
+      return <CheckoutPage onNavigate={navigate} />;
+    }
+    if (path === '/waitlist' || path === '/early-access') {
+      return <WaitlistPage onNavigate={navigate} />;
+    }
+    if (path === '/admin' || path === '/operations') {
+      return <AdminPage onNavigate={navigate} />;
     }
     if (path === '/account' || path === '/subscription' || path === '/my-plan') {
       return <AccountPage onNavigate={navigate} />;
@@ -435,48 +497,51 @@ export default function App() {
     <AuthProvider>
       <ThemeProvider>
         <LanguageProvider>
-          <SubscriptionProvider>
-            <VersionProvider>
-              <AdPolicyWatcher currentPath={currentPath} />
-              <div
-                className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
-                style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
-              >
-                <Ambient3DBackground />
-                <Header
-                  onNavigate={navigate}
-                  onOpenSearch={() => setIsSearchOpen(true)}
-                  currentPath={currentPath}
-                />
+          <CurrencyProvider>
+            <SubscriptionProvider>
+              <VersionProvider>
+                <AdPolicyWatcher currentPath={currentPath} />
+                <div
+                  className="min-h-screen flex flex-col transition-colors duration-200 selection:bg-indigo-500 selection:text-white relative"
+                  style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                >
+                  <Ambient3DBackground />
+                  <CurrencyBanner />
+                  <Header
+                    onNavigate={navigate}
+                    onOpenSearch={() => setIsSearchOpen(true)}
+                    currentPath={currentPath}
+                  />
 
-                <main className="flex-1">
-                  <ErrorBoundary>
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      {renderContent()}
-                    </Suspense>
-                  </ErrorBoundary>
-                </main>
+                  <main className="flex-1">
+                    <ErrorBoundary>
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        {renderContent()}
+                      </Suspense>
+                    </ErrorBoundary>
+                  </main>
 
-                <Footer onNavigate={navigate} />
+                  <Footer onNavigate={navigate} />
 
-                <Suspense fallback={null}>
-                  <ChatBot onNavigate={navigate} />
-                </Suspense>
-
-                {isSearchOpen && (
                   <Suspense fallback={null}>
-                    <SearchModal
-                      isOpen={isSearchOpen}
-                      onClose={() => setIsSearchOpen(false)}
-                      onNavigate={(path) => navigate(path)}
-                    />
+                    <ChatBot onNavigate={navigate} />
                   </Suspense>
-                )}
 
-                <CookieConsentBanner onNavigate={navigate} />
-              </div>
-            </VersionProvider>
-          </SubscriptionProvider>
+                  {isSearchOpen && (
+                    <Suspense fallback={null}>
+                      <SearchModal
+                        isOpen={isSearchOpen}
+                        onClose={() => setIsSearchOpen(false)}
+                        onNavigate={(path) => navigate(path)}
+                      />
+                    </Suspense>
+                  )}
+
+                  <CookieConsentBanner onNavigate={navigate} />
+                </div>
+              </VersionProvider>
+            </SubscriptionProvider>
+          </CurrencyProvider>
         </LanguageProvider>
       </ThemeProvider>
     </AuthProvider>

@@ -3,14 +3,29 @@ import {
   CurrencyCode,
   PlanType,
   BillingInterval,
+  PlanId,
   detectDefaultCurrency,
 } from '../config/pricing';
+import { NavikoVersionId } from '../config/pricingEngine';
 import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
 import { paymentService, SubscriptionState } from '../services/payment';
 import { hasActivePaidSubscription, syncAdSenseRoutePolicy } from '../config/adPolicy';
 import { useAuth } from './AuthContext';
 
 export type SubscriptionStatus = SubscriptionState;
+
+export interface VersionSubscriptionState {
+  version: NavikoVersionId;
+  status: SubscriptionStatus;
+  plan: string;
+  tier: string;
+  billingInterval: BillingInterval;
+  currency: string;
+  amount: number;
+  startDate?: string | null;
+  renewalDate?: string | null;
+  isActive: boolean;
+}
 
 export interface UsageQuotaInfo {
   allowed: boolean;
@@ -20,7 +35,6 @@ export interface UsageQuotaInfo {
   requiredTier?: 'plus' | 'pro';
   resetTime?: string;
 }
-
 
 export interface UserSavedItem {
   id: string;
@@ -44,10 +58,20 @@ interface SubscriptionContextType {
   isAdFree: boolean;
   trialUsed: boolean;
   trialStartAt: string | null;
-
   trialEndsAt: string | null;
   remainingTrialDays: number;
   remainingTrialHours: number;
+  // Multi-version ecosystem state & controls
+  versionSubscriptions: Record<NavikoVersionId, VersionSubscriptionState>;
+  getVersionSubscription: (version: NavikoVersionId) => VersionSubscriptionState;
+  upgradeVersion: (
+    version: NavikoVersionId,
+    tier: string,
+    interval: string,
+    currency?: string
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
+  cancelVersion: (version: NavikoVersionId) => Promise<void>;
+  billingHistory: any[];
   toggleTestMode: () => void;
   setCurrency: (currency: CurrencyCode) => void;
   setBillingInterval: (interval: BillingInterval) => void;
@@ -56,9 +80,10 @@ interface SubscriptionContextType {
   recordUsage: (id: string) => boolean;
   isFoundingMember: boolean;
   upgradeToTier: (
-    tier: 'plus' | 'pro' | 'founding',
+    tier: 'plus' | 'pro' | 'business' | 'founding',
     interval: BillingInterval,
-    email?: string
+    email?: string,
+    customSelections?: any
   ) => Promise<{ success: boolean; message?: string; error?: string }>;
   upgradeToPremium: (
     interval: BillingInterval,
@@ -71,6 +96,31 @@ interface SubscriptionContextType {
   authorizeFeature: (
     requiredTier?: 'plus' | 'pro'
   ) => Promise<{ authorized: boolean; plan: string; isTrial?: boolean; message?: string }>;
+  checkServerToolAccess: (
+    toolId: string
+  ) => Promise<{
+    allowed: boolean;
+    tierEligible?: boolean;
+    quotaEligible?: boolean;
+    tier: string;
+    dailyLimit: number;
+    usedToday: number;
+    remaining: number;
+    requiredTier?: string;
+    isTrial?: boolean;
+    error?: string;
+  }>;
+  executeServerTool: (
+    toolId: string,
+    payload?: any
+  ) => Promise<{
+    success: boolean;
+    result?: any;
+    quota?: { dailyLimit: number; usedToday: number; remaining: number };
+    error?: string;
+    code?: string;
+    requiredTier?: string;
+  }>;
   savedItems: UserSavedItem[];
   saveUserItem: (category: string, title: string, data: any) => UserSavedItem;
   deleteUserItem: (id: string) => void;
@@ -149,6 +199,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Test mode flag indicates if backend Razorpay keys are test keys (rzp_test_...)
   const [isTestMode, setIsTestMode] = useState<boolean>(false);
 
+  // Authoritative multi-version ecosystem subscriptions
+  const [versionSubscriptions, setVersionSubscriptions] = useState<Record<NavikoVersionId, VersionSubscriptionState>>({
+    v1: { version: 'v1', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+    v2: { version: 'v2', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+    v3: { version: 'v3', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+  });
+
+  const [billingHistory, setBillingHistory] = useState<any[]>([]);
+
   // Authoritative trial states synced directly from server
   const [isTrial, setIsTrial] = useState<boolean>(false);
   const [trialUsed, setTrialUsed] = useState<boolean>(false);
@@ -192,7 +251,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   /**
    * Authoritative backend status synchronizer.
-   * Strictly verifies status via user ID.
+   * Strictly verifies status via user ID across all 3 NAVIKO versions.
    * If logged out, immediately resets UI state to FREE.
    */
   const refreshSubscriptionStatus = useCallback(async () => {
@@ -209,6 +268,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setTrialEndsAt(null);
         setRemainingTrialDays(0);
         setRemainingTrialHours(0);
+        setVersionSubscriptions({
+          v1: { version: 'v1', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+          v2: { version: 'v2', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+          v3: { version: 'v3', status: 'FREE', plan: 'free', tier: 'free', billingInterval: 'monthly', currency: 'INR', amount: 0, isActive: false },
+        });
+        setBillingHistory([]);
 
         if (typeof window !== 'undefined') {
           localStorage.removeItem('naviko_subscription_plan');
@@ -225,6 +290,52 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       const uid = user.id;
       const statusRes = await paymentService.getSubscriptionStatus(uid);
+
+      // Synchronize multi-version ecosystem subscriptions
+      if (statusRes.allVersions) {
+        setVersionSubscriptions({
+          v1: {
+            version: 'v1',
+            status: statusRes.allVersions.v1?.status || 'FREE',
+            plan: statusRes.allVersions.v1?.plan || 'free',
+            tier: (statusRes.allVersions.v1 as any)?.tier || statusRes.allVersions.v1?.plan || 'free',
+            billingInterval: (statusRes.allVersions.v1?.billingInterval as BillingInterval) || 'monthly',
+            currency: statusRes.allVersions.v1?.currency || 'INR',
+            amount: (statusRes.allVersions.v1 as any)?.amount || 0,
+            startDate: statusRes.allVersions.v1?.startDate || null,
+            renewalDate: statusRes.allVersions.v1?.renewalDate || null,
+            isActive: statusRes.allVersions.v1?.status === 'ACTIVE',
+          },
+          v2: {
+            version: 'v2',
+            status: statusRes.allVersions.v2?.status || 'FREE',
+            plan: statusRes.allVersions.v2?.plan || 'free',
+            tier: (statusRes.allVersions.v2 as any)?.tier || statusRes.allVersions.v2?.plan || 'free',
+            billingInterval: (statusRes.allVersions.v2?.billingInterval as BillingInterval) || 'monthly',
+            currency: statusRes.allVersions.v2?.currency || 'INR',
+            amount: (statusRes.allVersions.v2 as any)?.amount || 0,
+            startDate: statusRes.allVersions.v2?.startDate || null,
+            renewalDate: statusRes.allVersions.v2?.renewalDate || null,
+            isActive: statusRes.allVersions.v2?.status === 'ACTIVE',
+          },
+          v3: {
+            version: 'v3',
+            status: statusRes.allVersions.v3?.status || 'FREE',
+            plan: statusRes.allVersions.v3?.plan || 'free',
+            tier: (statusRes.allVersions.v3 as any)?.tier || statusRes.allVersions.v3?.plan || 'free',
+            billingInterval: (statusRes.allVersions.v3?.billingInterval as BillingInterval) || 'monthly',
+            currency: statusRes.allVersions.v3?.currency || 'INR',
+            amount: (statusRes.allVersions.v3 as any)?.amount || 0,
+            startDate: statusRes.allVersions.v3?.startDate || null,
+            renewalDate: statusRes.allVersions.v3?.renewalDate || null,
+            isActive: statusRes.allVersions.v3?.status === 'ACTIVE',
+          },
+        });
+      }
+
+      if (statusRes.billingHistory) {
+        setBillingHistory(statusRes.billingHistory);
+      }
 
       // Synchronize server trial flags
       setTrialUsed(!!statusRes.trialUsed);
@@ -448,9 +559,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
    */
   const upgradeToTier = useCallback(
     async (
-      tier: 'plus' | 'pro' | 'founding',
+      tier: 'plus' | 'pro' | 'business' | 'founding',
       interval: BillingInterval,
-      email?: string
+      email?: string,
+      customSelections?: any
     ): Promise<{ success: boolean; message?: string; error?: string }> => {
       try {
         if (!isAuthenticated || !user) {
@@ -462,7 +574,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const uid = user.id;
         const customerEmailAddress = user.email || email;
-        const planId = tier === 'founding' ? 'founding_member' : `${tier}_${interval}`;
+        const planId =
+          customSelections || tier === 'business' && !['business_monthly', 'business_yearly'].includes(`${tier}_${interval}`)
+            ? ('custom_plan' as PlanId)
+            : tier === 'founding'
+            ? 'founding_member'
+            : (`${tier}_${interval}` as PlanId);
 
         // 1. Process payment via Razorpay + Backend verification
         const result = await paymentService.processPlanPayment({
@@ -470,6 +587,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           interval,
           planId: planId as PlanId,
           currency,
+          customSelections,
           customerEmail: customerEmailAddress,
           customerName: user.name,
           userId: uid,
@@ -573,11 +691,82 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [isAuthenticated, user, trialUsed, refreshSubscriptionStatus]
   );
 
-  // Cancel Subscription
+  // Multi-version ecosystem subscription helper methods
+  const getVersionSubscription = useCallback(
+    (v: NavikoVersionId): VersionSubscriptionState => {
+      return (
+        versionSubscriptions[v] || {
+          version: v,
+          status: 'FREE',
+          plan: 'free',
+          tier: 'free',
+          billingInterval: 'monthly',
+          currency: 'INR',
+          amount: 0,
+          isActive: false,
+        }
+      );
+    },
+    [versionSubscriptions]
+  );
+
+  const upgradeVersion = useCallback(
+    async (
+      v: NavikoVersionId,
+      targetTier: string,
+      targetInterval: string,
+      targetCurrency?: string
+    ): Promise<{ success: boolean; message?: string; error?: string }> => {
+      if (!isAuthenticated || !user) {
+        return { success: false, error: 'Please log in or create an account to purchase a plan.' };
+      }
+      try {
+        const result = await paymentService.processPlanPayment({
+          version: v,
+          tier: targetTier,
+          interval: targetInterval,
+          currency: targetCurrency || currency,
+          userId: user.id,
+          customerEmail: user.email,
+          customerName: user.name,
+        });
+        await refreshSubscriptionStatus();
+        if (result.success && result.status === 'ACTIVE') {
+          return {
+            success: true,
+            message: result.message || `Upgraded to NAVIKO ${v.toUpperCase()} (${targetTier.toUpperCase()}) successfully!`,
+          };
+        }
+        return {
+          success: false,
+          error: result.error || 'Payment was not completed. Subscription remains unchanged.',
+        };
+      } catch (err: any) {
+        await refreshSubscriptionStatus();
+        return { success: false, error: err?.message || 'Payment processing error.' };
+      }
+    },
+    [isAuthenticated, user, currency, refreshSubscriptionStatus]
+  );
+
+  const cancelVersion = useCallback(
+    async (v: NavikoVersionId) => {
+      if (!isAuthenticated || !user?.id) return;
+      try {
+        await paymentService.cancelSubscription(user.id, v);
+        await refreshSubscriptionStatus();
+      } catch (err) {
+        console.error('Failed to cancel version subscription:', err);
+      }
+    },
+    [isAuthenticated, user?.id, refreshSubscriptionStatus]
+  );
+
+  // Cancel Subscription (v1 or active)
   const cancelSubscription = useCallback(async () => {
     try {
       if (!isAuthenticated || !user?.id) return;
-      await paymentService.cancelSubscription(user.id);
+      await paymentService.cancelSubscription(user.id, 'v1');
       await refreshSubscriptionStatus();
     } catch (err) {
       console.error('Failed to cancel subscription:', err);
@@ -592,6 +781,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     },
     [user?.id]
   );
+
+  // Authoritative server tool access checker
+  const checkServerToolAccess = useCallback(async (toolId: string) => {
+    return paymentService.checkToolAccess(toolId);
+  }, []);
+
+  // Authoritative server tool runner
+  const executeServerTool = useCallback(async (toolId: string, payload?: any) => {
+    return paymentService.executeTool(toolId, payload);
+  }, []);
 
   // Save User Item
   const saveUserItem = useCallback(
@@ -680,6 +879,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         trialEndsAt,
         remainingTrialDays,
         remainingTrialHours,
+        versionSubscriptions,
+        getVersionSubscription,
+        upgradeVersion,
+        cancelVersion,
+        billingHistory,
         toggleTestMode,
         setCurrency,
 
@@ -695,6 +899,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         cancelSubscription,
         refreshSubscriptionStatus,
         authorizeFeature,
+        checkServerToolAccess,
+        executeServerTool,
         savedItems,
         saveUserItem,
         deleteUserItem,

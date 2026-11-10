@@ -132,6 +132,41 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
           </span>
         </div>
       </button>
+      {/* Option 3: NAVIKO 3.0 — Astrology & Vastu */}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={version === 'v3'}
+        tabIndex={version === 'v3' ? 0 : -1}
+        onClick={() => handleSelect('v3')}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            handleSelect('v2');
+          }
+        }}
+        className={`relative flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-left transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-amber-500/50 ${
+          version === 'v3'
+            ? 'bg-gradient-to-r from-[#0d1630] to-[#1e1b4b] text-amber-300 shadow-xs font-bold border border-amber-500/40'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white font-medium'
+        }`}
+        title="NAVIKO 3.0 — Vedic Astrology & Vastu: Kundli, Dasha, Panchang, Numerology & NAVI AI"
+      >
+        <Sparkles className={`w-3.5 h-3.5 shrink-0 ${version === 'v3' ? 'text-amber-400' : 'text-amber-500/80'}`} />
+        <div className="flex flex-col leading-tight">
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap">
+              NAVIKO 3.0
+            </span>
+            <span className="text-[8px] font-black uppercase px-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              New
+            </span>
+          </div>
+          <span className={`text-[9px] font-semibold whitespace-nowrap ${version === 'v3' ? 'text-amber-200' : 'text-slate-500 dark:text-slate-400'}`}>
+            Astrology &amp; Vastu
+          </span>
+        </div>
+      </button>
     </div>
   );
 
@@ -144,21 +179,25 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
         id="version-switcher-btn"
         aria-haspopup="listbox"
         aria-expanded={dropdownOpen}
-        aria-label="Switch NAVIKO Version: NAVIKO 1.0 — Original or NAVIKO 2.0 — Nutrition & Ayurveda"
+        aria-label="Switch NAVIKO Version: NAVIKO 1.0, NAVIKO 2.0 or NAVIKO 3.0"
         onClick={() => setDropdownOpen(!dropdownOpen)}
         className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs focus:outline-hidden focus:ring-2 ${
-          version === 'v1'
-            ? 'bg-slate-900 text-white border-slate-800 dark:bg-indigo-600 dark:border-indigo-500 focus:ring-indigo-400'
-            : 'bg-[#1B4332] text-white border-[#153427] dark:bg-[#2D6A4F] dark:border-[#245741] focus:ring-emerald-400'
+          version === 'v3'
+            ? 'bg-[#0d1630] text-amber-300 border-amber-500/40 focus:ring-amber-400'
+            : version === 'v2'
+            ? 'bg-[#1B4332] text-white border-[#153427] dark:bg-[#2D6A4F] dark:border-[#245741] focus:ring-emerald-400'
+            : 'bg-slate-900 text-white border-slate-800 dark:bg-indigo-600 dark:border-indigo-500 focus:ring-indigo-400'
         }`}
       >
-        {version === 'v1' ? (
-          <Layers className="w-3 h-3 text-indigo-400 dark:text-indigo-200 shrink-0" />
-        ) : (
+        {version === 'v3' ? (
+          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+        ) : version === 'v2' ? (
           <Leaf className="w-3 h-3 text-emerald-300 shrink-0" />
+        ) : (
+          <Layers className="w-3 h-3 text-indigo-400 dark:text-indigo-200 shrink-0" />
         )}
         <span className="text-[11px] font-black tracking-tight">
-          {version === 'v1' ? 'v1.0' : 'v2.0'}
+          {version === 'v3' ? 'v3.0' : version === 'v2' ? 'v2.0' : 'v1.0'}
         </span>
         <ChevronDown className={`w-3 h-3 transition-transform duration-200 opacity-70 ${dropdownOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -167,45 +206,48 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
         <div
           role="listbox"
           aria-labelledby="version-switcher-btn"
-          className="absolute left-0 mt-1.5 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute left-0 mt-1.5 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
         >
-          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1">
+          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Select NAVIKO Version
+              Select NAVIKO Ecosystem
+            </span>
+            <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+              3 Experiences
             </span>
           </div>
 
-          {/* Version 1.0 Option */}
+          {/* Version 3.0 Option (Featured Default) */}
           <button
             type="button"
             role="option"
-            aria-selected={version === 'v1'}
-            onClick={() => handleSelect('v1')}
+            aria-selected={version === 'v3'}
+            onClick={() => handleSelect('v3')}
             className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
-              version === 'v1'
-                ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200'
+              version === 'v3'
+                ? 'bg-[#0d1630] text-amber-300 border border-amber-500/30'
                 : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
             }`}
           >
             <div className="flex items-start gap-2">
               <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                version === 'v1' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                version === 'v3' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-100 dark:bg-slate-800 text-amber-500'
               }`}>
-                <Layers className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5" />
               </span>
               <div>
                 <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
-                  <span>NAVIKO 1.0</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    Original
+                  <span className={version === 'v3' ? 'text-amber-300' : ''}>NAVIKO 3.0</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    Astrology &amp; Vastu
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  Original 46+ tools, calculators, finance &amp; utilities
+                <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-snug">
+                  Vedic Kundli, Dasha, Interactive Vastu, Panchang &amp; NAVI AI
                 </p>
               </div>
             </div>
-            {version === 'v1' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 ml-1" />}
+            {version === 'v3' && <Check className="w-4 h-4 text-amber-400 shrink-0 ml-1" />}
           </button>
 
           {/* Version 2.0 Option */}
@@ -239,6 +281,39 @@ export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
               </div>
             </div>
             {version === 'v2' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
+          </button>
+
+          {/* Version 1.0 Option */}
+          <button
+            type="button"
+            role="option"
+            aria-selected={version === 'v1'}
+            onClick={() => handleSelect('v1')}
+            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer mt-1 ${
+              version === 'v1'
+                ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200'
+                : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                version === 'v1' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              }`}>
+                <Layers className="w-3.5 h-3.5" />
+              </span>
+              <div>
+                <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
+                  <span>NAVIKO 1.0</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                    Original
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  Original 46+ tools, calculators, finance &amp; utilities
+                </p>
+              </div>
+            </div>
+            {version === 'v1' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 ml-1" />}
           </button>
         </div>
       )}
