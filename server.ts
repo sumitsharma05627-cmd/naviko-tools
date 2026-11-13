@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import path from 'path';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
@@ -3593,10 +3594,15 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // STATIC ASSETS & VITE MIDDLEWARE
 // ==========================================
 async function startServer() {
+  const httpServer = http.createServer(app);
+
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: { server: httpServer },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -3612,7 +3618,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`NAVIKO Server listening on http://0.0.0.0:${PORT}`);
   });
 }

@@ -106,21 +106,33 @@ class PaymentService {
     });
   }
 
+  private gatewayConfigPromise: Promise<{ keyId: string; isConfigured: boolean; isTestKey: boolean }> | null = null;
+
   /**
-   * Fetches public server configuration for Razorpay
+   * Fetches public server configuration for Razorpay (deduplicated per session)
    */
   public async getGatewayConfig(): Promise<{ keyId: string; isConfigured: boolean; isTestKey: boolean }> {
-    try {
-      const res = await safeApiFetch<{ keyId: string; isConfigured: boolean; isTestKey: boolean }>(
-        '/api/subscription/config'
-      );
-      if (!res.ok || !res.data) {
+    if (this.gatewayConfigPromise) {
+      return this.gatewayConfigPromise;
+    }
+
+    this.gatewayConfigPromise = (async () => {
+      try {
+        const res = await safeApiFetch<{ keyId: string; isConfigured: boolean; isTestKey: boolean }>(
+          '/api/subscription/config'
+        );
+        if (!res.ok || !res.data) {
+          this.gatewayConfigPromise = null;
+          return { keyId: '', isConfigured: false, isTestKey: false };
+        }
+        return res.data;
+      } catch {
+        this.gatewayConfigPromise = null;
         return { keyId: '', isConfigured: false, isTestKey: false };
       }
-      return res.data;
-    } catch {
-      return { keyId: '', isConfigured: false, isTestKey: false };
-    }
+    })();
+
+    return this.gatewayConfigPromise;
   }
 
   /**

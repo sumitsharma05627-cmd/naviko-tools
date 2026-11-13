@@ -147,8 +147,6 @@ function logSafeApiDebug(
 
   if (status >= 400 || parsedErrorMessage) {
     console.warn('[NAVIKO API DEBUG - ERROR]', debugInfo);
-  } else {
-    console.log('[NAVIKO API DEBUG - SUCCESS]', debugInfo);
   }
 }
 
