@@ -1,8 +1,8 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
-import { PlanType } from '../config/pricing';
+import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements.ts';
+import type { PlanType } from '../config/pricing.ts';
 
 export type EnforcedTier = 'free' | 'plus' | 'pro' | 'business';
 

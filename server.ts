@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
@@ -10,29 +9,29 @@ import {
   resolveOfficialPricing,
   getOfficialPlansCatalog,
   getSubunitAmount,
-  CurrencyCode,
-  PlanType,
-  BillingInterval,
-  PlanId,
+  type CurrencyCode,
+  type PlanType,
+  type BillingInterval,
+  type PlanId,
   calculateCustomPlanQuote,
-  CustomPlanSelections,
+  type CustomPlanSelections,
   DEFAULT_CUSTOM_SELECTIONS,
-} from './src/config/pricing';
+} from './src/config/pricing.ts';
 import {
   VERSION_PLANS,
   CURRENCIES_REGISTRY,
   INTERVAL_CONFIG,
   calculatePlanPrice,
-  NavikoVersionId,
-  CurrencyCode as EngineCurrencyCode,
-  BillingInterval as EngineBillingInterval,
+  type NavikoVersionId,
+  type CurrencyCode as EngineCurrencyCode,
+  type BillingInterval as EngineBillingInterval,
   detectVisitorCurrency,
-} from './src/config/pricingEngine';
-import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS } from './src/config/entitlements';
-import { generateKundli } from './src/services/astrology/calculationEngine';
-import { calculatePanchang } from './src/services/astrology/panchangEngine';
-import { evaluateVastu } from './src/services/astrology/vastuEngine';
-import { calculateNumerology } from './src/services/astrology/numerologyEngine';
+} from './src/config/pricingEngine.ts';
+import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS } from './src/config/entitlements.ts';
+import { generateKundli } from './src/services/astrology/calculationEngine.ts';
+import { calculatePanchang } from './src/services/astrology/panchangEngine.ts';
+import { evaluateVastu } from './src/services/astrology/vastuEngine.ts';
+import { calculateNumerology } from './src/services/astrology/numerologyEngine.ts';
 import { GoogleGenAI } from '@google/genai';
 import {
   createSubscriptionContextMiddleware,
@@ -43,13 +42,13 @@ import {
   recordToolUsageServer,
   getEffectiveToolDailyLimit,
   TIER_WEIGHTS,
-  EnforcedTier,
-} from './src/server/subscriptionAuthMiddleware';
+  type EnforcedTier,
+} from './src/server/subscriptionAuthMiddleware.ts';
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Parse JSON with raw body capture for webhook signature verification
 app.use(
@@ -3595,6 +3594,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // ==========================================
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',

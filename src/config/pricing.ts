@@ -1,4 +1,4 @@
-import { ToolCategory } from '../types';
+import type { ToolCategory } from '../types.ts';
 
 export type PlanType = 'free' | 'plus' | 'pro' | 'business' | 'founding' | 'trial';
 export type BillingInterval = 'monthly' | 'yearly' | 'lifetime';

@@ -1,4 +1,4 @@
-import { PlanType } from './pricing';
+import type { PlanType } from './pricing.ts';
 
 export type AccessLevel = 'FREE' | 'FREE_LIMITED' | 'PLUS' | 'PRO';
 

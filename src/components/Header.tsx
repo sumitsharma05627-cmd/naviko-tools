@@ -1040,7 +1040,7 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
                   {version === 'v1' ? 'v1.0 Original' : version === 'v2' ? 'v2.0 Nutrition' : 'v3.0 Astrology & Vastu'}
                 </span>
               </div>
-              <VersionSwitcher onNavigate={handleNav} mode="segmented" className="w-full justify-between" />
+              <VersionSwitcher onNavigate={handleNav} size="standard" className="w-full justify-between" />
             </div>
           </div>
 

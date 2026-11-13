@@ -13,7 +13,7 @@
  * - Muhurat evaluators: Marriage, Griha Pravesh, Vehicle Purchase, Business Inauguration
  */
 
-import { getJulianDay, getLahiriAyanamsha, calculatePlanetaryPositions, normalizeDegrees, NAKSHATRAS } from './calculationEngine';
+import { getJulianDay, getLahiriAyanamsha, calculatePlanetaryPositions, normalizeDegrees, NAKSHATRAS } from './calculationEngine.ts';
 
 export interface PanchangData {
   dateString: string;
