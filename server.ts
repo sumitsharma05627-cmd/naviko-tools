@@ -161,7 +161,7 @@ export interface UserSubscriptionEcosystem {
 export interface DynamicPricingConfig {
   internationalMultiplier: number;
   basePricesINR: {
-    v1: { plus: number; pro: number };
+    v1: { pro: number; premium: number; plus?: number };
     v2: { plus: number; premium: number };
     v3: { plus: number; premium: number };
   };
@@ -272,7 +272,7 @@ let ecosystemCache: Record<string, UserSubscriptionEcosystem> = {};
 let dynamicPricingConfig: DynamicPricingConfig = {
   internationalMultiplier: 5.0,
   basePricesINR: {
-    v1: { plus: 299, pro: 699 },
+    v1: { pro: 299, premium: 699 },
     v2: { plus: 349, premium: 749 },
     v3: { plus: 499, premium: 999 },
   },
@@ -1529,10 +1529,12 @@ app.get('/api/pricing/engine', (req, res) => {
           interval,
           currency,
           dynamicPricingConfig.internationalMultiplier,
-          activeRates
+          activeRates,
+          dynamicPricingConfig.basePricesINR
         );
         return {
           ...p,
+          baseMonthlyINR: calculated.inrBaseMonthly,
           calculated,
         };
       }),
@@ -1911,7 +1913,8 @@ app.post('/api/subscription/create-order', async (req, res) => {
       interval,
       currency,
       dynamicPricingConfig.internationalMultiplier,
-      activeRates
+      activeRates,
+      dynamicPricingConfig.basePricesINR
     );
 
     const amountInUnits = calculated.finalPayableWithTax;
@@ -3138,14 +3141,22 @@ app.get('/api/admin/metrics', (req, res) => {
     });
   });
 
-  // Calculate MRR & ARR estimates based on active plans
+  // Calculate MRR & ARR estimates based on active plans (normalized to INR & monthly cadence)
   const mrrByVersion: Record<NavikoVersionId, number> = { v1: 0, v2: 0, v3: 0 };
+  const intervalMonthsMap: Record<string, number> = {
+    monthly: 1,
+    quarterly: 3,
+    half_yearly: 6,
+    yearly: 12,
+  };
   ecoList.forEach((e) => {
     (['v1', 'v2', 'v3'] as NavikoVersionId[]).forEach((v) => {
       const sub = e[v];
       if (sub && sub.status === 'ACTIVE') {
-        const monthlyAmt = sub.billingInterval === 'yearly' ? (sub.amount || 0) / 12 : sub.amount || 0;
-        mrrByVersion[v] += monthlyAmt;
+        const monthsDivisor = intervalMonthsMap[sub.billingInterval || 'monthly'] || 1;
+        const rate = CURRENCIES_REGISTRY[(sub.currency || 'INR') as EngineCurrencyCode]?.exchangeRateToINR || 1;
+        const monthlyAmtINR = ((sub.amount || 0) * rate) / monthsDivisor;
+        mrrByVersion[v] += monthlyAmtINR;
       }
     });
   });
@@ -3206,13 +3217,20 @@ app.post('/api/admin/pricing-config', (req, res) => {
 
   const { internationalMultiplier, basePricesINR, exchangeRates } = req.body;
 
-  if (typeof internationalMultiplier === 'number' && internationalMultiplier > 0) {
+  if (typeof internationalMultiplier === 'number' && !Number.isNaN(internationalMultiplier)) {
+    if (internationalMultiplier < 5.0) {
+      return res.status(400).json({
+        success: false,
+        error: 'International multiplier cannot be reduced below the mandatory 5.0x platform policy.',
+      });
+    }
     dynamicPricingConfig.internationalMultiplier = internationalMultiplier;
   }
   if (basePricesINR && typeof basePricesINR === 'object') {
     dynamicPricingConfig.basePricesINR = {
-      ...dynamicPricingConfig.basePricesINR,
-      ...basePricesINR,
+      v1: { ...dynamicPricingConfig.basePricesINR.v1, ...(basePricesINR.v1 || {}) },
+      v2: { ...dynamicPricingConfig.basePricesINR.v2, ...(basePricesINR.v2 || {}) },
+      v3: { ...dynamicPricingConfig.basePricesINR.v3, ...(basePricesINR.v3 || {}) },
     };
   }
   if (exchangeRates && typeof exchangeRates === 'object') {

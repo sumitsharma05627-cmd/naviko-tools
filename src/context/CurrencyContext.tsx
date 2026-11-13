@@ -2,8 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import {
   CurrencyCode,
   CURRENCIES_REGISTRY,
-  SUPPORTED_CURRENCY_CODES,
   CurrencyMetadata,
+  DynamicBasePricesINR,
+  INTERNATIONAL_MINIMUM_MULTIPLIER,
   detectVisitorCurrency,
 } from '../config/pricingEngine';
 
@@ -16,7 +17,17 @@ interface CurrencyContextType {
   dismissSuggestion: () => void;
   acceptSuggestedCurrency: () => void;
   formatPriceString: (amount: number, code?: CurrencyCode) => string;
+  internationalMultiplier: number;
+  basePricesINR: DynamicBasePricesINR;
+  exchangeRates: Partial<Record<CurrencyCode, number>>;
+  refreshPricingConfig: () => Promise<void>;
 }
+
+const DEFAULT_BASE_PRICES: DynamicBasePricesINR = {
+  v1: { pro: 299, premium: 699 },
+  v2: { plus: 349, premium: 749 },
+  v3: { plus: 499, premium: 999 },
+};
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
@@ -33,6 +44,32 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [suggestedCurrency, setSuggestedCurrency] = useState<CurrencyCode | null>(null);
   const [detectedCountry, setDetectedCountry] = useState<string>('India');
+  const [internationalMultiplier, setInternationalMultiplier] = useState<number>(
+    INTERNATIONAL_MINIMUM_MULTIPLIER
+  );
+  const [basePricesINR, setBasePricesINR] = useState<DynamicBasePricesINR>(DEFAULT_BASE_PRICES);
+  const [exchangeRates, setExchangeRates] = useState<Partial<Record<CurrencyCode, number>>>({});
+
+  const refreshPricingConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/pricing/engine');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.success) {
+        if (typeof data.internationalMultiplier === 'number' && data.internationalMultiplier >= 5) {
+          setInternationalMultiplier(data.internationalMultiplier);
+        }
+        if (data.basePricesINR) {
+          setBasePricesINR(data.basePricesINR);
+        }
+        if (data.exchangeRates) {
+          setExchangeRates(data.exchangeRates);
+        }
+      }
+    } catch {
+      // keep safe defaults
+    }
+  }, []);
 
   useEffect(() => {
     const { detectedCurrency, detectedCountry: country } = detectVisitorCurrency();
@@ -44,7 +81,9 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!saved && !dismissed && detectedCurrency !== 'INR') {
       setSuggestedCurrency(detectedCurrency);
     }
-  }, []);
+
+    refreshPricingConfig();
+  }, [refreshPricingConfig]);
 
   const setCurrency = useCallback((code: CurrencyCode) => {
     if (CURRENCIES_REGISTRY[code]) {
@@ -70,7 +109,11 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [suggestedCurrency, setCurrency, dismissSuggestion]);
 
-  const currencyMeta = CURRENCIES_REGISTRY[currentCurrency] || CURRENCIES_REGISTRY.INR;
+  const baseMeta = CURRENCIES_REGISTRY[currentCurrency] || CURRENCIES_REGISTRY.INR;
+  const currencyMeta: CurrencyMetadata = {
+    ...baseMeta,
+    exchangeRateToINR: exchangeRates[currentCurrency] || baseMeta.exchangeRateToINR,
+  };
 
   const formatPriceString = useCallback(
     (amount: number, code?: CurrencyCode) => {
@@ -94,6 +137,10 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         dismissSuggestion,
         acceptSuggestedCurrency,
         formatPriceString,
+        internationalMultiplier,
+        basePricesINR,
+        exchangeRates,
+        refreshPricingConfig,
       }}
     >
       {children}

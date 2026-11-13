@@ -1,7 +1,9 @@
 import React from 'react';
 import { Sparkles, Crown, Lock, ArrowRight, X, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useSubscription } from '../../context/SubscriptionContext';
-import { PRICING_CONFIG, PlanType, formatCurrencyPrice } from '../../config/pricing';
+import { useCurrency } from '../../context/CurrencyContext';
+import { useVersion } from '../../context/VersionContext';
+import { calculatePlanPrice } from '../../config/pricingEngine';
 
 interface LockedFeatureModalProps {
   isOpen: boolean;
@@ -22,18 +24,30 @@ export const LockedFeatureModal: React.FC<LockedFeatureModalProps> = ({
   benefits,
   onNavigate,
 }) => {
-  const { currency, billingInterval } = useSubscription();
+  const { billingInterval } = useSubscription();
+  const { currentCurrency, internationalMultiplier, exchangeRates, basePricesINR } = useCurrency();
+  const { version } = useVersion();
 
   if (!isOpen) return null;
 
   const isPro = requiredTier === 'pro';
-  const pricing = PRICING_CONFIG[currency] || PRICING_CONFIG.INR;
-  const tierConfig = isPro ? pricing.pro : pricing.plus;
-  const currentPriceFormatted = formatCurrencyPrice(
-    billingInterval === 'yearly' ? tierConfig.yearly : tierConfig.monthly,
-    currency
+  const resolvedTier =
+    version === 'v1'
+      ? isPro ? 'premium' : 'pro'
+      : isPro ? 'premium' : 'plus';
+
+  const calc = calculatePlanPrice(
+    version,
+    resolvedTier,
+    billingInterval === 'yearly' ? 'yearly' : 'monthly',
+    currentCurrency,
+    internationalMultiplier,
+    exchangeRates,
+    basePricesINR
   );
-  const intervalLabel = billingInterval === 'yearly' ? '/year' : '/month';
+
+  const currentPriceFormatted = calc.formattedMonthlyPrice;
+  const intervalLabel = billingInterval === 'yearly' ? '/mo (billed yearly)' : '/month';
 
   const defaultBenefits = isPro
     ? [
@@ -53,10 +67,11 @@ export const LockedFeatureModal: React.FC<LockedFeatureModalProps> = ({
 
   const handleUpgrade = () => {
     onClose();
+    const targetUrl = `/pricing?version=${version}`;
     if (onNavigate) {
-      onNavigate('/pricing');
+      onNavigate(targetUrl);
     } else if (typeof window !== 'undefined') {
-      window.location.href = '/pricing';
+      window.location.href = targetUrl;
     }
   };
 

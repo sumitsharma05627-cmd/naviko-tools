@@ -44,7 +44,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     totalDailyUsage,
     dailyAiLimit,
     renewalDate,
-    startDate,
+    versionSubscriptions,
+    isVersionActive,
   } = useSubscription();
 
   const remainingDailyRuns = Math.max(0, dailyAiLimit - totalDailyUsage);
@@ -185,33 +186,43 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Subscription Plan
+              Ecosystem Subscriptions
             </span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Crown className="w-4 h-4" />
             </div>
           </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white capitalize">
-              {plan === 'trial' ? '₹1 Premium Trial' : `${plan} Plan`}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isTrial
-                ? `Active for ${remainingTrialDays} more days (${remainingTrialHours}h left). No automatic renewal.`
-                : isPremiumActive
-                ? renewalDate
-                  ? `Renews on ${new Date(renewalDate).toLocaleDateString()}`
-                  : 'Active subscription'
-                : 'Free tier with standard limits. Upgrade anytime for unlimited access.'}
-            </p>
+          <div className="space-y-2">
+            {([
+              { id: 'v1' as const, label: 'NAVIKO 1.0 (Tools)' },
+              { id: 'v2' as const, label: 'NAVIKO 2.0 (Nutrition)' },
+              { id: 'v3' as const, label: 'NAVIKO 3.0 (Jyotish)' },
+            ]).map((item) => {
+              const sub = versionSubscriptions[item.id];
+              const active = isVersionActive(item.id);
+              return (
+                <div key={item.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-100 dark:border-slate-800/70 last:border-b-0">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{item.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${active ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                    {active ? sub?.tier || 'ACTIVE' : 'FREE'}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <div className="pt-2">
+          <div className="pt-1 flex items-center justify-between gap-2">
             <button
-              onClick={() => onNavigate('/billing')}
+              onClick={() => onNavigate('/account')}
               className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
             >
-              <span>Manage plan & invoices</span>
+              <span>Manage plans &amp; invoices</span>
               <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onNavigate('/pricing')}
+              className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+            >
+              View pricing
             </button>
           </div>
         </div>

@@ -28,12 +28,12 @@ import {
 } from 'lucide-react';
 import { safeApiFetch } from '../services/apiClient';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import {
   NavikoVersionId,
   CURRENCIES_REGISTRY,
   calculatePlanPrice,
   CurrencyCode,
-  INTERNATIONAL_MINIMUM_MULTIPLIER,
 } from '../config/pricingEngine';
 
 interface AdminPageProps {
@@ -42,12 +42,13 @@ interface AdminPageProps {
 
 export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const { user, isAuthenticated } = useAuth();
+  const { refreshPricingConfig, exchangeRates } = useCurrency();
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'pricing' | 'products' | 'subscriptions' | 'users' | 'waitlist' | 'quotes'
   >('analytics');
 
   const [metrics, setMetrics] = useState<any>(null);
-  const [pricingConfig, setPricingConfig] = useState<any>(null);
+  const [, setPricingConfig] = useState<any>(null);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [waitlist, setWaitlist] = useState<any[]>([]);
   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
@@ -57,10 +58,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [versionFilter, setVersionFilter] = useState<'all' | 'v1' | 'v2' | 'v3'>('all');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Dynamic Pricing Editor State
+  // Dynamic Pricing Editor State (aligned with VERSION_PLANS & server.ts)
   const [multiplierInput, setMultiplierInput] = useState<number>(5.0);
   const [basePrices, setBasePrices] = useState({
-    v1: { plus: 299, pro: 699 },
+    v1: { pro: 299, premium: 699 },
     v2: { plus: 349, premium: 749 },
     v3: { plus: 499, premium: 999 },
   });
@@ -70,6 +71,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   });
 
   const fetchData = async () => {
+    if (!isAuthenticated || !user) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const [metricsRes, pricingRes, usersRes, waitlistRes, quotesRes, policiesRes] = await Promise.all([
@@ -90,7 +95,21 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
           setMultiplierInput(pricingRes.data.config.internationalMultiplier);
         }
         if (pricingRes.data.config?.basePricesINR) {
-          setBasePrices(pricingRes.data.config.basePricesINR);
+          const bp = pricingRes.data.config.basePricesINR;
+          setBasePrices({
+            v1: {
+              pro: bp.v1?.pro ?? bp.v1?.plus ?? 299,
+              premium: bp.v1?.premium ?? bp.v1?.pro ?? 699,
+            },
+            v2: {
+              plus: bp.v2?.plus ?? 349,
+              premium: bp.v2?.premium ?? 749,
+            },
+            v3: {
+              plus: bp.v3?.plus ?? 499,
+              premium: bp.v3?.premium ?? 999,
+            },
+          });
         }
       }
       if (usersRes.ok && usersRes.data?.success) {
@@ -114,9 +133,16 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isAuthenticated, user?.id]);
 
   const handleSavePricingConfig = async () => {
+    if (Number(multiplierInput) < 5.0 || Number.isNaN(Number(multiplierInput))) {
+      setStatusMessage({
+        type: 'error',
+        text: 'International multiplier cannot be below the mandatory 5.0x platform minimum.',
+      });
+      return;
+    }
     try {
       const res = await safeApiFetch<any>('/api/admin/pricing-config', {
         method: 'POST',
@@ -128,7 +154,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       });
 
       if (res.ok && res.data?.success) {
-        setStatusMessage({ type: 'success', text: 'Dynamic pricing engine and 5x rules saved successfully!' });
+        await refreshPricingConfig();
+        setStatusMessage({ type: 'success', text: 'Dynamic pricing engine and 5x rules saved and synced globally!' });
         fetchData();
       } else {
         setStatusMessage({ type: 'error', text: res.data?.error || 'Failed to update pricing rules.' });
@@ -137,6 +164,40 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       setStatusMessage({ type: 'error', text: err?.message || 'Error saving pricing configuration.' });
     }
   };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12 bg-slate-50/70 dark:bg-slate-950">
+        <div className="max-w-md w-full text-center space-y-6 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <Shield className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white">
+              Admin Sign In Required
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Sign in with your account to access NAVIKO financial analytics, 5x pricing controls, and subscriber audits.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={() => onNavigate('/login?redirect=/admin')}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
+            >
+              Sign In to Control Center
+            </button>
+            <button
+              onClick={() => onNavigate('/pricing')}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all cursor-pointer"
+            >
+              View Public Pricing
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-24 transition-colors">
@@ -387,11 +448,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </label>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="text-[10px] text-slate-400">Pro Monthly:</span>
+                      <span className="text-[10px] text-slate-400">Pro Suite Monthly:</span>
                       <input
                         type="number"
                         value={basePrices.v1.pro}
                         onChange={(e) => setBasePrices({ ...basePrices, v1: { ...basePrices.v1, pro: parseInt(e.target.value) || 0 } })}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400">Power Premium Monthly:</span>
+                      <input
+                        type="number"
+                        value={basePrices.v1.premium}
+                        onChange={(e) => setBasePrices({ ...basePrices, v1: { ...basePrices.v1, premium: parseInt(e.target.value) || 0 } })}
                         className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
                       />
                     </div>
@@ -404,11 +474,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </label>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="text-[10px] text-slate-400">Plus Monthly:</span>
+                      <span className="text-[10px] text-slate-400">Wellness Plus Monthly:</span>
                       <input
                         type="number"
                         value={basePrices.v2.plus}
                         onChange={(e) => setBasePrices({ ...basePrices, v2: { ...basePrices.v2, plus: parseInt(e.target.value) || 0 } })}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400">Wellness Pro Monthly:</span>
+                      <input
+                        type="number"
+                        value={basePrices.v2.premium}
+                        onChange={(e) => setBasePrices({ ...basePrices, v2: { ...basePrices.v2, premium: parseInt(e.target.value) || 0 } })}
                         className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
                       />
                     </div>
@@ -421,11 +500,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </label>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="text-[10px] text-slate-400">Plus Monthly:</span>
+                      <span className="text-[10px] text-slate-400">Astrology Plus Monthly:</span>
                       <input
                         type="number"
                         value={basePrices.v3.plus}
                         onChange={(e) => setBasePrices({ ...basePrices, v3: { ...basePrices.v3, plus: parseInt(e.target.value) || 0 } })}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400">Astrology Master Monthly:</span>
+                      <input
+                        type="number"
+                        value={basePrices.v3.premium}
+                        onChange={(e) => setBasePrices({ ...basePrices, v3: { ...basePrices.v3, premium: parseInt(e.target.value) || 0 } })}
                         className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold"
                       />
                     </div>
@@ -458,8 +546,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                       className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold cursor-pointer"
                     >
                       <option value="v1_pro">NAVIKO 1.0 (Pro • ₹{basePrices.v1.pro})</option>
+                      <option value="v1_premium">NAVIKO 1.0 (Premium • ₹{basePrices.v1.premium})</option>
                       <option value="v2_plus">NAVIKO 2.0 (Wellness Plus • ₹{basePrices.v2.plus})</option>
+                      <option value="v2_premium">NAVIKO 2.0 (Wellness Pro • ₹{basePrices.v2.premium})</option>
                       <option value="v3_plus">NAVIKO 3.0 (Astrology Plus • ₹{basePrices.v3.plus})</option>
+                      <option value="v3_premium">NAVIKO 3.0 (Astrology Master • ₹{basePrices.v3.premium})</option>
                     </select>
                   </div>
                 </div>
@@ -470,8 +561,8 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                       <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] uppercase tracking-wider">
                         <th className="py-2.5 px-3 font-bold">Currency</th>
                         <th className="py-2.5 px-3 font-bold">Exchange Rate (INR/unit)</th>
-                        <th className="py-2.5 px-3 font-bold">Raw Formula Minimum (5x)</th>
-                        <th className="py-2.5 px-3 font-bold">Charged Monthly (.99)</th>
+                        <th className="py-2.5 px-3 font-bold">Raw Formula Minimum ({Math.max(5, multiplierInput)}x)</th>
+                        <th className="py-2.5 px-3 font-bold">Charged Monthly</th>
                         <th className="py-2.5 px-3 font-bold">Annual Cycle Price</th>
                         <th className="py-2.5 px-3 font-bold text-center">5x Compliant?</th>
                       </tr>
@@ -480,23 +571,29 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                       {Object.keys(CURRENCIES_REGISTRY).map((cKey) => {
                         const code = cKey as CurrencyCode;
                         const meta = CURRENCIES_REGISTRY[code];
+                        const activeRate = exchangeRates[code] || meta.exchangeRateToINR;
                         const calculatedMonthly = calculatePlanPrice(
                           testProofTier.version,
                           testProofTier.tier,
                           'monthly',
                           code,
-                          multiplierInput
+                          multiplierInput,
+                          exchangeRates,
+                          basePrices
                         );
                         const calculatedYearly = calculatePlanPrice(
                           testProofTier.version,
                           testProofTier.tier,
                           'yearly',
                           code,
-                          multiplierInput
+                          multiplierInput,
+                          exchangeRates,
+                          basePrices
                         );
 
                         const inrBase = calculatedMonthly.inrBaseMonthly;
-                        const rawMathMin = code === 'INR' ? inrBase : (inrBase * multiplierInput) / meta.exchangeRateToINR;
+                        const enforcedMult = Math.max(5, multiplierInput);
+                        const rawMathMin = code === 'INR' ? inrBase : (inrBase * enforcedMult) / activeRate;
                         const isStrictlyCompliant = calculatedMonthly.effectiveMonthlyPrice >= rawMathMin - 0.05;
 
                         return (
@@ -506,7 +603,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                               <span>{code}</span>
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 font-mono">
-                              1 {code} = ₹{meta.exchangeRateToINR}
+                              1 {code} = ₹{activeRate}
                             </td>
                             <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
                               {meta.symbol}{rawMathMin.toFixed(2)}
@@ -521,7 +618,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                               {isStrictlyCompliant ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                   <Check className="w-3 h-3" />
-                                  <span>VERIFIED ≥ 5x</span>
+                                  <span>VERIFIED ≥ {enforcedMult}x</span>
                                 </span>
                               ) : (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
@@ -618,38 +715,56 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                  {usersList.map((u) => {
-                    const v1 = u.subscriptions?.v1;
-                    const v2 = u.subscriptions?.v2;
-                    const v3 = u.subscriptions?.v3;
+                  {(() => {
+                    const filteredAuditUsers = usersList.filter((u) => {
+                      if (versionFilter === 'all') return true;
+                      const sub = u.subscriptions?.[versionFilter];
+                      return sub?.status === 'ACTIVE' || (sub?.tier && sub.tier !== 'free');
+                    });
 
-                    return (
-                      <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                        <td className="py-3 px-3">
-                          <div className="font-bold text-slate-900 dark:text-white">{u.name || 'Anonymous User'}</div>
-                          <div className="text-[11px] text-slate-400">{u.email}</div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v1?.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
-                            {v1?.tier?.toUpperCase() || 'FREE'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v2?.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
-                            {v2?.tier?.toUpperCase() || 'FREE'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v3?.status === 'ACTIVE' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}`}>
-                            {v3?.tier?.toUpperCase() || 'FREE'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-slate-500">
-                          {new Date(u.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                    if (filteredAuditUsers.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="py-8 px-4 text-center text-xs text-slate-400">
+                            No users currently hold an active or paid {versionFilter === 'all' ? '' : `${versionFilter.toUpperCase()} `}subscription.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return filteredAuditUsers.map((u) => {
+                      const v1 = u.subscriptions?.v1;
+                      const v2 = u.subscriptions?.v2;
+                      const v3 = u.subscriptions?.v3;
+
+                      return (
+                        <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-slate-900 dark:text-white">{u.name || 'Anonymous User'}</div>
+                            <div className="text-[11px] text-slate-400">{u.email}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v1?.status === 'ACTIVE' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                              {v1?.status === 'ACTIVE' ? `${(v1?.tier || 'PRO').toUpperCase()} • ${v1?.currency || 'INR'}` : 'FREE'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v2?.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                              {v2?.status === 'ACTIVE' ? `${(v2?.tier || 'PLUS').toUpperCase()} • ${v2?.currency || 'INR'}` : 'FREE'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v3?.status === 'ACTIVE' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+                              {v3?.status === 'ACTIVE' ? `${(v3?.tier || 'PLUS').toUpperCase()} • ${v3?.currency || 'INR'}` : 'FREE'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-500">
+                            {new Date(u.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>

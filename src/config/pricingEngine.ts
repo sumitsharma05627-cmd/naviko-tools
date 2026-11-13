@@ -516,38 +516,64 @@ export interface CalculatedPricePoint {
 
 export const INTERNATIONAL_MINIMUM_MULTIPLIER = 5;
 
+export interface DynamicBasePricesINR {
+  v1?: { pro?: number; plus?: number; premium?: number };
+  v2?: { plus?: number; premium?: number };
+  v3?: { plus?: number; premium?: number };
+}
+
 /**
  * Master Pricing Calculator Function
  * Enforces the 5x International Multiplier Rule!
  * Supports both signatures:
- *  - calculatePlanPrice(plan, currency, interval, multiplier)
- *  - calculatePlanPrice(version, tier, interval, currency, multiplier, customRates)
+ *  - calculatePlanPrice(plan, currency, interval, multiplier, customRates, customBasePrices)
+ *  - calculatePlanPrice(version, tier, interval, currency, multiplier, customRates, customBasePrices)
  */
+export function calculatePlanPrice(
+  plan: VersionPlanDefinition,
+  currency?: CurrencyCode,
+  interval?: BillingInterval,
+  customMultiplier?: number,
+  customRates?: Partial<Record<CurrencyCode, number>>,
+  customBasePrices?: DynamicBasePricesINR
+): CalculatedPricePoint;
+export function calculatePlanPrice(
+  version: NavikoVersionId,
+  tier: string,
+  interval?: BillingInterval,
+  currency?: CurrencyCode,
+  customMultiplier?: number,
+  customRates?: Partial<Record<CurrencyCode, number>>,
+  customBasePrices?: DynamicBasePricesINR
+): CalculatedPricePoint;
 export function calculatePlanPrice(
   planOrVersion: VersionPlanDefinition | NavikoVersionId,
   currencyOrTier: CurrencyCode | string = 'INR',
   intervalArg: BillingInterval = 'monthly',
   currencyOrMultiplierArg: CurrencyCode | number = 'INR',
-  customMultiplierArg: number = 5,
-  customRates?: Partial<Record<CurrencyCode, number>>
+  customMultiplierArg: number | Partial<Record<CurrencyCode, number>> = 5,
+  customRatesOrBasePrices?: Partial<Record<CurrencyCode, number>> | DynamicBasePricesINR,
+  customBasePrices?: DynamicBasePricesINR
 ): CalculatedPricePoint {
   let plan: VersionPlanDefinition;
   let currency: CurrencyCode = 'INR';
   let interval: BillingInterval = 'monthly';
   let customMultiplier: number = 5;
+  let resolvedRates: Partial<Record<CurrencyCode, number>> | undefined;
 
   if (typeof planOrVersion === 'string') {
-    // Called as: calculatePlanPrice(version, tier, interval, currency, customMultiplier, customRates)
+    // Called as: calculatePlanPrice(version, tier, interval, currency, customMultiplier, customRates, customBasePrices)
     const version = planOrVersion as NavikoVersionId;
     const tier = String(currencyOrTier || 'free').toLowerCase();
     interval = (intervalArg || 'monthly') as BillingInterval;
     currency = (typeof currencyOrMultiplierArg === 'string' ? currencyOrMultiplierArg : 'INR') as CurrencyCode;
     customMultiplier = typeof customMultiplierArg === 'number' ? customMultiplierArg : 5;
+    resolvedRates = customRatesOrBasePrices as Partial<Record<CurrencyCode, number>> | undefined;
 
     const matchedPlan = VERSION_PLANS[version]?.find(
       (p) => p.tier.toLowerCase() === tier || p.id.toLowerCase() === tier
     );
-    plan = matchedPlan || {
+    const basePlan = matchedPlan || {
       id: `${version}_${tier}`,
       version,
       tier,
@@ -558,19 +584,31 @@ export function calculatePlanPrice(
       limitsDescription: 'Standard access',
       entitlements: { adFree: true },
     };
+    const overridePrice = (customBasePrices?.[version] as Record<string, number> | undefined)?.[basePlan.tier];
+    plan = typeof overridePrice === 'number' && overridePrice >= 0
+      ? { ...basePlan, baseMonthlyINR: overridePrice }
+      : basePlan;
   } else {
-    // Called as: calculatePlanPrice(plan, currency, interval, customMultiplier)
+    // Called as: calculatePlanPrice(plan, currency, interval, customMultiplier, customRates, customBasePrices)
     plan = planOrVersion;
     currency = (currencyOrTier || 'INR') as CurrencyCode;
     interval = (intervalArg || 'monthly') as BillingInterval;
     customMultiplier = typeof currencyOrMultiplierArg === 'number' ? currencyOrMultiplierArg : 5;
+    if (typeof customMultiplierArg === 'object' && customMultiplierArg !== null) {
+      resolvedRates = customMultiplierArg;
+    }
+    const resolvedBasePrices = (customBasePrices || customRatesOrBasePrices) as DynamicBasePricesINR | undefined;
+    const overridePrice = (resolvedBasePrices?.[plan.version] as Record<string, number> | undefined)?.[plan.tier];
+    if (typeof overridePrice === 'number' && overridePrice >= 0) {
+      plan = { ...plan, baseMonthlyINR: overridePrice };
+    }
   }
 
   const isINR = currency === 'INR';
   const currencyMeta = CURRENCIES_REGISTRY[currency] || CURRENCIES_REGISTRY.INR;
   const intervalMeta = INTERVAL_CONFIG[interval] || INTERVAL_CONFIG.monthly;
   const multiplier = isINR ? 1 : Math.max(5, customMultiplier); // Strict minimum of 5 for international
-  const exchangeRate = customRates && customRates[currency] ? customRates[currency]! : currencyMeta.exchangeRateToINR;
+  const exchangeRate = resolvedRates && resolvedRates[currency] ? resolvedRates[currency]! : currencyMeta.exchangeRateToINR;
 
   // 1. Base Free Tier check
   if (plan.baseMonthlyINR === 0) {
@@ -646,7 +684,7 @@ export function calculatePlanPrice(
     currencySymbol: currencyMeta.symbol,
     inrBaseMonthly: plan.baseMonthlyINR,
     internationalMultiplier: multiplier,
-    exchangeRate: currencyMeta.exchangeRateToINR,
+    exchangeRate,
     monthsCount: intervalMeta.monthsCount,
     discountPercent: intervalMeta.discountPercent,
     effectiveMonthlyPrice: effectiveMonthly,

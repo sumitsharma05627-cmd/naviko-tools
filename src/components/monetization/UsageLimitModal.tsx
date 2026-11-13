@@ -1,7 +1,9 @@
 import React from 'react';
-import { Clock, Zap, ArrowRight, X, ShieldCheck, Crown, Sparkles } from 'lucide-react';
+import { Clock, Zap, ArrowRight, X, ShieldCheck, Crown } from 'lucide-react';
 import { useSubscription } from '../../context/SubscriptionContext';
-import { PRICING_CONFIG, formatCurrencyPrice } from '../../config/pricing';
+import { useCurrency } from '../../context/CurrencyContext';
+import { useVersion } from '../../context/VersionContext';
+import { calculatePlanPrice } from '../../config/pricingEngine';
 
 interface UsageLimitModalProps {
   isOpen: boolean;
@@ -18,7 +20,9 @@ export const UsageLimitModal: React.FC<UsageLimitModalProps> = ({
   limit,
   onNavigate,
 }) => {
-  const { plan, currency, billingInterval } = useSubscription();
+  const { plan, billingInterval } = useSubscription();
+  const { currentCurrency, internationalMultiplier, exchangeRates, basePricesINR } = useCurrency();
+  const { version } = useVersion();
 
   if (!isOpen) return null;
 
@@ -26,19 +30,30 @@ export const UsageLimitModal: React.FC<UsageLimitModalProps> = ({
   const targetTier = isPlusUser ? 'pro' : 'plus';
   const isProTarget = targetTier === 'pro';
 
-  const pricing = PRICING_CONFIG[currency] || PRICING_CONFIG.INR;
-  const tierConfig = isProTarget ? pricing.pro : pricing.plus;
-  const currentPriceFormatted = formatCurrencyPrice(
-    billingInterval === 'yearly' ? tierConfig.yearly : tierConfig.monthly,
-    currency
+  const resolvedTier =
+    version === 'v1'
+      ? isProTarget ? 'premium' : 'pro'
+      : isProTarget ? 'premium' : 'plus';
+
+  const calc = calculatePlanPrice(
+    version,
+    resolvedTier,
+    billingInterval === 'yearly' ? 'yearly' : 'monthly',
+    currentCurrency,
+    internationalMultiplier,
+    exchangeRates,
+    basePricesINR
   );
+
+  const currentPriceFormatted = `${calc.formattedMonthlyPrice}/mo`;
 
   const handleUpgrade = () => {
     onClose();
+    const targetUrl = `/pricing?version=${version}`;
     if (onNavigate) {
-      onNavigate('/pricing');
+      onNavigate(targetUrl);
     } else if (typeof window !== 'undefined') {
-      window.location.href = '/pricing';
+      window.location.href = targetUrl;
     }
   };
 

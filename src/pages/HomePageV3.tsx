@@ -22,6 +22,7 @@ import { useVersion } from '../context/VersionContext';
 import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { VersionSwitcher } from '../components/VersionSwitcher';
+import { useSEO } from '../utils/seo';
 
 interface HomePageV3Props {
   onNavigate: (path: string) => void;
@@ -32,6 +33,13 @@ export const HomePageV3: React.FC<HomePageV3Props> = ({ onNavigate }) => {
   const { user } = useAuth();
   const { plan } = useSubscription();
   const [activeTab, setActiveTab] = useState<'all' | 'astrology' | 'vastu' | 'panchang' | 'numerology'>('all');
+
+  useSEO({
+    title: 'NAVIKO 3.0 — Vedic Astrology, Kundli & Vastu Shastra',
+    description:
+      'Generate authentic Vedic Kundli charts with true Lahiri Ayanamsha, analyze floor-plans via interactive Vastu Shastra, consult live Panchang timings, and converse with NAVI AI.',
+    canonical: '/v3',
+  });
 
   return (
     <div className="min-h-screen bg-[#070b19] text-slate-100 selection:bg-amber-500 selection:text-slate-950 font-sans">

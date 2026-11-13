@@ -14,10 +14,12 @@ export type SubscriptionState =
 
 export interface PaymentPlanRequest {
   version?: NavikoVersionId;
-  tier: string;
-  interval: string;
-  currency: string;
+  tier?: string;
+  interval?: string;
+  currency?: string;
   planId?: string;
+  billingOption?: 'subscription' | 'flexible';
+  itemId?: string;
   customSelections?: any;
   customerEmail?: string;
   customerName?: string;
@@ -210,6 +212,8 @@ class PaymentService {
         tier: request.tier,
         interval: request.interval,
         currency: request.currency,
+        billingOption: request.billingOption || 'subscription',
+        itemId: request.itemId,
         customSelections: request.customSelections,
         customerEmail: request.customerEmail,
         customerName: request.customerName,
@@ -247,6 +251,8 @@ class PaymentService {
           userId: request.userId,
           tier: request.tier,
           interval: request.interval,
+          billingOption: request.billingOption || 'subscription',
+          itemId: request.itemId,
         }),
       });
 
@@ -327,6 +333,8 @@ class PaymentService {
                 userId: request.userId,
                 tier: request.tier,
                 interval: request.interval,
+                billingOption: request.billingOption || 'subscription',
+                itemId: request.itemId,
               }),
             });
 

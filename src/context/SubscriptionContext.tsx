@@ -4,13 +4,13 @@ import {
   PlanType,
   BillingInterval,
   PlanId,
-  detectDefaultCurrency,
 } from '../config/pricing';
-import { NavikoVersionId } from '../config/pricingEngine';
+import { NavikoVersionId, CurrencyCode as EngineCurrencyCode } from '../config/pricingEngine';
 import { TOOL_ENTITLEMENTS, FEATURE_ENTITLEMENTS, PLAN_CAPABILITIES } from '../config/entitlements';
 import { paymentService, SubscriptionState } from '../services/payment';
 import { hasActivePaidSubscription, syncAdSenseRoutePolicy } from '../config/adPolicy';
 import { useAuth } from './AuthContext';
+import { useCurrency } from './CurrencyContext';
 
 export type SubscriptionStatus = SubscriptionState;
 
@@ -64,6 +64,8 @@ interface SubscriptionContextType {
   // Multi-version ecosystem state & controls
   versionSubscriptions: Record<NavikoVersionId, VersionSubscriptionState>;
   getVersionSubscription: (version: NavikoVersionId) => VersionSubscriptionState;
+  isVersionActive: (version: NavikoVersionId) => boolean;
+  canAccessVersion: (version: NavikoVersionId, requiredTier?: string) => boolean;
   upgradeVersion: (
     version: NavikoVersionId,
     tier: string,
@@ -157,6 +159,7 @@ function getOrCreateUserId(): string {
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
+  const { currentCurrency, setCurrency: setGlobalCurrency } = useCurrency();
   const [userId, setUserId] = useState<string>(() => user?.id || getOrCreateUserId());
 
   // Keep userId and email synced with authenticated user state
@@ -169,14 +172,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [isAuthenticated, user?.id, user?.email]);
 
-  // 1. Currency state
-  const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('naviko_currency') as CurrencyCode;
-      if (saved) return saved;
-    }
-    return detectDefaultCurrency();
-  });
+  // 1. Unified Currency state from CurrencyContext
+  const currency: CurrencyCode = (currentCurrency === 'NZD' ? 'AUD' : currentCurrency) as CurrencyCode;
 
   // 2. Authoritative Plan state: FREE is the strict default for all users!
   const [plan, setPlan] = useState<PlanType>('free');
@@ -420,12 +417,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => window.removeEventListener('focus', handleFocus);
   }, [refreshSubscriptionStatus]);
 
-  const setCurrency = useCallback((newCurrency: CurrencyCode) => {
-    setCurrencyState(newCurrency);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('naviko_currency', newCurrency);
-    }
-  }, []);
+  const setCurrency = useCallback(
+    (newCurrency: CurrencyCode) => {
+      setGlobalCurrency(newCurrency as EngineCurrencyCode);
+    },
+    [setGlobalCurrency]
+  );
 
   const setBillingInterval = useCallback((newInterval: BillingInterval) => {
     setBillingIntervalState(newInterval);
@@ -710,6 +707,36 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [versionSubscriptions]
   );
 
+  const isVersionActive = useCallback(
+    (v: NavikoVersionId): boolean => {
+      const sub = versionSubscriptions[v];
+      return Boolean(sub && (sub.isActive || sub.status === 'ACTIVE' || sub.status === 'TRIAL_ACTIVE'));
+    },
+    [versionSubscriptions]
+  );
+
+  const canAccessVersion = useCallback(
+    (v: NavikoVersionId, requiredTier: string = 'plus'): boolean => {
+      const sub = versionSubscriptions[v];
+      if (!sub || (!sub.isActive && sub.status !== 'ACTIVE' && sub.status !== 'TRIAL_ACTIVE')) {
+        return false;
+      }
+      const tierWeights: Record<string, number> = {
+        free: 0,
+        plus: 1,
+        pro: 2,
+        premium: 3,
+        business: 3,
+        founding: 4,
+        trial: 2,
+      };
+      const userWeight = tierWeights[String(sub.tier || 'free').toLowerCase()] || 0;
+      const reqWeight = tierWeights[String(requiredTier || 'plus').toLowerCase()] || 1;
+      return userWeight >= reqWeight;
+    },
+    [versionSubscriptions]
+  );
+
   const upgradeVersion = useCallback(
     async (
       v: NavikoVersionId,
@@ -845,7 +872,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const isAdFree = hasActivePaidSubscription({ plan, subscriptionStatus });
+  const hasAnyActiveVersion =
+    versionSubscriptions.v1?.isActive ||
+    versionSubscriptions.v2?.isActive ||
+    versionSubscriptions.v3?.isActive;
+  const isAdFree = hasAnyActiveVersion || hasActivePaidSubscription({ plan, subscriptionStatus });
 
   // Whenever subscription status changes, instantly synchronize Google AdSense SPA request policy
   useEffect(() => {
@@ -881,6 +912,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         remainingTrialHours,
         versionSubscriptions,
         getVersionSubscription,
+        isVersionActive,
+        canAccessVersion,
         upgradeVersion,
         cancelVersion,
         billingHistory,

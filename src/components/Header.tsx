@@ -173,13 +173,15 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
 
   const { currentLanguage, setLanguage, t, activeMeta } = useLanguage();
   const { theme, resolvedTheme, toggleTheme, setTheme } = useTheme();
-  const { plan, subscriptionStatus, isTrial } = useSubscription();
+  const { plan, subscriptionStatus, isTrial, isVersionActive } = useSubscription();
   const { user, isAuthenticated } = useAuth();
   const { version, switchVersion } = useVersion();
 
+  const isCurrentVersionActive = isVersionActive(version);
   const isPremiumUser =
-    (plan === 'plus' || plan === 'pro' || plan === 'trial') &&
-    (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE');
+    isCurrentVersionActive ||
+    ((plan === 'plus' || plan === 'pro' || plan === 'trial') &&
+      (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL_ACTIVE'));
 
   const navContainerRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
@@ -857,16 +859,18 @@ export const Header: React.FC<HeaderProps> = ({ currentPath, onNavigate, onOpenS
               <button
                 onClick={() => handleNav('/account')}
                 className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-extrabold transition-all cursor-pointer shadow-2xs"
-                title="Manage NAVIKO Premium Account"
+                title="Manage NAVIKO Ecosystem Account & Subscriptions"
               >
                 <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="hidden sm:inline">{isTrial ? 'Trial Active' : 'My Premium'}</span>
+                <span className="hidden sm:inline">
+                  {isTrial ? 'Trial Active' : isCurrentVersionActive ? `${version.toUpperCase()} Active` : 'My Account'}
+                </span>
               </button>
             ) : (
               <button
-                onClick={() => handleNav('/premium')}
+                onClick={() => handleNav(`/pricing?version=${version}`)}
                 className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-rose-500/15 hover:from-amber-500/25 hover:to-rose-500/25 text-amber-800 dark:text-amber-300 border border-amber-300/40 dark:border-amber-600/40 text-xs font-extrabold transition-all cursor-pointer shadow-2xs hover:scale-105"
-                title="Explore NAVIKO Premium"
+                title="Explore NAVIKO Plans & Pricing"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span className="hidden xs:inline">Premium</span>

@@ -23,6 +23,7 @@ import {
 import { useCurrency } from '../context/CurrencyContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useAuth } from '../context/AuthContext';
+import { useVersion } from '../context/VersionContext';
 import {
   NavikoVersionId,
   VERSION_PLANS,
@@ -30,7 +31,6 @@ import {
   calculatePlanPrice,
   BillingInterval,
   CURRENCIES_REGISTRY,
-  INTERNATIONAL_MINIMUM_MULTIPLIER,
 } from '../config/pricingEngine';
 import { CurrencySelector } from '../components/ui/CurrencySelector';
 import { UnifiedButton } from '../components/ui/UnifiedButton';
@@ -43,35 +43,51 @@ interface PricingPageProps {
   defaultVersion?: NavikoVersionId;
 }
 
-export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVersion = 'v3' }) => {
-  const { currentCurrency, setCurrency } = useCurrency();
+const resolveInitialVersion = (defaultVer?: NavikoVersionId, contextVer?: NavikoVersionId): NavikoVersionId => {
+  if (defaultVer) return defaultVer;
+  if (typeof window !== 'undefined') {
+    const param = new URLSearchParams(window.location.search).get('version')?.toLowerCase();
+    if (param === 'v1' || param === 'v2' || param === 'v3') {
+      return param;
+    }
+  }
+  return contextVer || 'v3';
+};
+
+export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVersion }) => {
+  const {
+    currentCurrency,
+    internationalMultiplier,
+    basePricesINR,
+    exchangeRates,
+  } = useCurrency();
   const {
     versionSubscriptions,
     upgradeVersion,
-    cancelVersion,
-    refreshSubscriptionStatus,
   } = useSubscription();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { version: contextVersion } = useVersion();
 
-  const [activeVersion, setActiveVersion] = useState<NavikoVersionId>(defaultVersion);
+  const [activeVersion, setActiveVersion] = useState<NavikoVersionId>(() =>
+    resolveInitialVersion(defaultVersion, contextVersion)
+  );
   const [activeInterval, setActiveInterval] = useState<BillingInterval>('yearly');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // SEO configuration
+  const canonicalPath = defaultVersion ? `/${defaultVersion}/pricing` : '/pricing';
+
+  // Currency-aware & Version-aware SEO configuration
   useSEO({
-    title: 'NAVIKO Pricing — Independent Multi-Currency Plans for V1, V2 & V3',
-    description:
-      'Transparent, multi-currency subscription plans for NAVIKO 1.0 (General Tools), NAVIKO 2.0 (Nutrition Science), and NAVIKO 3.0 (Vedic Astrology & Vastu). Support for 11 global currencies with equitable 5x international pricing.',
-    canonical: `${CANONICAL_DOMAIN}/pricing`,
+    title: `NAVIKO ${activeVersion.toUpperCase()} Pricing (${currentCurrency}) — Multi-Currency Plans`,
+    description: `Transparent ${currentCurrency} subscription plans for NAVIKO 1.0 (General Tools), NAVIKO 2.0 (Nutrition Science), and NAVIKO 3.0 (Vedic Astrology & Vastu). Fair global currency parity with independent version access.`,
+    canonical: `${CANONICAL_DOMAIN}${canonicalPath}`,
   });
 
   useEffect(() => {
-    if (defaultVersion) {
-      setActiveVersion(defaultVersion);
-    }
-  }, [defaultVersion]);
+    setActiveVersion(resolveInitialVersion(defaultVersion, contextVersion));
+  }, [defaultVersion, contextVersion]);
 
   const currentSub = versionSubscriptions[activeVersion];
   const isVersionActive = currentSub?.isActive;
@@ -296,7 +312,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVer
             const calculated = calculatePlanPrice(
               plan,
               currentCurrency,
-              activeInterval
+              activeInterval,
+              internationalMultiplier,
+              exchangeRates,
+              basePricesINR
             );
 
             const isCurrentSub = isVersionActive && currentSub?.tier === plan.tier;
@@ -350,9 +369,9 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVer
                             / month
                           </span>
                         </div>
-                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1.5">
+                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1.5 flex items-center flex-wrap gap-1.5">
                           <span>
-                            Billed {INTERVAL_CONFIG[activeInterval].label.toLowerCase()}:{' '}
+                            Cycle subtotal: {calculated.formattedTotalCyclePrice} • Payable:{' '}
                             <strong className="text-slate-700 dark:text-slate-200">
                               {calculated.formattedFinalPayable}
                             </strong>
@@ -362,6 +381,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVer
                               Save {calculated.discountPercent}%
                             </span>
                           )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                          {calculated.taxPercent > 0
+                            ? `Includes ${calculated.taxPercent}% Indian GST (${currencyData.symbol}${calculated.taxAmount})`
+                            : '0% Export VAT / GST for international billing'}
                         </div>
                       </div>
                     )}
@@ -428,6 +452,67 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, defaultVer
               </div>
             );
           })}
+        </div>
+
+        {/* Feature Comparison Matrix for Active Version */}
+        <div className="mb-16 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+          <div className="mb-6">
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              Plan Feature Comparison — {versionMeta[activeVersion].title.split('—')[0].trim()}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Side-by-side breakdown of limits and capabilities across tiers in {currentCurrency}.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                  <th className="py-3 pr-4 font-bold">Capability</th>
+                  {currentPlans.map((p) => (
+                    <th key={p.id} className="py-3 px-4 font-black text-slate-900 dark:text-white text-center">
+                      {p.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                {(activeVersion === 'v1'
+                  ? [
+                      { label: 'Daily High-Compute Operations', vals: ['5 / day', '50 / day', '250 / day'] },
+                      { label: 'Max PDF File Processing Size', vals: ['5 MB', '100 MB', '500 MB'] },
+                      { label: 'Financial Modeling & Debt Clock', vals: ['Core Only', 'Full Suite', 'Full + Batch CSV'] },
+                      { label: 'ATS Resume Builder & Export', vals: ['Standard', 'Unlimited PDF', 'Priority Templates'] },
+                      { label: 'Ad-Free Workspace', vals: ['Standard Ads', 'Ad-Free', 'Ad-Free'] },
+                    ]
+                  : activeVersion === 'v2'
+                  ? [
+                      { label: 'ICMR-NIN Food Explorer & Matrix', vals: ['2 Foods Compare', '6 Foods Compare', '12 Foods Compare'] },
+                      { label: 'Saved Custom Meal Plans', vals: ['1 Plan', '20 Plans', '100 Plans + Family'] },
+                      { label: 'Packaged Label & INS Decoder', vals: ['Basic', 'Full Database', 'Clinical Export'] },
+                      { label: 'Ayurveda Dinacharya & Herbs', vals: ['12 Core Herbs', 'Dosha Builder', 'Full Monographs'] },
+                      { label: 'Ad-Free Workspace', vals: ['Standard Ads', 'Ad-Free', 'Ad-Free'] },
+                    ]
+                  : [
+                      { label: 'Saved Kundli Birth Charts', vals: ['1 Chart', '10 Charts', 'Unlimited Family Archive'] },
+                      { label: 'Divisional Charts & Dasha', vals: ['D1 Lagna', 'D1 + D9 + 120y Dasha', 'Full Shodashvarga + Yogas'] },
+                      { label: 'Vastu Shastra Analyzer', vals: ['8-Direction Check', '16-Zone Mandala', 'Blueprint Upload + Remedies'] },
+                      { label: 'NAVI AI Grounded Consultations', vals: ['3 / day', '15 / day', 'Unlimited (EN & HI)'] },
+                      { label: 'PDF Kundli & Vastu Dossiers', vals: ['Screen View', 'Printable Basic', 'High-Res Dossiers'] },
+                    ]
+                ).map((row, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                    <td className="py-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{row.label}</td>
+                    {row.vals.map((val, cIdx) => (
+                      <td key={cIdx} className="py-3 px-4 text-center font-medium text-slate-600 dark:text-slate-300">
+                        {val}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Multi-Version Ecosystem Independence Explanation */}

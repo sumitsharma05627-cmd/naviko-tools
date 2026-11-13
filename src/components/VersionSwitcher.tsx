@@ -1,338 +1,128 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useVersion, NavikoVersion } from '../context/VersionContext';
-import { Sparkles, Leaf, Layers, ChevronDown, Check } from 'lucide-react';
+import { Sparkles, Leaf, Layers } from 'lucide-react';
 
 interface VersionSwitcherProps {
   onNavigate?: (path: string) => void;
   className?: string;
-  mode?: 'auto' | 'segmented' | 'dropdown';
+  size?: 'compact' | 'standard';
 }
+
+interface VersionItem {
+  id: NavikoVersion;
+  number: string;
+  shortTitle: string;
+  compactLabel: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  activeBg: string;
+  activeText: string;
+  activeBorder: string;
+  activeIconColor: string;
+}
+
+const VERSIONS: VersionItem[] = [
+  {
+    id: 'v1',
+    number: '1.0',
+    shortTitle: 'Tools',
+    compactLabel: '1.0 Tools',
+    title: 'NAVIKO 1.0 — General Tools Suite & Calculators',
+    icon: Layers,
+    activeBg: 'bg-indigo-600 dark:bg-indigo-600',
+    activeText: 'text-white',
+    activeBorder: 'border-indigo-600',
+    activeIconColor: 'text-indigo-200',
+  },
+  {
+    id: 'v2',
+    number: '2.0',
+    shortTitle: 'Health',
+    compactLabel: '2.0 Health',
+    title: 'NAVIKO 2.0 — Nutrition Science & Ayurveda',
+    icon: Leaf,
+    activeBg: 'bg-emerald-700 dark:bg-emerald-600',
+    activeText: 'text-white',
+    activeBorder: 'border-emerald-700 dark:border-emerald-600',
+    activeIconColor: 'text-emerald-200',
+  },
+  {
+    id: 'v3',
+    number: '3.0',
+    shortTitle: 'Jyotish',
+    compactLabel: '3.0 Jyotish',
+    title: 'NAVIKO 3.0 — Vedic Astrology & Vastu Shastra',
+    icon: Sparkles,
+    activeBg: 'bg-amber-600 dark:bg-amber-500',
+    activeText: 'text-white dark:text-slate-950',
+    activeBorder: 'border-amber-600 dark:border-amber-500',
+    activeIconColor: 'text-amber-200 dark:text-slate-950',
+  },
+];
 
 export const VersionSwitcher: React.FC<VersionSwitcherProps> = ({
   onNavigate,
   className = '',
-  mode = 'auto'
+  size = 'compact',
 }) => {
   const { version, switchVersion } = useVersion();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelect = (v: NavikoVersion) => {
     if (v !== version) {
       switchVersion(v, onNavigate);
     }
-    setDropdownOpen(false);
   };
 
-  // Close dropdown when clicking outside or pressing Escape
-  useEffect(() => {
-    if (!dropdownOpen) return;
-
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setDropdownOpen(false);
-        buttonRef.current?.focus();
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        handleSelect('v2');
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        handleSelect('v1');
-      }
-    };
-
-    document.addEventListener('pointerdown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [dropdownOpen, version]);
-
-  // Segmented Control renderer
-  const renderSegmented = (wrapperClass = '') => (
+  return (
     <div
       role="radiogroup"
-      aria-label="NAVIKO Website Version Switcher"
-      className={`inline-flex items-center p-1 rounded-2xl border transition-all ${
+      aria-label="NAVIKO Ecosystem Version Switcher"
+      className={`inline-flex items-center p-0.5 rounded-xl border transition-all ${
         version === 'v2'
-          ? 'bg-[#F2ECE4] dark:bg-[#13221A] border-[#E8E2D9] dark:border-[#22382C]'
-          : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80'
-      } ${wrapperClass}`}
+          ? 'bg-[#EFEAE2] dark:bg-[#15261D] border-[#DDD5C9] dark:border-[#223B2E]'
+          : version === 'v3'
+          ? 'bg-[#0f172a] dark:bg-[#0b1120] border-amber-500/30 dark:border-amber-500/30'
+          : 'bg-slate-100 dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700/80'
+      } ${className}`}
     >
-      {/* Option 1: NAVIKO 1.0 — Original */}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={version === 'v1'}
-        tabIndex={version === 'v1' ? 0 : -1}
-        onClick={() => handleSelect('v1')}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            handleSelect('v2');
-          }
-        }}
-        className={`relative flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-left transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-indigo-500/50 ${
-          version === 'v1'
-            ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-xs font-bold'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white font-medium'
-        }`}
-        title="NAVIKO 1.0 — Original: 46+ tools, calculators, finance & utilities"
-      >
-        <Layers className={`w-3.5 h-3.5 shrink-0 ${version === 'v1' ? 'text-indigo-400 dark:text-white' : 'text-slate-400'}`} />
-        <div className="flex flex-col leading-tight">
-          <span className="text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap">
-            NAVIKO 1.0
-          </span>
-          <span className={`text-[9px] font-semibold whitespace-nowrap ${version === 'v1' ? 'text-slate-300 dark:text-indigo-100' : 'text-slate-500 dark:text-slate-400'}`}>
-            Original
-          </span>
-        </div>
-      </button>
+      {VERSIONS.map((vItem) => {
+        const isActive = version === vItem.id;
+        const Icon = vItem.icon;
 
-      {/* Option 2: NAVIKO 2.0 — Nutrition & Ayurveda */}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={version === 'v2'}
-        tabIndex={version === 'v2' ? 0 : -1}
-        onClick={() => handleSelect('v2')}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            handleSelect('v1');
-          }
-        }}
-        className={`relative flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-left transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-emerald-500/50 ${
-          version === 'v2'
-            ? 'bg-[#1B4332] dark:bg-[#2D6A4F] text-white shadow-xs font-bold'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white font-medium'
-        }`}
-        title="NAVIKO 2.0 — Nutrition & Ayurveda: Food explorer, recipes, meal planner & habits"
-      >
-        <Leaf className={`w-3.5 h-3.5 shrink-0 ${version === 'v2' ? 'text-emerald-300' : 'text-emerald-600/70'}`} />
-        <div className="flex flex-col leading-tight">
-          <span className="text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap">
-            NAVIKO 2.0
-          </span>
-          <span className={`text-[9px] font-semibold whitespace-nowrap ${version === 'v2' ? 'text-emerald-100' : 'text-[#4D6156] dark:text-[#9FB7A9]'}`}>
-            Nutrition &amp; Ayurveda
-          </span>
-        </div>
-      </button>
-      {/* Option 3: NAVIKO 3.0 — Astrology & Vastu */}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={version === 'v3'}
-        tabIndex={version === 'v3' ? 0 : -1}
-        onClick={() => handleSelect('v3')}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-            e.preventDefault();
-            handleSelect('v2');
-          }
-        }}
-        className={`relative flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-left transition-all cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-amber-500/50 ${
-          version === 'v3'
-            ? 'bg-gradient-to-r from-[#0d1630] to-[#1e1b4b] text-amber-300 shadow-xs font-bold border border-amber-500/40'
-            : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white font-medium'
-        }`}
-        title="NAVIKO 3.0 — Vedic Astrology & Vastu: Kundli, Dasha, Panchang, Numerology & NAVI AI"
-      >
-        <Sparkles className={`w-3.5 h-3.5 shrink-0 ${version === 'v3' ? 'text-amber-400' : 'text-amber-500/80'}`} />
-        <div className="flex flex-col leading-tight">
-          <div className="flex items-center gap-1">
-            <span className="text-[11px] sm:text-xs font-black tracking-tight whitespace-nowrap">
-              NAVIKO 3.0
-            </span>
-            <span className="text-[8px] font-black uppercase px-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              New
-            </span>
-          </div>
-          <span className={`text-[9px] font-semibold whitespace-nowrap ${version === 'v3' ? 'text-amber-200' : 'text-slate-500 dark:text-slate-400'}`}>
-            Astrology &amp; Vastu
-          </span>
-        </div>
-      </button>
-    </div>
-  );
-
-  // Compact Dropdown renderer (ideal for narrow mobile screens)
-  const renderDropdown = (wrapperClass = '') => (
-    <div ref={dropdownRef} className={`relative inline-block ${wrapperClass}`}>
-      <button
-        ref={buttonRef}
-        type="button"
-        id="version-switcher-btn"
-        aria-haspopup="listbox"
-        aria-expanded={dropdownOpen}
-        aria-label="Switch NAVIKO Version: NAVIKO 1.0, NAVIKO 2.0 or NAVIKO 3.0"
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs focus:outline-hidden focus:ring-2 ${
-          version === 'v3'
-            ? 'bg-[#0d1630] text-amber-300 border-amber-500/40 focus:ring-amber-400'
-            : version === 'v2'
-            ? 'bg-[#1B4332] text-white border-[#153427] dark:bg-[#2D6A4F] dark:border-[#245741] focus:ring-emerald-400'
-            : 'bg-slate-900 text-white border-slate-800 dark:bg-indigo-600 dark:border-indigo-500 focus:ring-indigo-400'
-        }`}
-      >
-        {version === 'v3' ? (
-          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-        ) : version === 'v2' ? (
-          <Leaf className="w-3 h-3 text-emerald-300 shrink-0" />
-        ) : (
-          <Layers className="w-3 h-3 text-indigo-400 dark:text-indigo-200 shrink-0" />
-        )}
-        <span className="text-[11px] font-black tracking-tight">
-          {version === 'v3' ? 'v3.0' : version === 'v2' ? 'v2.0' : 'v1.0'}
-        </span>
-        <ChevronDown className={`w-3 h-3 transition-transform duration-200 opacity-70 ${dropdownOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {dropdownOpen && (
-        <div
-          role="listbox"
-          aria-labelledby="version-switcher-btn"
-          className="absolute left-0 mt-1.5 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
-        >
-          <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Select NAVIKO Ecosystem
-            </span>
-            <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
-              3 Experiences
-            </span>
-          </div>
-
-          {/* Version 3.0 Option (Featured Default) */}
+        return (
           <button
+            key={vItem.id}
             type="button"
-            role="option"
-            aria-selected={version === 'v3'}
-            onClick={() => handleSelect('v3')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
-              version === 'v3'
-                ? 'bg-[#0d1630] text-amber-300 border border-amber-500/30'
-                : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
+            role="radio"
+            aria-checked={isActive}
+            tabIndex={isActive ? 0 : -1}
+            onClick={() => handleSelect(vItem.id)}
+            title={vItem.title}
+            className={`relative flex items-center justify-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none focus:outline-hidden focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500/60 ${
+              isActive
+                ? `${vItem.activeBg} ${vItem.activeText} shadow-xs font-black z-10 scale-[1.02]`
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
             }`}
           >
-            <div className="flex items-start gap-2">
-              <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                version === 'v3' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-100 dark:bg-slate-800 text-amber-500'
-              }`}>
-                <Sparkles className="w-3.5 h-3.5" />
-              </span>
-              <div>
-                <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
-                  <span className={version === 'v3' ? 'text-amber-300' : ''}>NAVIKO 3.0</span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    Astrology &amp; Vastu
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 leading-snug">
-                  Vedic Kundli, Dasha, Interactive Vastu, Panchang &amp; NAVI AI
-                </p>
-              </div>
-            </div>
-            {version === 'v3' && <Check className="w-4 h-4 text-amber-400 shrink-0 ml-1" />}
+            <Icon
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 ${
+                isActive ? vItem.activeIconColor : 'text-slate-400 dark:text-slate-500'
+              }`}
+            />
+            
+            {/* Version Number & Short Label */}
+            <span className="tracking-tight text-[11px] sm:text-xs">
+              <span className="font-extrabold">{vItem.number}</span>
+              <span className="hidden xs:inline ml-1 font-semibold opacity-90">{vItem.shortTitle}</span>
+            </span>
+
+            {/* Active Indicator Dot on tightest viewports */}
+            {isActive && (
+              <span className="xs:hidden w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-950 shrink-0 ml-0.5" />
+            )}
           </button>
-
-          {/* Version 2.0 Option */}
-          <button
-            type="button"
-            role="option"
-            aria-selected={version === 'v2'}
-            onClick={() => handleSelect('v2')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer mt-1 ${
-              version === 'v2'
-                ? 'bg-emerald-50/80 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200'
-                : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                version === 'v2' ? 'bg-[#1B4332] text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-              }`}>
-                <Leaf className="w-3.5 h-3.5 text-emerald-300" />
-              </span>
-              <div>
-                <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
-                  <span>NAVIKO 2.0</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                    Nutrition &amp; Ayurveda
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  Indian food explorer, meal planner, herbs &amp; habits
-                </p>
-              </div>
-            </div>
-            {version === 'v2' && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 ml-1" />}
-          </button>
-
-          {/* Version 1.0 Option */}
-          <button
-            type="button"
-            role="option"
-            aria-selected={version === 'v1'}
-            onClick={() => handleSelect('v1')}
-            className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer mt-1 ${
-              version === 'v1'
-                ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200'
-                : 'hover:bg-slate-100/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              <span className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                version === 'v1' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-              }`}>
-                <Layers className="w-3.5 h-3.5" />
-              </span>
-              <div>
-                <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
-                  <span>NAVIKO 1.0</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                    Original
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  Original 46+ tools, calculators, finance &amp; utilities
-                </p>
-              </div>
-            </div>
-            {version === 'v1' && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 ml-1" />}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  if (mode === 'segmented') {
-    return renderSegmented(className);
-  }
-
-  if (mode === 'dropdown') {
-    return renderDropdown(className);
-  }
-
-  // Auto mode: compact dropdown on small mobile screens (<640px), segmented control on sm and up (>=640px)
-  return (
-    <div className={`inline-flex items-center ${className}`}>
-      {renderDropdown('sm:hidden')}
-      {renderSegmented('hidden sm:inline-flex')}
+        );
+      })}
     </div>
   );
 };
